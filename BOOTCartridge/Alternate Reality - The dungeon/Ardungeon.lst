@@ -7,20 +7,19 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
      5 				// *     (C) Guillermo Fuenzalida (Willysoft)         *
      6 				// *                                                  *
      7 				// ****************************************************
-     8 				//
-     9
+     8
+     9 = 0000			hola =$00
     10
-    11
-    12 				// First, we will define the extension as .rom
-    13
-    14 				;	@com.wudsn.ide.asm.outputfileextension=.rom
-    15
-    16 				// Now we set no binary headers
-    17
-    18 					opt h-
-    19
-    20 				; include files, useful macros:
-    21 					icl "../../base/sys_equates.m65"
+    11 				// First, we will define the extension as .rom
+    12
+    13 				;	@com.wudsn.ide.asm.outputfileextension=.rom
+    14
+    15 				// Now we set no binary headers
+    16
+    17 					opt h-
+    18
+    19 				; include files, useful macros:
+    20 					icl "../../base/sys_equates.m65"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_equates.m65
      1 				;================================================================================
      2 				; System equates, Atari XL + mads [NRV 2009]
@@ -403,7 +402,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    379 				together with Control key: add +$80 
    380 				*/
    380
-    22 					icl "../../base/sys_macros.m65"
+    21 					icl "../../base/sys_macros.m65"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65
      1 				;================================================================================
      2 				; System macros, Atari XL + mads [NRV 2009]
@@ -1291,84 +1290,84 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    884
    885
    886
-    23 					
-    24 				// Now a cart type definition
-    25
-    26 				//Cartridge types available
-    27 				// 1: Atarimax 8 Mbit
-    28 				// 2: Switchable XEGS 8 Mbit
-    29 				// 3: Atarimax 1 Mbit
-    30 				// 4: Atrax 128 Kbytes (1 Mbit)
-    31 				// 5: Megacart 128 KB
-    32 				// 6: Megacart 1024 KB
-    33
-    34 = 0001			TYPE_CART =1
-    35
-    36 				.if TYPE_CART = 1 
-    37 = A000				start_cartridge = $A000
-    38 = C000				end_bank = $C000
-    39 = 0080				cart_banks = 128
-    40 = D5FF				cart_apaga = $D5FF
-    41 = 0000				FLAG_16KB = $00
-    42 				.elseif TYPE_CART = 2
-    43 					start_cartridge = $8000
-    44 					end_bank = $A000
-    45 					cart_banks = 128
-    46 					cart_apaga = $D5FF
-    47 					FLAG_16KB = $00
-    48 				.elseif TYPE_CART = 3
-    49 					start_cartridge = $A000
-    50 					end_bank = $C000
-    51 					cart_banks = 16
-    52 					cart_apaga = $D51F
-    53 					FLAG_16KB = $00
-    54 				.elseif TYPE_CART = 4
-    55 					start_cartridge = $A000
-    56 					end_bank = $C000
-    57 					cart_banks = 16
-    58 					cart_apaga = $D5FF
-    59 					FLAG_16KB = $00
-    60 				.elseif TYPE_CART = 5
-    61 					start_cartridge = $8000
-    62 					end_bank = $C000
-    63 					cart_banks = 8
-    64 					cart_apaga = $D5FF
-    65 					FLAG_16KB = $01
-    66 				.elseif TYPE_CART = 6
-    67 					start_cartridge = $8000
-    68 					end_bank = $C000
-    69 					cart_banks = 64
-    70 					cart_apaga = $D5FF
-    71 					FLAG_16KB = $01
-    72 				.else
-    73 					.error "Cartridge type not defined"
-    74 				.endif
-    75
-    76 				//Parameters to init the loader
-    77
-    78 = 0400			start_loader = $0400
-    79 = 0480			start_init2 = $480
+    22 					
+    23 				// Now a cart type definition
+    24
+    25 				//Cartridge types available
+    26 				// 1: Atarimax 8 Mbit
+    27 				// 2: Switchable XEGS 8 Mbit
+    28 				// 3: Atarimax 1 Mbit
+    29 				// 4: Atrax 128 Kbytes (1 Mbit)
+    30 				// 5: Megacart 128 KB
+    31 				// 6: Megacart 1024 KB
+    32
+    33 = 0001			TYPE_CART =1
+    34
+    35 				.if TYPE_CART = 1 
+    36 = A000				start_cartridge = $A000
+    37 = C000				end_bank = $C000
+    38 = 0080				cart_banks = 128
+    39 = D5FF				cart_apaga = $D5FF
+    40 = 0000				FLAG_16KB = $00
+    41 				.elseif TYPE_CART = 2
+    42 					start_cartridge = $8000
+    43 					end_bank = $A000
+    44 					cart_banks = 128
+    45 					cart_apaga = $D5FF
+    46 					FLAG_16KB = $00
+    47 				.elseif TYPE_CART = 3
+    48 					start_cartridge = $A000
+    49 					end_bank = $C000
+    50 					cart_banks = 16
+    51 					cart_apaga = $D51F
+    52 					FLAG_16KB = $00
+    53 				.elseif TYPE_CART = 4
+    54 					start_cartridge = $A000
+    55 					end_bank = $C000
+    56 					cart_banks = 16
+    57 					cart_apaga = $D5FF
+    58 					FLAG_16KB = $00
+    59 				.elseif TYPE_CART = 5
+    60 					start_cartridge = $8000
+    61 					end_bank = $C000
+    62 					cart_banks = 8
+    63 					cart_apaga = $D5FF
+    64 					FLAG_16KB = $01
+    65 				.elseif TYPE_CART = 6
+    66 					start_cartridge = $8000
+    67 					end_bank = $C000
+    68 					cart_banks = 64
+    69 					cart_apaga = $D5FF
+    70 					FLAG_16KB = $01
+    71 				.else
+    72 					.error "Cartridge type not defined"
+    73 				.endif
+    74
+    75 				//Parameters to init the loader
+    76
+    77 = 0400			start_loader = $0400
+    78 = 0480			start_init2 = $480
+    79
     80
-    81
-    82 				// Page zero parameters
-    83 = 0032			BUFRLO 	= $32
-    84 = 0033			BUFRHI 	= $33
-    85 = 0034			AUX1	= $34
-    86 = 0035			AUX2	= $35
-    87 = 0036			c_bank	= $36
-    88
-    89 				//Starting the cartridge
-    90
-    91 					org start_cartridge
-    92 A000				lmb #$00	//BANK 0
-    93
-    94 				// First, copy the loader routine and get back to the OS. You can do whatever you want to initialize.
-    95 				Copy_init
-    96 				.proc init
-    97 				// 1st stage
-    98 A000 A9 FF 8D 01 D3		mva #$ff portb
-    99 A005 A9 01 8D F8 03		mva #$01 basicf
-   100 A00A				CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
+    81 				// Page zero parameters
+    82 = 0032			BUFRLO 	= $32
+    83 = 0033			BUFRHI 	= $33
+    84 = 0034			AUX1	= $34
+    85 = 0035			AUX2	= $35
+    86 = 0036			c_bank	= $36
+    87
+    88 				//Starting the cartridge
+    89
+    90 					org start_cartridge
+    91 A000				lmb #$00	//BANK 0
+    92
+    93 				// First, copy the loader routine and get back to the OS. You can do whatever you want to initialize.
+    94 				Copy_init
+    95 				.proc init
+    96 				// 1st stage
+    97 A000 A9 FF 8D 01 D3		mva #$ff portb
+    98 A005 A9 02 8D F8 03		mva #$02 basicf
+    99 A00A				CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
@@ -1381,7 +1380,7 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
     18 A013 C0 6A					cpy #<(.LEN LOADER)
     20 A015 D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   101 A017				CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
+   100 A017				CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
@@ -1394,9 +1393,9 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
     18 A020 C0 99					cpy #<(.LEN INIT2)
     20 A022 D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   102 A024 78				sei
-   103 A025 A9 00 8D 0E D4		mva #$00 nmien
-   104 A02A				CopyMemory $c000,$600,$1000				//Copy OS to RAM
+   101 A024 78				sei
+   102 A025 A9 00 8D 0E D4		mva #$00 nmien
+   103 A02A				CopyMemory $c000,$600,$1000				//Copy OS to RAM
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
@@ -1431,7 +1430,7 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
     51 A059 05 FB				ora copyMemCounter+1
     52 A05B D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   105 A05D				CopyMemory $d800,$1600,$2800
+   104 A05D				CopyMemory $d800,$1600,$2800
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
@@ -1466,8 +1465,8 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
     51 A08C 05 FB				ora copyMemCounter+1
     52 A08E D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   106 A090 A9 FE 8D 01 D3		mva #$fe portb
-   107 A095				CopyMemory $600,$c000,$1000				//Put OS on upper RAM
+   105 A090 A9 FE 8D 01 D3		mva #$fe portb
+   106 A095				CopyMemory $600,$c000,$1000				//Put OS on upper RAM
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
@@ -1502,7 +1501,7 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
     51 A0C4 05 FB				ora copyMemCounter+1
     52 A0C6 D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   108 A0C8				CopyMemory $1600,$d800,$2800
+   107 A0C8				CopyMemory $1600,$d800,$2800
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
@@ -1537,240 +1536,240 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
     51 A0F7 05 FB				ora copyMemCounter+1
     52 A0F9 D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   109 A0FB A9 40 8D 0E D4		mva #$40 nmien
-   110 A100 58				cli
-   111 A101 18				clc	// No errors!
-   112 A102 60				rts	// Done
-   113 				.endp
-   114 A103			Copy_init2
-   115 A103			.proc init2, start_init2
-   116 0480 A2 FF			ldx #$ff
-   117 0482 9A				txs
-   118 0483 8E FF D5			stx cart_apaga
-   119 0486 AD 13 D0 8D FA 03		mva trig3 gintlk
-   120 048C A9 00 8D 04 03 A9 + 	mwa #$600 dbuflo
-   121 0496 A9 01 8D 0A 03 A9 + 	mwa #$01  daux1
-   122 04A0 A9 52 8D 02 03		mva #$52  dcomnd
-   123 04A5 20 00 04			jsr loader		//Read 1st sector
-   124 04A8 A9 00 8D 33 06 A9 + 	mwa #loader $633	//Patch SIO call
-   125 04B2 A9 BF 8D 3E 06 A9 + 	mwa #cont $63e		//Patch final instruction
-   126 04BC 4C 06 06			jmp $606
-   127 04BF			cont
-   128 04BF A9 00			lda #$00
-   129 04C1 8D 2F 02			sta sdmctl
-   130 04C4 8D 00 D4			sta dmactl		//Turn screen off
-   131 04C7 A9 00 8D 46 B0 A9 + 	mwa #loader $b046	//Patch SIO call
-   132 04D1 A9 DE 8D 41 B0 A9 + 	mwa #cont2 $b041	//Patch final instruction
-   133 04DB 4C 00 B0			jmp $b000		//GO!
-   134 04DE			cont2
-   135 04DE A9 22			lda #$22
-   136 04E0 8D 2F 02			sta sdmctl
-   137 04E3 8D 00 D4			sta dmactl		//Turn screen on
-   138 04E6 A9 00 8D 43 1E A9 + 	mwa #loader $1e43	//Patch SIO call 1
-   139 04F0 A9 00 8D 7D 1E A9 + 	mwa #loader $1e7d	//Patch SIO call 2
-   140 04FA A9 07 8D 7A 1E A9 + 	mwa #cont3 $1e7a	//Patch final instruction
-   141 0504 4C 00 20			jmp $2000		//Execute intro!!
-   142 0507			cont3
-   143 0507 A9 4C 8D A4 81		mva #$4c $81a4		//Skip
-   144 050C A9 21 8D A5 81 A9 + 	mwa #$8221 $81a5	//RAM size detection
-   145
-   146 				//TO DO: patch custom SIO command to $CC00
-   147 				//What to know:
-   148 				//	$230 = SIO drive ID ($31-$34)
-   149 				//	$231 = SIO command ($52 read, $53 status, $50 put, $22 format)
-   150 				//	$232 = SIO aux1 (sector number lo byte)
-   151 				//	$233 = SIO aux2 (sector number hi byte)
-   152 				// Pending: where to locate the buffer ($CD00? or similar.)
-   153
-   154 0516 4C 7E 80			jmp $807e		//Go to the game!
-   155 				.endp
-   156
-   157 A19C			Copy_init3
-   158
-   159 				// Now, we put the loader
-   160 A19C			Copy_Loader
-   161 A19C			.proc	loader , start_loader
-   162 0400 78				sei		// No IRQs!
-   163 0401 AD 0E D4			lda nmien	// Save NMIEN
-   164 0404 48				pha		// Store it
-   165 0405 A9 00			lda #$00	
-   166 0407 8D 0E D4			sta nmien	// No NMIs!
-   167 040A AD 04 03			lda dbuflo	// Take LSB of the address to store
-   168 040D 85 32			sta bufrlo	// Store it on Page Zero!
-   169 040F AD 05 03			lda dbufhi	// Take MSB of the addres to store
-   170 0412 85 33			sta bufrhi	// Store it!
-   171 0414 38				sec		// Let's substract 1
-   172 0415 AD 0A 03			lda daux1	// To the sector number!
-   173 0418 E9 01			sbc #$01
-   174 041A 85 34			sta aux1	// Store it!
-   175 041C AD 0B 03			lda daux2	// Take MSB of the sector to read
-   176 041F E9 00			sbc #$00	// Make sure we store it
-   177 0421 85 35			sta aux2	// on page zero!
-   178 0423 18				clc		// Clear the carry.
-   179 0424 A5 34			lda aux1	// Take new sector number
-   180 0426 48				pha		// save it!
-   181 					.if FLAG_16KB = 0
-   182 0427 29 C0				and #$c0	// Take bits 6 and 7
-   183 					.else
-   184 						and #$80	//In case of 16 kb banks just take bit 7
-   185
-   186 					.endif
-   187 0429 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
-   188 					.if FLAG_16KB = 1
-   189 						lsr	// Or bit 7 to 0 in case of 16kb banks
-   190 					.endif
-   191 042F 85 34			sta aux1	// Store it!
-   192 0431 A5 35			lda aux2	// Take MSB of the sector.
-   193 0433 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
-   194 					.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
-   195 0434 0A					asl		// Done!
-   196 					.endif
-   197 0435 05 34			ora aux1	// Put bits 0 and 1 on from the previous calculation 
-   198 0437 18				clc		// Preparing to add 1
-   199 = 0439			parameter=*+1		// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
-   200 0438 69 01			adc #$01	// Add it!
-   201 043A 85 36			sta c_bank	// Store cartridge bank!
-   202 043C 68				pla		// take previous LSB of the sector number.
-   203 					.if FLAG_16KB = 0
-   204 043D 29 3F				and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
-   205 					.else
-   206 						and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
-   207 					.endif
-   208 043F 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
-   209 0440 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
-   210 0442 85 35			sta aux2	// Store it as MSB from the address to read from the cartridge
-   211 0444 A9 00			lda #$00	// Taking carry
-   212 0446 6A				ror		// To determine if LSB is $00 or $80
-   213 0447 85 34			sta aux1	// Save it!
-   214 0449 A0 7F			ldy #$7F	// Number of bytes to read from cartridge (128)
-   215 044B			loop
-   216 044B A5 36			lda c_bank	// First, we take the cartridge bank calculated
-   217 044D AA				tax		// Transfer to register X
-   218 044E 9D 00 D5			sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
-   219 0451 B1 34			lda (aux1),y	// Read the byte from the cartridge
-   220 0453 48				pha		// Store it before turning off the cartridge
-   221 0454 A9 FF			lda #$FF	// Let's turn the cartridge off
-   222 0456 8D FF D5			sta cart_apaga	// Done!
-   223 0459 68				pla		// Recover byte reading
-   224 045A 91 32			sta (bufrlo),y	// Store it to the final address
-   225 045C 88				dey		// Are we done with the byte copying?
-   226 045D 10 EC			bpl loop	// Not yet
-   227 045F 68				pla		// Ending the cartridge reading process. Now we recover the computer status
-   228 0460 8D 0E D4			sta nmien	// Recover NMIs
-   229 0463 58				cli		// Recover IRQs
-   230 0464 A0 01			ldy #$01	// All done without errors
-   231 0466 8C 03 03			sty dstats	// Save it to DSTATS!
-   232 0469 60				rts		// BYE!!
-   233 046A			fin_loader
-   234 				.endp
+   108 A0FB A9 40 8D 0E D4		mva #$40 nmien
+   109 A100 58				cli
+   110 A101 18				clc	// No errors!
+   111 A102 60				rts	// Done
+   112 				.endp
+   113 A103			Copy_init2
+   114 A103			.proc init2, start_init2
+   115 0480 A2 FF			ldx #$ff
+   116 0482 9A				txs
+   117 0483 8E FF D5			stx cart_apaga
+   118 0486 AD 13 D0 8D FA 03		mva trig3 gintlk
+   119 048C A9 00 8D 04 03 A9 + 	mwa #$600 dbuflo
+   120 0496 A9 01 8D 0A 03 A9 + 	mwa #$01  daux1
+   121 04A0 A9 52 8D 02 03		mva #$52  dcomnd
+   122 04A5 20 00 04			jsr loader		//Read 1st sector
+   123 04A8 A9 00 8D 33 06 A9 + 	mwa #loader $633	//Patch SIO call
+   124 04B2 A9 BF 8D 3E 06 A9 + 	mwa #cont $63e		//Patch final instruction
+   125 04BC 4C 06 06			jmp $606
+   126 04BF			cont
+   127 04BF A9 00			lda #$00
+   128 04C1 8D 2F 02			sta sdmctl
+   129 04C4 8D 00 D4			sta dmactl		//Turn screen off
+   130 04C7 A9 00 8D 46 B0 A9 + 	mwa #loader $b046	//Patch SIO call
+   131 04D1 A9 DE 8D 41 B0 A9 + 	mwa #cont2 $b041	//Patch final instruction
+   132 04DB 4C 00 B0			jmp $b000		//GO!
+   133 04DE			cont2
+   134 04DE A9 22			lda #$22
+   135 04E0 8D 2F 02			sta sdmctl
+   136 04E3 8D 00 D4			sta dmactl		//Turn screen on
+   137 04E6 A9 00 8D 43 1E A9 + 	mwa #loader $1e43	//Patch SIO call 1
+   138 04F0 A9 00 8D 7D 1E A9 + 	mwa #loader $1e7d	//Patch SIO call 2
+   139 04FA A9 07 8D 7A 1E A9 + 	mwa #cont3 $1e7a	//Patch final instruction
+   140 0504 4C 00 20			jmp $2000		//Execute intro!!
+   141 0507			cont3
+   142 0507 A9 4C 8D A4 81		mva #$4c $81a4		//Skip
+   143 050C A9 21 8D A5 81 A9 + 	mwa #$8221 $81a5	//RAM size detection
+   144
+   145 				//TO DO: patch custom SIO command to $CC00
+   146 				//What to know:
+   147 				//	$230 = SIO drive ID ($31-$34)
+   148 				//	$231 = SIO command ($52 read, $53 status, $50 put, $22 format)
+   149 				//	$232 = SIO aux1 (sector number lo byte)
+   150 				//	$233 = SIO aux2 (sector number hi byte)
+   151 				// Pending: where to locate the buffer ($CD00? or similar.)
+   152
+   153 0516 4C 7E 80			jmp $807e		//Go to the game!
+   154 				.endp
+   155
+   156 A19C			Copy_init3
+   157
+   158 				// Now, we put the loader
+   159 A19C			Copy_Loader
+   160 A19C			.proc	loader , start_loader
+   161 0400 78				sei		// No IRQs!
+   162 0401 AD 0E D4			lda nmien	// Save NMIEN
+   163 0404 48				pha		// Store it
+   164 0405 A9 00			lda #$00	
+   165 0407 8D 0E D4			sta nmien	// No NMIs!
+   166 040A AD 04 03			lda dbuflo	// Take LSB of the address to store
+   167 040D 85 32			sta bufrlo	// Store it on Page Zero!
+   168 040F AD 05 03			lda dbufhi	// Take MSB of the addres to store
+   169 0412 85 33			sta bufrhi	// Store it!
+   170 0414 38				sec		// Let's substract 1
+   171 0415 AD 0A 03			lda daux1	// To the sector number!
+   172 0418 E9 01			sbc #$01
+   173 041A 85 34			sta aux1	// Store it!
+   174 041C AD 0B 03			lda daux2	// Take MSB of the sector to read
+   175 041F E9 00			sbc #$00	// Make sure we store it
+   176 0421 85 35			sta aux2	// on page zero!
+   177 0423 18				clc		// Clear the carry.
+   178 0424 A5 34			lda aux1	// Take new sector number
+   179 0426 48				pha		// save it!
+   180 					.if FLAG_16KB = 0
+   181 0427 29 C0				and #$c0	// Take bits 6 and 7
+   182 					.else
+   183 						and #$80	//In case of 16 kb banks just take bit 7
+   184
+   185 					.endif
+   186 0429 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
+   187 					.if FLAG_16KB = 1
+   188 						lsr	// Or bit 7 to 0 in case of 16kb banks
+   189 					.endif
+   190 042F 85 34			sta aux1	// Store it!
+   191 0431 A5 35			lda aux2	// Take MSB of the sector.
+   192 0433 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+   193 					.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
+   194 0434 0A					asl		// Done!
+   195 					.endif
+   196 0435 05 34			ora aux1	// Put bits 0 and 1 on from the previous calculation 
+   197 0437 18				clc		// Preparing to add 1
+   198 = 0439			parameter=*+1		// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+   199 0438 69 01			adc #$01	// Add it!
+   200 043A 85 36			sta c_bank	// Store cartridge bank!
+   201 043C 68				pla		// take previous LSB of the sector number.
+   202 					.if FLAG_16KB = 0
+   203 043D 29 3F				and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+   204 					.else
+   205 						and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
+   206 					.endif
+   207 043F 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+   208 0440 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
+   209 0442 85 35			sta aux2	// Store it as MSB from the address to read from the cartridge
+   210 0444 A9 00			lda #$00	// Taking carry
+   211 0446 6A				ror		// To determine if LSB is $00 or $80
+   212 0447 85 34			sta aux1	// Save it!
+   213 0449 A0 7F			ldy #$7F	// Number of bytes to read from cartridge (128)
+   214 044B			loop
+   215 044B A5 36			lda c_bank	// First, we take the cartridge bank calculated
+   216 044D AA				tax		// Transfer to register X
+   217 044E 9D 00 D5			sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
+   218 0451 B1 34			lda (aux1),y	// Read the byte from the cartridge
+   219 0453 48				pha		// Store it before turning off the cartridge
+   220 0454 A9 FF			lda #$FF	// Let's turn the cartridge off
+   221 0456 8D FF D5			sta cart_apaga	// Done!
+   222 0459 68				pla		// Recover byte reading
+   223 045A 91 32			sta (bufrlo),y	// Store it to the final address
+   224 045C 88				dey		// Are we done with the byte copying?
+   225 045D 10 EC			bpl loop	// Not yet
+   226 045F 68				pla		// Ending the cartridge reading process. Now we recover the computer status
+   227 0460 8D 0E D4			sta nmien	// Recover NMIs
+   228 0463 58				cli		// Recover IRQs
+   229 0464 A0 01			ldy #$01	// All done without errors
+   230 0466 8C 03 03			sty dstats	// Save it to DSTATS!
+   231 0469 60				rts		// BYE!!
+   232 046A			fin_loader
+   233 				.endp
+   234
    235
-   236
-   237 					opt f+		//start filling!
-   238 					
-   239 A206				org end_bank-6-3	//// Put it into the end
-   240 BFF7 4C 00 A0			jmp init
-   241 BFFA 80 04			.word init2		// Second init address first.
-   242 BFFC 00 04			.byte $00,$04		// Parameters to not to call to Disk.
-   243 BFFE 00 A0			.word init		// First init address
-   244 					opt f-			// No more filling!
-   245
-   246 				// Bank 2
-   247 C000				org start_cartridge
-   248 01,A000				lmb #$01
-   249 01,A000			start_atr
-   250 01,A000 01 01 00 06 06 + 	ins "ARD_WIP_rel3.atr",16
-   251 01,09A000		end_atr
-   252
-   253 				//Now we fill till we got cartridge size
-   254
-   255 = 01,090000		total_bytes	= end_atr - start_atr		//Total bytes of ATR
-   256 = 01,2000		bank_size	= end_bank - start_cartridge
-   257
-   258 = 01,0049		banks_used = ((total_bytes+(bank_size-1))/bank_size)+1
-   259 = 01,0037		filler_banks = cart_banks - banks_used
-   260 = 01,0000		filler_bytes = bank_size*(banks_used-1)-total_bytes
-   261
-   262 				; Llenamos los bytes
-   263
-   264 				.if filler_banks > 0
-   265 01,09A000			.sav filler_bytes
-   266 				.else
-   267 					.sav filler_bytes - 6 -8
-   268 				.endif
-   269
-   270 01,09A000		end_file
+   236 					opt f+		//start filling!
+   237 					
+   238 A206				org end_bank-6-3	//// Put it into the end
+   239 BFF7 4C 00 A0			jmp init
+   240 BFFA 80 04			.word init2		// Second init address first.
+   241 BFFC 00 04			.byte $00,$04		// Parameters to not to call to Disk.
+   242 BFFE 00 A0			.word init		// First init address
+   243 					opt f-			// No more filling!
+   244
+   245 				// Bank 2
+   246 C000				org start_cartridge
+   247 01,A000				lmb #$01
+   248 01,A000			start_atr
+   249 01,A000 01 01 00 06 06 + 	ins "ARD_WIP_rel3.atr",16
+   250 01,09A000		end_atr
+   251
+   252 				//Now we fill till we got cartridge size
+   253
+   254 = 01,090000		total_bytes	= end_atr - start_atr		//Total bytes of ATR
+   255 = 01,2000		bank_size	= end_bank - start_cartridge
+   256
+   257 = 01,0049		banks_used = ((total_bytes+(bank_size-1))/bank_size)+1
+   258 = 01,0037		filler_banks = cart_banks - banks_used
+   259 = 01,0000		filler_bytes = bank_size*(banks_used-1)-total_bytes
+   260
+   261 				; Llenamos los bytes
+   262
+   263 				.if filler_banks > 0
+   264 01,09A000			.sav filler_bytes
+   265 				.else
+   266 					.sav filler_bytes - 6 -8
+   267 				.endif
+   268
+   269 01,09A000		end_file
+   270
    271
-   272
-   273 				.if filler_banks > 0
-   274 					.if filler_banks > 1
-   275 						.rept filler_banks-1
-   276 							.SAV BANK_SIZE
-   277 						.ENDR
-   277 						.endr
+   272 				.if filler_banks > 0
+   273 					.if filler_banks > 1
+   274 						.rept filler_banks-1
+   275 							.SAV BANK_SIZE
+   276 						.ENDR
+   276 						.endr
 Source: REPT
-   276 01,09A000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,09C000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,09E000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0A0000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0A2000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0A4000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0A6000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0A8000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0AA000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0AC000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0AE000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0B0000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0B2000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0B4000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0B6000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0B8000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0BA000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0BC000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0BE000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0C0000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0C2000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0C4000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0C6000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0C8000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0CA000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0CC000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0CE000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0D0000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0D2000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0D4000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0D6000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0D8000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0DA000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0DC000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0DE000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0E0000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0E2000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0E4000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0E6000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0E8000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0EA000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0EC000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0EE000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0F0000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0F2000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0F4000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0F6000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0F8000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0FA000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0FC000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,0FE000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,100000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,102000 00 00 00 00 +  			.SAV BANK_SIZE
-   276 01,104000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,09A000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,09C000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,09E000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0A0000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0A2000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0A4000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0A6000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0A8000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0AA000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0AC000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0AE000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0B0000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0B2000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0B4000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0B6000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0B8000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0BA000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0BC000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0BE000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0C0000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0C2000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0C4000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0C6000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0C8000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0CA000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0CC000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0CE000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0D0000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0D2000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0D4000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0D6000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0D8000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0DA000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0DC000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0DE000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0E0000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0E2000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0E4000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0E6000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0E8000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0EA000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0EC000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0EE000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0F0000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0F2000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0F4000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0F6000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0F8000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0FA000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0FC000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,0FE000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,100000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,102000 00 00 00 00 +  			.SAV BANK_SIZE
+   275 01,104000 00 00 00 00 +  			.SAV BANK_SIZE
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   278 					.endif
-   279 01,106000 00 00 00 00 +  	.sav bank_size-6-8
-   280 				.endif
+   277 					.endif
+   278 01,106000 00 00 00 00 +  	.sav bank_size-6-8
+   279 				.endif
+   280
    281
-   282
-   283 01,107FF2 A9 00			lda #$00
-   284 01,107FF4 8D 00 D5		sta $d500
-   285 01,107FF7 4C 00 A0		jmp init
-   286 01,107FFA 00 04			.word start_loader
-   287 01,107FFC 00 04			.byte $00,$04
-   288 01,107FFE F2 BF			.word $bff2
+   282 01,107FF2 A9 00			lda #$00
+   283 01,107FF4 8D 00 D5		sta $d500
+   284 01,107FF7 4C 00 A0		jmp init
+   285 01,107FFA 00 04			.word start_loader
+   286 01,107FFC 00 04			.byte $00,$04
+   287 01,107FFE F2 BF			.word $bff2

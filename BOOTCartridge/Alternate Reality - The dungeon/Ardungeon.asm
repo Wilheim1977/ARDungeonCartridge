@@ -5,9 +5,8 @@
 // *     (C) Guillermo Fuenzalida (Willysoft)         *
 // *                                                  *
 // ****************************************************
-//
 
-
+hola =$00
 
 // First, we will define the extension as .rom
 
@@ -96,7 +95,7 @@ Copy_init
 .proc init
 // 1st stage
 	mva #$ff portb
-	mva #$01 basicf
+	mva #$02 basicf
 	CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
 	CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
 	sei
