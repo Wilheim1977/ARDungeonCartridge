@@ -10,6 +10,7 @@
 
 //History:
 
+//V8: various bug fixes and optimized D1: access
 //V7: Added D1:functionality from physical drive.
 //V6: relocating initialization routines, now it boots faster! Changed title credits.
 //	Removed SPACE BAR waiting routine when saving character.
@@ -367,69 +368,18 @@ backupbuffer =$cff0
 	jne no_drive1	//No!
 	jsr $204e
 	bpl end_drive1
-	inc $230
-	jmp $cc00
+	php
+	lda drivecommand
+	cmp #$53
+	bne no_status
+	plp
+	rts
+no_status
+	inc drivenum
+	plp
+	jmp loader2
 end_drive1
 	rts
-
-	lda drivecommand
-	cmp #$21	//Is it a format?
-	beq go_drive1	//Yes!
-
-	lda drivesechi	//>=256?
-	bne go_drive1	//No! Reading sector 01-255
-	lda driveseclo
-	cmp #$02	//Is it sector 2?
-	bne go_drive1	//No! Sector 1 or 3-255
-
-	ldx #$0f
-loop_savebuffer
-	lda buffer,x
-	sta backupbuffer,x
-	dex
-	bpl loop_savebuffer
-	inx
-loop_save230
-	lda $230,x
-	pha
-	inx
-	cpx #$05
-	bne loop_save230
-	lda #$03
-	sta $232
-	lda #$00
-	sta $233
-	lda #$80
-	sta $234
-	jsr $24a3	//Status D1:
-	php
-	pla
-	sta temp_x
-	ldx #$04
-loop_read230
-	pla
-	sta $230,x
-	dex
-	bpl loop_read230
-	ldx #$0f
-loop_recoverbuffer
-	lda backupbuffer,x
-	sta buffer,x
-	dex
-	bpl loop_recoverbuffer
-	lda temp_x
-	pha
-	plp
-	bpl go_drive1
-	lda #$ff
-	sta $24e
-	inc drivenum
-	ldy #$8a
-	sty status1
-	sty status2
-	rts
-go_drive1
-	jmp $204e	//Yes, continue disk access
 no_drive1
 	cmp #$34	//Is virtual D4: drive?
 	jne drive2	//No! It's the character disk.
@@ -513,11 +463,11 @@ d4_aux2 = d4_aux1+1
 	
 //Let's patch the SPACE BAR from the first menu!	
 	lda #$4c
-	sta $7ebf
+	sta $7ebe
 	lda #$cb
-	sta $7ec0
+	sta $7ebf
 	lda #$7e
-	sta $7ec1
+	sta $7ec0
 	
 d4_2nd
 	lda $762f
@@ -545,18 +495,20 @@ d4_4th
 	cmp #$A9	//LDA?
 	bne d4_5th
 	lda $8405
-	cmp #$31
-	bne d4_5th
+	cmp #$31	//Drive 1?
+	bne d4_5th	//Nope!
 	mwa #char_format $8402
 d4_5th
-	lda $776b
+	lda $77bf
 	cmp #$a9
 	bne d4_end
-	lda $776c
+	lda $77c0
 	cmp #$57
 	bne d4_end
 	lda #$50
 	sta $776c
+	sta $77a3
+	sta $77c0
 
 d4_end
 	ldy #$01	// All done without errors
@@ -724,9 +676,9 @@ d2_end
 	rts		// BYE!!
 
 put_31
-	lda #$31
-	sta drivenum
-	jmp $1818
+	lda #$31	//Put D1: first
+	sta drivenum	
+	jmp $1818	//Go!
 
 char_format
 	jsr $1827
@@ -735,10 +687,10 @@ char_format
 	bpl char_format_si31
 	inx
 char_format_si31
-	stx $8405
+	stx $8405	//Store drive number
 	lda #$4c
 	sta $8421
-	mwa #char_format_error $8422
+	mwa #char_format_error $8422	//Patch format error.
 	rts
 
 char_format_error
