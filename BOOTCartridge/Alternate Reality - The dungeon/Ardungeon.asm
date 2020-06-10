@@ -99,6 +99,12 @@ Copy_init
 // 1st stage
 	mva #$ff portb
 	mva #$01 basicf
+	lda consol
+	and #$04	//OPTION??
+	bne NO_OPTION	//NO!
+	CopyMemory Copy_Exit,$100,(.len Exit)
+	jmp $100
+NO_OPTION
 	CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
 	CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
 	sei
@@ -114,6 +120,24 @@ Copy_init
 	clc	// No errors!
 	rts	// Done
 .endp
+Copy_exit
+.proc exit,$100
+	sei
+	lda #$00
+	sta nmien
+	lda #$ff
+	sta basicf
+	sta cart_apaga
+	lda trig3
+	sta gintlk
+	lda #$40
+	sta nmien
+	cli
+	clc
+	jmp $e474
+	rts
+.endp
+
 Copy_init2
 .proc init2, start_init2
 	ldx #$ff
@@ -283,20 +307,18 @@ buffer = $100
 //	jmp $204e	// Use the disk drive!!!
 drive4	
 	sei		// No IRQs!
-	lda nmien	// Save NMIEN
-	pha		// Store it
 	lda #$00	
 	sta nmien	// No NMIs!
 
 	sec		// Let's substract 1
 	lda driveseclo	// To the sector number!
 	sbc #$01
-	sta aux1	// Store it!
+	sta d4_aux1	// Store it!
 	lda drivesechi	// Take MSB of the sector to read
 	sbc #$00	// Make sure we store it
-	sta aux2	// on page zero!
+	sta d4_aux2	// on page zero!
 	clc		// Clear the carry.
-	lda aux1	// Take new sector number
+	lda d4_aux1	// Take new sector number
 	pha		// save it!
 	.if FLAG_16KB = 0
 		and #$c0	// Take bits 6 and 7
@@ -308,17 +330,17 @@ drive4
 	.if FLAG_16KB = 1
 		lsr	// Or bit 7 to 0 in case of 16kb banks
 	.endif
-	sta aux1	// Store it!
-	lda aux2	// Take MSB of the sector.
+	sta d4_aux1	// Store it!
+	lda d4_aux2	// Take MSB of the sector.
 	asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
 	.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
 		asl		// Done!
 	.endif
-	ora aux1	// Put bits 0 and 1 on from the previous calculation 
+	ora d4_aux1	// Put bits 0 and 1 on from the previous calculation 
 	clc		// Preparing to add 1
-parameter=*+1		// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+d4_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
 	adc #$01	// Add it!
-	sta c_bank	// Store cartridge bank!
+	sta d4_c_bank	// Store cartridge bank!
 	pla		// take previous LSB of the sector number.
 	.if FLAG_16KB = 0
 		and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
@@ -327,26 +349,26 @@ parameter=*+1		// IMPORTANT: the parameter sets the initial side from the disk. 
 	.endif
 	lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
 	ora #>start_cartridge	// Establish the initial address from the cartridge
-	sta aux2	// Store it as MSB from the address to read from the cartridge
+	sta d4_aux2	// Store it as MSB from the address to read from the cartridge
 	lda #$00	// Taking carry
 	ror		// To determine if LSB is $00 or $80
-	sta aux1	// Save it!
+	sta d4_aux1	// Save it!
 	ldy #$7F	// Number of bytes to read from cartridge (128)
-ldacbank
+d4_ldacbank
 	lda #$FF	// First, we take the cartridge bank calculated
-c_bank = ldacbank+1
+d4_c_bank = d4_ldacbank+1
 	tax		// Transfer to register X
 	sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
-loop
+d4_loop
 	lda $FFFF,y	// Read the byte from the cartridge
-aux1 = loop+1
-aux2 = aux1+1
+d4_aux1 = d4_loop+1
+d4_aux2 = d4_aux1+1
 	sta buffer,y	// Store it to the final address
 	dey		// Are we done with the byte copying?
-	bpl loop	// Not yet
+	bpl d4_loop	// Not yet
 	lda #$ff
 	sta cart_apaga
-	pla		// Ending the cartridge reading process. Now we recover the computer status
+	lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
 	sta nmien	// Recover NMIs
 	cli		// Recover IRQs
 	ldy #$01	// All done without errors
@@ -360,9 +382,14 @@ sec_table		//List of initial sectors to write on
 //This table marks the sectors we'll take into account to erase the entire sector.
 //That is, the initial disk sector from we'll erase.
 	.word $0002,$0003,$00bb,$0173,$022b
-bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
-	.word $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-	.word $50,$58,$60,$68,$70,$78
+offset_table
+	.word $0001,$0003,$00bb,$0173,$022b
+sec_offset
+	.word $0000	//Sector offset to substract from original cartridge sector.
+//bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
+	.by $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+bank_table
+	.by $50,$58,$60,$68,$70,$78
 sector_selected
 	.by $00		//By default, sector 0
 bank_selected
@@ -383,60 +410,148 @@ drive1
 	jsr erasebk	//Erase bank $0d (save state 3)
 	lda #$0e
 	jsr erasebk	//Erase bank $0e (save state 4)
+	lda #$ff
+	sta cart_apaga
 	ldy #$01	// All done without errors
 	sty status1	// Save it to DSTATS!
 	sty status2
-	rts
+	rts		//Formatting successful
 no_format
 
 
-	rts		//NEED TO BE REMOVED!!!!
+//	rts		//NEED TO BE REMOVED!!!!
 
 
 	pha		//Store command for a while
 //Now will check if it's the initial sector from the block of the disk.
 //In case it's the initial one, it erases the entire sector
 	ldx #$00	//Counter
-	ldy #$01	//Start with no detection!!
-write_loop1
-	lda drivesechi
-	cmp sec_table+1,x
-	bcs write_loop2
-	bne write_loop1_0
-	lda driveseclo
-	cmp sec_table,x
-	beq write_loop1_1
-write_loop1_0	
-	lda driveseclo
-	cmp sec_table,x
-	bcs write_loop2
-	bcc write_loop1_2
-write_loop1_1		
-	dey		//Detected!!
-write_loop1_2
 	stx sector_selected
-write_loop2
+	ldy #$01	//Start with no detection!!
+d1_loop1
+	lda drivesechi		//Take MSB of the sector
+	cmp sec_table+1,x	//Is it from the table?
+	beq d1_loop1_0 
+	bcc d1_loop2		//NO! It's higher. Don't count this.
+	bne d1_loop1_2		//No! It's lower. Take x to the sector selected.
+
+d1_loop1_0
+	lda driveseclo		//It's equal. Now let's get LSB of the sector.
+	cmp sec_table,x		//Is it from the table?
+	beq d1_loop1_1
+	bcc d1_loop2		//No, it's higher. next sector!
+	bne d1_loop1_2		//No, it's lower. Take x to the sector selected.
+d1_loop1_1
+	dey			//It's the same! Put Y = 0.
+d1_loop1_2
+	stx sector_selected
+d1_loop2
 	inx
 	inx
 	cpx #$0a	//All 5 sectors checked?
-	bne write_loop1	//Not yet!
-	lsr sector_selected	
-	tya		//Is initial sector?
-	bne write_no_initial	//No!
-	lda sector_selected
-	clc
-	adc #$0a	//Sector to delete
-	jsr erasebk	//erase it!
-write_no_initial	//Now we mark which bank to use
-	lda sector_selected
+	bne d1_loop1	//Not yet!
+	ldx sector_selected
+	lda offset_table,x	//Take the offset
+	sta sec_offset		//Store it!
+	lda offset_table+1,x	//MSB offset
+	sta sec_offset+1	//Store it!
+	lsr sector_selected
+	ldx sector_selected
+	lda bank_table,x
+	sta d1_parameter	//Change initial bank to take
+
+drive1_put
+	sei		// No IRQs!
+	lda #$00	
+	sta nmien	// No NMIs!
+
+	sec		// Let's substract 1
+	lda driveseclo	// To the sector number!
+	sbc sec_offset
+	sta d1_read_aux1	// Store it!
+	lda drivesechi	// Take MSB of the sector to read
+	sbc sec_offset+1	// Make sure we store it
+	sta d1_read_aux2	// on page zero!
+	clc		// Clear the carry.
+	lda d1_read_aux1	// Take new sector number
+	pha		// save it!
+	and #$c0	// Take bits 6 and 7
+	:6 lsr		// Move it to bit 0 and 1!
+	sta d1_read_aux1	// Store it!
+	lda d1_read_aux2	// Take MSB of the sector.
+	asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+	asl		// Done!
+	ora d1_read_aux1	// Put bits 0 and 1 on from the previous calculation 
+	clc		// Preparing to add 1
+d1_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+	adc #$01	// Add it!
+	sta d1_read_c_bank	// Store cartridge bank!
+	sta d1_write_c_bank
+	pla		// take previous LSB of the sector number.
+	and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+	lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+	ora #>start_cartridge	// Establish the initial address from the cartridge
+	sta d1_read_aux2	// Store it as MSB from the address to read from the cartridge
+	sta d1_write_aux2
+	lda #$00	// Taking carry
+	ror		// To determine if LSB is $00 or $80
+	sta d1_read_aux1	// Save it!
+	sta d1_write_aux1
+
+//Now we start to copy the bytes (read/write)
+
+	ldx #$7f
+	pla		//Restore command
+	cmp #$57	//Write?
+	beq d1_write
+d1_read_ldacbank
+	lda #$ff
+d1_read_c_bank =d1_read_ldacbank+1
+	tay
+	sta $d500,y
+d1_read_loop
+	lda $FFFF,x	// Read the byte from the cartridge
+d1_read_aux1 = d1_read_loop+1
+d1_read_aux2 = d1_read_aux1+1
+	sta buffer,x	// Store it to the final address
+	dex		// Are we done with the byte copying?
+	bpl d1_read_loop	// Not yet
+	bmi d1_end	//Let's finish
+
+d1_write
+	tya		//Is is first sector?
+	bne d1_write_cont	//Nope, let's continue
+	lda sector_selected	
 	clc
 	adc #$0a
-	
+	jsr erasebk		//Erase the bank and start writing!
+d1_write_cont
 
-	cmp #$57
-	jne read
-read
-//It's a write!
+d1_write_loop
+d1_write_ldacbank
+	lda #$ff
+d1_write_c_bank =d1_write_ldacbank+1
+	jsr enable_write
+	lda buffer,x
+d1_write_sta	
+	sta $FFFF,x
+d1_write_aux1 = d1_write_sta+1
+d1_write_aux2 = d1_write_aux1+1
+	dex
+	bpl d1_write_loop
+
+d1_end
+	lda #$ff
+	sta cart_apaga
+	lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
+	sta nmien	// Recover NMIs
+	cli		// Recover IRQs
+	ldy #$01	// All done without errors
+	sty status1	// Save it to DSTATS!
+	sty status2
+	rts		// BYE!!
+
+
 
 fcode
 setsec
@@ -463,10 +578,28 @@ wr2AAA
 	sta $d541
 	sta $aaaa
 	rts
-
-
-
+	
+enable_write
+	stx temp_x
+	pha
+	jsr cmd_unlock
+	lda #$a0
+	jsr wr5555
+enable_write_cont
+	pla
+	tax
+	sta $d500,x
+	ldx temp_x
+	rts
+	
+enable_read
+	pha
+	jsr cmd_unlock
+	lda #$f0
+	jsr wr5555
+	jmp enable_write_cont
 erasebk
+	stx temp_x
 	pha
 	jsr cmd_unlock		//First two cycles!
 	lda #$80
@@ -493,15 +626,18 @@ poll_write
 	bne @poll_again
 	lda #$ff
 	sta cart_apaga
+	ldx temp_x
 	rts
 pollsame
 	.by $00
+temp_x	.by $00
 	
 //	icl "fcode.s"	//Courtesy from Wrathchild at Atariage. Thanks!
 
 chipmask
 	.byte $00
-
+final_greeting
+	.sb "Cartridge version (C) 2020 by Guillermo Fuenzalida"
 fin_loader
 .endp
 
