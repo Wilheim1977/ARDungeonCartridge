@@ -7,6 +7,8 @@
 // ****************************************************
 
 
+
+
 // First, we will define the extension as .rom
 
 ;	@com.wudsn.ide.asm.outputfileextension=.rom
@@ -74,6 +76,8 @@ TYPE_CART =1
 //Parameters to init the loader
 
 start_loader = $0400
+start_loader2 = $cc00		//Dungeon loader.
+start_cart_io =$cd00		//Cartridge IO routines.
 start_init2 = $480
 
 
@@ -105,6 +109,7 @@ Copy_init
 	CopyMemory $600,$c000,$1000				//Put OS on upper RAM
 	CopyMemory $1600,$d800,$2800
 	mva #$40 nmien
+	CopyMemory Copy_loader2, start_loader2,(.len loader2)
 	cli
 	clc	// No errors!
 	rts	// Done
@@ -121,14 +126,24 @@ Copy_init2
 	jsr loader		//Read 1st sector
 	mwa #loader $633	//Patch SIO call
 	mwa #cont $63e		//Patch final instruction
+	mva #$70 $62e
 	jmp $606
 cont
-	lda #$00
-	sta sdmctl
-	sta dmactl		//Turn screen off
-	mwa #loader $b046	//Patch SIO call
-	mwa #cont2 $b041	//Patch final instruction
-	jmp $b000		//GO!
+;	lda #$00
+;	sta sdmctl
+;	sta dmactl		//Turn screen off
+	lda #$70
+	sta $7005
+	sta $7019
+	sta $7020
+	sta $703f
+	sta $707e
+	lda #$7d
+	sta $700f
+	sta $7067
+	mwa #loader $7046	//Patch SIO call
+	mwa #cont2 $7041	//Patch final instruction
+	jmp $7000		//GO!
 cont2
 	lda #$22
 	sta sdmctl
@@ -138,6 +153,10 @@ cont2
 	mwa #cont3 $1e7a	//Patch final instruction
 	jmp $2000		//Execute intro!!
 cont3
+	lda #$20		//NO "48K" display!!
+	sta $818f
+	sta $8190
+	sta $8191		//Done!
 	mva #$4c $81a4		//Skip
 	mwa #$8221 $81a5	//RAM size detection
 
@@ -149,6 +168,20 @@ cont3
 //	$233 = SIO aux2 (sector number hi byte)
 // Pending: where to locate the buffer ($CD00? or similar.)
 
+	mwa #loader2 $24a1
+	mva #$02 $80e1		//Skip Virtual D4: detection
+	lda #$4c		//NOPs to force detection on D1:
+	sta $80e0
+	mwa #$810d $80e1
+	lda #$ea		//Store NOPs
+	sta $2893		//Forces no checksum
+	sta $2894		//Forces no checksum
+	sta $288b		//Forces no checksum
+	sta $288c		//Forces no checksum
+	lda #$00
+	sta $24e		//Virtual D1: enabled!
+	sta $251		//Virtual D4: enabled! 
+	mva #$34 $810e		//Use D4: as main drive
 	jmp $807e		//Go to the game!
 .endp
 
@@ -231,6 +264,97 @@ loop
 fin_loader
 .endp
 
+Copy_loader2
+.proc	loader2 , start_loader2
+
+;aux1 = $02
+;aux2 = aux1+1
+drivenum =$230
+drivecommand =$231
+driveseclo =$232
+drivesechi =$233
+status1 = $23d
+status2 = $246
+buffer = $100
+	lda drivenum
+	cmp #$34
+	beq si_drive
+	jmp $204e	// Use the disk drive!!!
+
+si_drive	
+	sei		// No IRQs!
+	lda nmien	// Save NMIEN
+	pha		// Store it
+	lda #$00	
+	sta nmien	// No NMIs!
+
+	sec		// Let's substract 1
+	lda driveseclo	// To the sector number!
+	sbc #$01
+	sta aux1	// Store it!
+	lda drivesechi	// Take MSB of the sector to read
+	sbc #$00	// Make sure we store it
+	sta aux2	// on page zero!
+	clc		// Clear the carry.
+	lda aux1	// Take new sector number
+	pha		// save it!
+	.if FLAG_16KB = 0
+		and #$c0	// Take bits 6 and 7
+	.else
+		and #$80	//In case of 16 kb banks just take bit 7
+
+	.endif
+	:6 lsr		// Move it to bit 0 and 1!
+	.if FLAG_16KB = 1
+		lsr	// Or bit 7 to 0 in case of 16kb banks
+	.endif
+	sta aux1	// Store it!
+	lda aux2	// Take MSB of the sector.
+	asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+	.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
+		asl		// Done!
+	.endif
+	ora aux1	// Put bits 0 and 1 on from the previous calculation 
+	clc		// Preparing to add 1
+parameter=*+1		// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+	adc #$01	// Add it!
+	sta c_bank	// Store cartridge bank!
+	pla		// take previous LSB of the sector number.
+	.if FLAG_16KB = 0
+		and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+	.else
+		and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
+	.endif
+	lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+	ora #>start_cartridge	// Establish the initial address from the cartridge
+	sta aux2	// Store it as MSB from the address to read from the cartridge
+	lda #$00	// Taking carry
+	ror		// To determine if LSB is $00 or $80
+	sta aux1	// Save it!
+	ldy #$7F	// Number of bytes to read from cartridge (128)
+ldacbank
+	lda #$FF	// First, we take the cartridge bank calculated
+c_bank = ldacbank+1
+	tax		// Transfer to register X
+	sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
+loop
+	lda $FFFF,y	// Read the byte from the cartridge
+aux1 = loop+1
+aux2 = aux1+1
+	sta buffer,y	// Store it to the final address
+	dey		// Are we done with the byte copying?
+	bpl loop	// Not yet
+	lda #$ff
+	sta cart_apaga
+	pla		// Ending the cartridge reading process. Now we recover the computer status
+	sta nmien	// Recover NMIs
+	cli		// Recover IRQs
+	ldy #$01	// All done without errors
+	sty status1	// Save it to DSTATS!
+	sty status2
+	rts		// BYE!!
+fin_loader
+.endp
 
 	opt f+		//start filling!
 	
@@ -281,6 +405,6 @@ end_file
 	lda #$00
 	sta $d500
 	jmp init
-	.word start_loader
+	.word init2
 	.byte $00,$04
 	.word $bff2
