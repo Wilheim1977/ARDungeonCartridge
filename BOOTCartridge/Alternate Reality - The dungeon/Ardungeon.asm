@@ -277,11 +277,11 @@ status1 = $23d
 status2 = $246
 buffer = $100
 	lda drivenum
-	cmp #$34
-	beq si_drive
-	jmp $204e	// Use the disk drive!!!
-
-si_drive	
+	cmp #$34	//Is virtual D4: drive?
+	jne drive1	//No! It's the character disk.
+//	beq drive4
+//	jmp $204e	// Use the disk drive!!!
+drive4	
 	sei		// No IRQs!
 	lda nmien	// Save NMIEN
 	pha		// Store it
@@ -353,6 +353,155 @@ aux2 = aux1+1
 	sty status1	// Save it to DSTATS!
 	sty status2
 	rts		// BYE!!
+
+
+sec_table		//List of initial sectors to write on 
+
+//This table marks the sectors we'll take into account to erase the entire sector.
+//That is, the initial disk sector from we'll erase.
+	.word $0002,$0003,$00bb,$0173,$022b
+bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
+	.word $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+	.word $50,$58,$60,$68,$70,$78
+sector_selected
+	.by $00		//By default, sector 0
+bank_selected
+	.by $00		//By default, bank 0
+drive1
+	lda drivecommand
+	cmp #$21	//Is it a format command?
+	jne no_format	//No! It's a write or read
+
+//Let's format it! Will erase all sectors for D1:
+	lda #$0a
+	jsr erasebk	//Erase bank $0a (Header info)
+	lda #$0b
+	jsr erasebk	//Erase bank $0b (save state 1)
+	lda #$0c
+	jsr erasebk	//Erase bank $0c (save state 2)
+	lda #$0d
+	jsr erasebk	//Erase bank $0d (save state 3)
+	lda #$0e
+	jsr erasebk	//Erase bank $0e (save state 4)
+	ldy #$01	// All done without errors
+	sty status1	// Save it to DSTATS!
+	sty status2
+	rts
+no_format
+
+
+	rts		//NEED TO BE REMOVED!!!!
+
+
+	pha		//Store command for a while
+//Now will check if it's the initial sector from the block of the disk.
+//In case it's the initial one, it erases the entire sector
+	ldx #$00	//Counter
+	ldy #$01	//Start with no detection!!
+write_loop1
+	lda drivesechi
+	cmp sec_table+1,x
+	bcs write_loop2
+	bne write_loop1_0
+	lda driveseclo
+	cmp sec_table,x
+	beq write_loop1_1
+write_loop1_0	
+	lda driveseclo
+	cmp sec_table,x
+	bcs write_loop2
+	bcc write_loop1_2
+write_loop1_1		
+	dey		//Detected!!
+write_loop1_2
+	stx sector_selected
+write_loop2
+	inx
+	inx
+	cpx #$0a	//All 5 sectors checked?
+	bne write_loop1	//Not yet!
+	lsr sector_selected	
+	tya		//Is initial sector?
+	bne write_no_initial	//No!
+	lda sector_selected
+	clc
+	adc #$0a	//Sector to delete
+	jsr erasebk	//erase it!
+write_no_initial	//Now we mark which bank to use
+	lda sector_selected
+	clc
+	adc #$0a
+	
+
+	cmp #$57
+	jne read
+read
+//It's a write!
+
+fcode
+setsec
+	and #$0F	//Only $00-$0F allowed
+	clc		//Just to not set bit 7 to 1 accidentally
+	rol		//*2
+	rol		//*4
+	rol		//*8
+	tax
+	sta $d500,x	//Change bank!
+	rts
+
+wr5555
+	sta $d542
+	sta $b555
+	rts
+
+cmd_unlock
+	lda #$AA
+	jsr wr5555
+	lda #$55
+
+wr2AAA
+	sta $d541
+	sta $aaaa
+	rts
+
+
+
+erasebk
+	pha
+	jsr cmd_unlock		//First two cycles!
+	lda #$80
+	jsr wr5555		//Third cycle!
+	jsr cmd_unlock		//Fourth and fifth cycles!
+	pla
+	jsr setsec
+	lda #$30		//Sixth and final cycle!
+	sta start_cartridge	//Erase!
+	
+
+poll_write
+	lda #$00
+	sta pollsame
+@poll_again
+	lda start_cartridge
+	cmp start_cartridge
+	bne poll_write
+	cmp start_cartridge
+	bne poll_write
+	cmp start_cartridge
+	bne poll_write
+	inc pollsame
+	bne @poll_again
+	lda #$ff
+	sta cart_apaga
+	rts
+pollsame
+	.by $00
+	
+//	icl "fcode.s"	//Courtesy from Wrathchild at Atariage. Thanks!
+
+chipmask
+	.byte $00
+
 fin_loader
 .endp
 

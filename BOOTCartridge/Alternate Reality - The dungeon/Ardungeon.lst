@@ -1377,7 +1377,7 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
      4 = 00FA			copyMemCounter	= 250
     10 A00A A0 00			      ldy #0
     13 A00C			copyMemLoop1
-    14 A00C B9 03 A2				lda COPY_LOADER,y
+    14 A00C B9 29 A2				lda COPY_LOADER,y
     15 A00F 99 00 04				sta START_LOADER,y
     16 A012 C8					iny
     18 A013 C0 6A					cpy #<(.LEN LOADER)
@@ -1390,7 +1390,7 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
      4 = 00FA			copyMemCounter	= 250
     10 A017 A0 00			      ldy #0
     13 A019			copyMemLoop1
-    14 A019 B9 10 A1				lda COPY_INIT2,y
+    14 A019 B9 36 A1				lda COPY_INIT2,y
     15 A01C 99 80 04				sta INIT2,y
     16 A01F C8					iny
     18 A020 C0 F3					cpy #<(.LEN INIT2)
@@ -1546,19 +1546,41 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDS
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
     10 A100 A0 00			      ldy #0
-    13 A102			copyMemLoop1
-    14 A102 B9 6D A2				lda COPY_LOADER2,y
-    15 A105 99 00 CC				sta START_LOADER2,y
-    16 A108 C8					iny
-    18 A109 C0 76					cpy #<(.LEN LOADER2)
-    20 A10B D0 F5				bne copyMemLoop1
+    23 A102 A9 93			        lda #<COPY_LOADER2
+    24 A104 85 FE			        sta copyMemPtr1
+    25 A106 A9 A2			        lda #>COPY_LOADER2
+    26 A108 85 FF			        sta copyMemPtr1+1
+    27 A10A A9 00				lda #<START_LOADER2
+    28 A10C 85 FC				sta copyMemPtr2
+    29 A10E A9 CC				lda #>START_LOADER2
+    30 A110 85 FD				sta copyMemPtr2+1
+    31 A112 A9 69				lda #<(.LEN LOADER2)
+    32 A114 85 FA				sta copyMemCounter
+    33 A116 A9 01				lda #>(.LEN LOADER2)
+    34 A118 85 FB				sta copyMemCounter+1
+    36 A11A			copyMemLoop2
+    37 A11A B1 FE				lda (copyMemPtr1),y
+    38 A11C 91 FC				sta (copyMemPtr2),y
+    39 A11E C8					iny
+    40 A11F D0 04				bne copyMemB1
+    41 A121 E6 FF				inc copyMemPtr1+1
+    42 A123 E6 FD				inc copyMemPtr2+1
+    43 A125			copyMemB1
+    44 A125 A5 FA				lda copyMemCounter
+    45 A127 D0 02				bne copyMemB2
+    46 A129 C6 FB				dec copyMemCounter+1
+    47 A12B			copyMemB2
+    48 A12B C6 FA				dec copyMemCounter
+    50 A12D A5 FA				lda copyMemCounter
+    51 A12F 05 FB				ora copyMemCounter+1
+    52 A131 D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   113 A10D 58				cli
-   114 A10E 18				clc	// No errors!
-   115 A10F 60				rts	// Done
+   113 A133 58				cli
+   114 A134 18				clc	// No errors!
+   115 A135 60				rts	// Done
    116 				.endp
-   117 A110			Copy_init2
-   118 A110			.proc init2, start_init2
+   117 A136			Copy_init2
+   118 A136			.proc init2, start_init2
    119 0480 A2 FF			ldx #$ff
    120 0482 9A				txs
    121 0483 8E FF D5			stx cart_apaga
@@ -1628,11 +1650,11 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    185 0570 4C 7E 80			jmp $807e		//Go to the game!
    186 				.endp
    187
-   188 A203			Copy_init3
+   188 A229			Copy_init3
    189
    190 				// Now, we put the loader
-   191 A203			Copy_Loader
-   192 A203			.proc	loader , start_loader
+   191 A229			Copy_Loader
+   192 A229			.proc	loader , start_loader
    193 0400 78				sei		// No IRQs!
    194 0401 AD 0E D4			lda nmien	// Save NMIEN
    195 0404 48				pha		// Store it
@@ -1707,8 +1729,8 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    264 046A			fin_loader
    265 				.endp
    266
-   267 A26D			Copy_loader2
-   268 A26D			.proc	loader2 , start_loader2
+   267 A293			Copy_loader2
+   268 A293			.proc	loader2 , start_loader2
    269
    270 				;aux1 = $02
    271 				;aux2 = aux1+1
@@ -1720,11 +1742,11 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    277 = 0246			status2 = $246
    278 = 0100			buffer = $100
    279 CC00 AD 30 02			lda drivenum
-   280 CC03 C9 34			cmp #$34
-   281 CC05 F0 03			beq si_drive
-   282 CC07 4C 4E 20			jmp $204e	// Use the disk drive!!!
-   283
-   284 CC0A			si_drive	
+   280 CC03 C9 34			cmp #$34	//Is virtual D4: drive?
+   281 CC05 F0 03 4C A2 CC		jne drive1	//No! It's the character disk.
+   282 				//	beq drive4
+   283 				//	jmp $204e	// Use the disk drive!!!
+   284 CC0A			drive4	
    285 CC0A 78				sei		// No IRQs!
    286 CC0B AD 0E D4			lda nmien	// Save NMIEN
    287 CC0E 48				pha		// Store it
@@ -1796,115 +1818,264 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    353 CC6F 8C 3D 02			sty status1	// Save it to DSTATS!
    354 CC72 8C 46 02			sty status2
    355 CC75 60				rts		// BYE!!
-   356 CC76			fin_loader
-   357 				.endp
-   358
-   359 					opt f+		//start filling!
-   360 					
-   361 A2E3				org end_bank-6-3	//// Put it into the end
-   362 BFF7 4C 00 A0			jmp init
-   363 BFFA 80 04			.word init2		// Second init address first.
-   364 BFFC 00 04			.byte $00,$04		// Parameters to not to call to Disk.
-   365 BFFE 00 A0			.word init		// First init address
-   366 					opt f-			// No more filling!
-   367
-   368 				// Bank 2
-   369 C000				org start_cartridge
-   370 01,A000				lmb #$01
-   371 01,A000			start_atr
-   372 01,A000 01 01 00 06 06 + 	ins "ARD_WIP_rel3.atr",16
-   373 01,09A000		end_atr
+   356
+   357
+   358 CC76			sec_table		//List of initial sectors to write on 
+   359
+   360 				//This table marks the sectors we'll take into account to erase the entire sector.
+   361 				//That is, the initial disk sector from we'll erase.
+   362 CC76 02 00 03 00 BB 00 + 	.word $0002,$0003,$00bb,$0173,$022b
+   363 CC80			bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
+   364 CC80 00 00 00 00 00 00 + 	.word $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   365 CC94 50 00 58 00 60 00 + 	.word $50,$58,$60,$68,$70,$78
+   366 CCA0			sector_selected
+   367 CCA0 00				.by $00		//By default, sector 0
+   368 CCA1			bank_selected
+   369 CCA1 00				.by $00		//By default, bank 0
+   370 CCA2			drive1
+   371 CCA2 AD 31 02			lda drivecommand
+   372 CCA5 C9 21			cmp #$21	//Is it a format command?
+   373 CCA7 D0 22			jne no_format	//No! It's a write or read
    374
-   375 				//Now we fill till we got cartridge size
-   376
-   377 = 01,090000		total_bytes	= end_atr - start_atr		//Total bytes of ATR
-   378 = 01,2000		bank_size	= end_bank - start_cartridge
-   379
-   380 = 01,0049		banks_used = ((total_bytes+(bank_size-1))/bank_size)+1
-   381 = 01,0037		filler_banks = cart_banks - banks_used
-   382 = 01,0000		filler_bytes = bank_size*(banks_used-1)-total_bytes
-   383
-   384 				; Llenamos los bytes
-   385
-   386 				.if filler_banks > 0
-   387 01,09A000			.sav filler_bytes
-   388 				.else
-   389 					.sav filler_bytes - 6 -8
-   390 				.endif
+   375 				//Let's format it! Will erase all sectors for D1:
+   376 CCA9 A9 0A			lda #$0a
+   377 CCAB 20 30 CD			jsr erasebk	//Erase bank $0a (Header info)
+   378 CCAE A9 0B			lda #$0b
+   379 CCB0 20 30 CD			jsr erasebk	//Erase bank $0b (save state 1)
+   380 CCB3 A9 0C			lda #$0c
+   381 CCB5 20 30 CD			jsr erasebk	//Erase bank $0c (save state 2)
+   382 CCB8 A9 0D			lda #$0d
+   383 CCBA 20 30 CD			jsr erasebk	//Erase bank $0d (save state 3)
+   384 CCBD A9 0E			lda #$0e
+   385 CCBF 20 30 CD			jsr erasebk	//Erase bank $0e (save state 4)
+   386 CCC2 A0 01			ldy #$01	// All done without errors
+   387 CCC4 8C 3D 02			sty status1	// Save it to DSTATS!
+   388 CCC7 8C 46 02			sty status2
+   389 CCCA 60				rts
+   390 CCCB			no_format
    391
-   392 01,09A000		end_file
-   393
+   392
+   393 CCCB 60				rts		//NEED TO BE REMOVED!!!!
    394
-   395 				.if filler_banks > 0
-   396 					.if filler_banks > 1
-   397 						.rept filler_banks-1
-   398 							.SAV BANK_SIZE
-   399 						.ENDR
-   399 						.endr
+   395
+   396 CCCC 48				pha		//Store command for a while
+   397 				//Now will check if it's the initial sector from the block of the disk.
+   398 				//In case it's the initial one, it erases the entire sector
+   399 CCCD A2 00			ldx #$00	//Counter
+   400 CCCF A0 01			ldy #$01	//Start with no detection!!
+   401 CCD1			write_loop1
+   402 CCD1 AD 33 02			lda drivesechi
+   403 CCD4 DD 77 CC			cmp sec_table+1,x
+   404 CCD7 B0 18			bcs write_loop2
+   405 CCD9 D0 08			bne write_loop1_0
+   406 CCDB AD 32 02			lda driveseclo
+   407 CCDE DD 76 CC			cmp sec_table,x
+   408 CCE1 F0 0A			beq write_loop1_1
+   409 CCE3			write_loop1_0	
+   410 CCE3 AD 32 02			lda driveseclo
+   411 CCE6 DD 76 CC			cmp sec_table,x
+   412 CCE9 B0 06			bcs write_loop2
+   413 CCEB 90 01			bcc write_loop1_2
+   414 CCED			write_loop1_1		
+   415 CCED 88				dey		//Detected!!
+   416 CCEE			write_loop1_2
+   417 CCEE 8E A0 CC			stx sector_selected
+   418 CCF1			write_loop2
+   419 CCF1 E8				inx
+   420 CCF2 E8				inx
+   421 CCF3 E0 0A			cpx #$0a	//All 5 sectors checked?
+   422 CCF5 D0 DA			bne write_loop1	//Not yet!
+   423 CCF7 4E A0 CC			lsr sector_selected	
+   424 CCFA 98				tya		//Is initial sector?
+   425 CCFB D0 09			bne write_no_initial	//No!
+   426 CCFD AD A0 CC			lda sector_selected
+   427 CD00 18				clc
+   428 CD01 69 0A			adc #$0a	//Sector to delete
+   429 CD03 20 30 CD			jsr erasebk	//erase it!
+   430 CD06			write_no_initial	//Now we mark which bank to use
+   431 CD06 AD A0 CC			lda sector_selected
+   432 CD09 18				clc
+   433 CD0A 69 0A			adc #$0a
+   434 					
+   435
+   436 CD0C C9 57			cmp #$57
+   437 CD0E D0 00			jne read
+   438 CD10			read
+   439 				//It's a write!
+   440
+   441 CD10			fcode
+   442 CD10			setsec
+   443 CD10 29 0F			and #$0F	//Only $00-$0F allowed
+   444 CD12 18				clc		//Just to not set bit 7 to 1 accidentally
+   445 CD13 2A				rol		//*2
+   446 CD14 2A				rol		//*4
+   447 CD15 2A				rol		//*8
+   448 CD16 AA				tax
+   449 CD17 9D 00 D5			sta $d500,x	//Change bank!
+   450 CD1A 60				rts
+   451
+   452 CD1B			wr5555
+   453 CD1B 8D 42 D5			sta $d542
+   454 CD1E 8D 55 B5			sta $b555
+   455 CD21 60				rts
+   456
+   457 CD22			cmd_unlock
+   458 CD22 A9 AA			lda #$AA
+   459 CD24 20 1B CD			jsr wr5555
+   460 CD27 A9 55			lda #$55
+   461
+   462 CD29			wr2AAA
+   463 CD29 8D 41 D5			sta $d541
+   464 CD2C 8D AA AA			sta $aaaa
+   465 CD2F 60				rts
+   466
+   467
+   468
+   469 CD30			erasebk
+   470 CD30 48				pha
+   471 CD31 20 22 CD			jsr cmd_unlock		//First two cycles!
+   472 CD34 A9 80			lda #$80
+   473 CD36 20 1B CD			jsr wr5555		//Third cycle!
+   474 CD39 20 22 CD			jsr cmd_unlock		//Fourth and fifth cycles!
+   475 CD3C 68				pla
+   476 CD3D 20 10 CD			jsr setsec
+   477 CD40 A9 30			lda #$30		//Sixth and final cycle!
+   478 CD42 8D 00 A0			sta start_cartridge	//Erase!
+   479 					
+   480
+   481 CD45			poll_write
+   482 CD45 A9 00			lda #$00
+   483 CD47 8D 67 CD			sta pollsame
+   484 CD4A			@poll_again
+   485 CD4A AD 00 A0			lda start_cartridge
+   486 CD4D CD 00 A0			cmp start_cartridge
+   487 CD50 D0 F3			bne poll_write
+   488 CD52 CD 00 A0			cmp start_cartridge
+   489 CD55 D0 EE			bne poll_write
+   490 CD57 CD 00 A0			cmp start_cartridge
+   491 CD5A D0 E9			bne poll_write
+   492 CD5C EE 67 CD			inc pollsame
+   493 CD5F D0 E9			bne @poll_again
+   494 CD61 A9 FF			lda #$ff
+   495 CD63 8D FF D5			sta cart_apaga
+   496 CD66 60				rts
+   497 CD67			pollsame
+   498 CD67 00				.by $00
+   499 					
+   500 				//	icl "fcode.s"	//Courtesy from Wrathchild at Atariage. Thanks!
+   501
+   502 CD68			chipmask
+   503 CD68 00				.byte $00
+   504
+   505 CD69			fin_loader
+   506 				.endp
+   507
+   508 					opt f+		//start filling!
+   509 					
+   510 A3FC				org end_bank-6-3	//// Put it into the end
+   511 BFF7 4C 00 A0			jmp init
+   512 BFFA 80 04			.word init2		// Second init address first.
+   513 BFFC 00 04			.byte $00,$04		// Parameters to not to call to Disk.
+   514 BFFE 00 A0			.word init		// First init address
+   515 					opt f-			// No more filling!
+   516
+   517 				// Bank 2
+   518 C000				org start_cartridge
+   519 01,A000				lmb #$01
+   520 01,A000			start_atr
+   521 01,A000 01 01 00 06 06 + 	ins "ARD_WIP_rel3.atr",16
+   522 01,09A000		end_atr
+   523
+   524 				//Now we fill till we got cartridge size
+   525
+   526 = 01,090000		total_bytes	= end_atr - start_atr		//Total bytes of ATR
+   527 = 01,2000		bank_size	= end_bank - start_cartridge
+   528
+   529 = 01,0049		banks_used = ((total_bytes+(bank_size-1))/bank_size)+1
+   530 = 01,0037		filler_banks = cart_banks - banks_used
+   531 = 01,0000		filler_bytes = bank_size*(banks_used-1)-total_bytes
+   532
+   533 				; Llenamos los bytes
+   534
+   535 				.if filler_banks > 0
+   536 01,09A000			.sav filler_bytes
+   537 				.else
+   538 					.sav filler_bytes - 6 -8
+   539 				.endif
+   540
+   541 01,09A000		end_file
+   542
+   543
+   544 				.if filler_banks > 0
+   545 					.if filler_banks > 1
+   546 						.rept filler_banks-1
+   547 							.SAV BANK_SIZE
+   548 						.ENDR
+   548 						.endr
 Source: REPT
-   398 01,09A000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,09C000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,09E000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0A0000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0A2000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0A4000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0A6000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0A8000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0AA000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0AC000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0AE000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0B0000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0B2000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0B4000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0B6000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0B8000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0BA000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0BC000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0BE000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0C0000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0C2000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0C4000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0C6000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0C8000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0CA000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0CC000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0CE000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0D0000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0D2000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0D4000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0D6000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0D8000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0DA000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0DC000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0DE000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0E0000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0E2000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0E4000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0E6000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0E8000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0EA000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0EC000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0EE000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0F0000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0F2000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0F4000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0F6000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0F8000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0FA000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0FC000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,0FE000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,100000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,102000 00 00 00 00 +  			.SAV BANK_SIZE
-   398 01,104000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,09A000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,09C000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,09E000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0A0000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0A2000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0A4000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0A6000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0A8000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0AA000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0AC000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0AE000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0B0000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0B2000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0B4000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0B6000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0B8000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0BA000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0BC000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0BE000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0C0000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0C2000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0C4000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0C6000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0C8000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0CA000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0CC000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0CE000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0D0000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0D2000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0D4000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0D6000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0D8000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0DA000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0DC000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0DE000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0E0000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0E2000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0E4000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0E6000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0E8000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0EA000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0EC000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0EE000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0F0000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0F2000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0F4000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0F6000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0F8000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0FA000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0FC000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,0FE000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,100000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,102000 00 00 00 00 +  			.SAV BANK_SIZE
+   547 01,104000 00 00 00 00 +  			.SAV BANK_SIZE
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   400 					.endif
-   401 01,106000 00 00 00 00 +  	.sav bank_size-6-8
-   402 				.endif
-   403
-   404
-   405 01,107FF2 A9 00			lda #$00
-   406 01,107FF4 8D 00 D5		sta $d500
-   407 01,107FF7 4C 00 A0		jmp init
-   408 01,107FFA 80 04			.word init2
-   409 01,107FFC 00 04			.byte $00,$04
-   410 01,107FFE F2 BF			.word $bff2
+   549 					.endif
+   550 01,106000 00 00 00 00 +  	.sav bank_size-6-8
+   551 				.endif
+   552
+   553
+   554 01,107FF2 A9 00			lda #$00
+   555 01,107FF4 8D 00 D5		sta $d500
+   556 01,107FF7 4C 00 A0		jmp init
+   557 01,107FFA 80 04			.word init2
+   558 01,107FFC 00 04			.byte $00,$04
+   559 01,107FFE F2 BF			.word $bff2
