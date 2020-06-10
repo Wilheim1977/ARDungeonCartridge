@@ -1,0 +1,2419 @@
+mads 2.0.6 build 58 (28 Jan 17)
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+     1 				// ****************************************************
+     2 				// *                                                  *
+     3 				// * Generic BOOT Cartridge routine                   *
+     4 				// *                                                  *
+     5 				// *     (C) Guillermo Fuenzalida (Willysoft)         *
+     6 				// *                                                  *
+     7 				// ****************************************************
+     8
+     9 				//Alternate Reality: The Dungeon Cartridge conversion
+    10
+    11 				//History:
+    12
+    13 				//V7: Added D1:functionality from physical drive.
+    14 				//V6: relocating initialization routines, now it boots faster! Changed title credits.
+    15 				//	Removed SPACE BAR waiting routine when saving character.
+    16 				//	Removed SPACE BAR waiting routing when resuming character.
+    17 				//V5: added OPTION key detection. If pressed, then boots the disk. Optimizing booting sequence
+    18 				//V4: added writing header and character data on flash cartridge. Now it's fully cartridge operational.
+    19 				//V3: added format character disk.
+    20 				//V2: bug fixes, now the game loads and work. Need floppy disk to save character.
+    21 				//V1: initial release. Can load the menu. Game doesn't work.
+    22
+    23 				// First, we will define the extension as .rom
+    24
+    25 				;	@com.wudsn.ide.asm.outputfileextension=.rom
+    26
+    27 				// Now we set no binary headers
+    28
+    29 					opt h-
+    30
+    31 				; include files, useful macros:
+    32 					icl "../../base/sys_equates.m65"
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_equates.m65
+     1 				;================================================================================
+     2 				; System equates, Atari XL + mads [NRV 2009]
+     3 				;================================================================================
+     4
+     5 				;----------------------------------------
+     6 				; GTIA:
+     7 				;----------------------------------------
+     8
+     9 = D000			M0PF	= $D000  ; read only
+    10 = D001			M1PF	= $D001  ; read only
+    11 = D002			M2PF	= $D002  ; read only
+    12 = D003			M3PF	= $D003  ; read only
+    13
+    14 = D004			P0PF	= $D004  ; read only
+    15 = D005			P1PF	= $D005  ; read only
+    16 = D006			P2PF	= $D006  ; read only
+    17 = D007			P3PF	= $D007  ; read only
+    18
+    19 = D008			M0PL	= $D008  ; read only
+    20 = D009			M1PL	= $D009  ; read only
+    21 = D00A			M2PL	= $D00A  ; read only
+    22 = D00B			M3PL	= $D00B  ; read only
+    23
+    24 = D00C			P0PL	= $D00C  ; read only
+    25 = D00D			P1PL	= $D00D  ; read only
+    26 = D00E			P2PL	= $D00E  ; read only
+    27 = D00F			P3PL	= $D00F  ; read only
+    28
+    29 = D010			TRIG0	= $D010  ; read only
+    30 = D011			TRIG1	= $D011  ; read only
+    31 = D012			TRIG2	= $D012  ; read only
+    32 = D013			TRIG3	= $D013  ; read only
+    33
+    34 = D014			PAL		= $D014  ; read only
+    35
+    36 				; positions for normal screen: 48 left (+160)--> 208 right (or 32-->224 for wide playfield)
+    37 				; 32 top (+192)--> 224 bottom (or 16-->112 for double line resolution)
+    38 = D000			HPOSP0	= $D000  ; write only
+    39 = D001			HPOSP1	= $D001  ; write only
+    40 = D002			HPOSP2	= $D002  ; write only
+    41 = D003			HPOSP3	= $D003  ; write only
+    42
+    43 = D004			HPOSM0	= $D004  ; write only
+    44 = D005			HPOSM1	= $D005  ; write only
+    45 = D006			HPOSM2	= $D006  ; write only
+    46 = D007			HPOSM3	= $D007  ; write only
+    47
+    48 				; 0 (or 2) normal width, 1 double width, 4 quadruple width
+    49 = D008			SIZEP0	= $D008  ; write only
+    50 = D009			SIZEP1	= $D009  ; write only
+    51 = D00A			SIZEP2	= $D00A  ; write only
+    52 = D00B			SIZEP3	= $D00B  ; write only
+    53
+    54 = D00C			SIZEM	= $D00C  ; write only		// the same 2 bits as the players, but in one byte, in this order: m3m2m1m0
+    55
+    56 = D00D			GRAFP0	= $D00D  ; write only
+    57 = D00E			GRAFP1	= $D00E  ; write only
+    58 = D00F			GRAFP2	= $D00F  ; write only
+    59 = D010			GRAFP3	= $D010  ; write only
+    60
+    61 = D011			GRAFM	= $D011  ; write only		// 4 missiles in this order: m3m2m1m0
+    62
+    63 = D012			COLPM0	= $D012  ; write only
+    64 = D013			COLPM1	= $D013  ; write only
+    65 = D014			COLPM2	= $D014  ; write only
+    66 = D015			COLPM3	= $D015  ; write only
+    67
+    68 = D016			COLPF0	= $D016  ; write only
+    69 = D017			COLPF1	= $D017  ; write only
+    70 = D018			COLPF2	= $D018  ; write only
+    71 = D019			COLPF3	= $D019  ; write only
+    72
+    73 = D01A			COLBK	= $D01A  ; write only
+    74
+    75 = D01B			PRIOR	= $D01B  ; write only
+    76 = D01C			VDELAY	= $D01C  ; write only
+    77 = D01D			GRACTL	= $D01D  ; write only
+    78 = D01E			HITCLR	= $D01E  ; write only
+    79
+    80 = D01F			CONSOL	= $D01F  ; read and write
+    81
+    82 				;----------------------------------------
+    83 				; POKEY:
+    84 				;----------------------------------------
+    85
+    86 = D200			POT0	= $D200  ; read only
+    87 = D201			POT1	= $D201  ; read only
+    88 = D202			POT2	= $D202  ; read only
+    89 = D203			POT3	= $D203  ; read only
+    90 = D204			POT4	= $D204  ; read only
+    91 = D205			POT5	= $D205  ; read only
+    92 = D206			POT6	= $D206  ; read only
+    93 = D207			POT7	= $D207  ; read only
+    94
+    95 = D208			ALLPOT	= $D208  ; read only
+    96
+    97 = D209			KBCODE	= $D209  ; read only
+    98 = D20A			RANDOM	= $D20A  ; read only
+    99
+   100 = D20D			SERIN	= $D20D  ; read only
+   101 = D20E			IRQST	= $D20E  ; read only
+   102 = D20F			SKSTAT	= $D20F  ; read only
+   103
+   104
+   105 = D200			AUDF1	= $D200  ; write only
+   106 = D201			AUDC1	= $D201  ; write only
+   107 = D202			AUDF2	= $D202  ; write only
+   108 = D203			AUDC2	= $D203  ; write only
+   109 = D204			AUDF3	= $D204  ; write only
+   110 = D205			AUDC3	= $D205  ; write only
+   111 = D206			AUDF4	= $D206  ; write only
+   112 = D207			AUDC4	= $D207  ; write only
+   113
+   114 = D208			AUDCTL	= $D208  ; write only
+   115
+   116 = D209			STIMER	= $D209  ; write only
+   117 = D20A			SKREST	= $D20A  ; write only
+   118 = D20B			POTGO	= $D20B  ; write only
+   119
+   120 = D20D			SEROUT	= $D20D  ; write only
+   121 = D20E			IRQEN	= $D20E  ; write only
+   122 = D20F			SKCTL	= $D20F  ; write only
+   123
+   124 				;----------------------------------------
+   125 				; PIA:
+   126 				;----------------------------------------
+   127
+   128 = D300			PORTA	= $D300  ; read and write
+   129 = D301			PORTB	= $D301  ; read and write
+   130 = D302			PACTL	= $D302  ; read and write
+   131 = D303			PBCTL	= $D303  ; read and write
+   132
+   133 				;----------------------------------------
+   134 				; ANTIC:
+   135 				;----------------------------------------
+   136
+   137 = D40B			VCOUNT	= $D40B  ; read only
+   138
+   139 = D40C			PENH	= $D40C  ; read only
+   140 = D40D			PENV	= $D40D  ; read only
+   141
+   142 = D40F			NMIST	= $D40F  ; read only
+   143
+   144
+   145 = D400			DMACTL	= $D400  ; write only
+   146 = D401			CHACTL	= $D401  ; write only
+   147 = D402			DLISTL	= $D402  ; write only
+   148 = D403			DLISTH	= $D403  ; write only
+   149 = D404			HSCROL	= $D404  ; write only
+   150 = D405			VSCROL	= $D405  ; write only
+   151 = D407			PMBASE	= $D407  ; write only
+   152 = D409			CHBASE	= $D409  ; write only
+   153 = D40A			WSYNC	= $D40A  ; write only
+   154 = D40E			NMIEN	= $D40E  ; write only
+   155 = D40F			NMIRES	= $D40F  ; write only
+   156
+   157 				;----------------------------------------
+   158 				; Shadow registers:
+   159 				;----------------------------------------
+   160
+   161 = 0218			CDTMV1	= $218
+   162 = 021A			CDTMV2	= $21a
+   163 = 021C			CDTMV3	= $21c
+   164 = 021E			CDTMV4	= $21e
+   165 = 0220			CDTMV5	= $220
+   166
+   167
+   168 = 022F			SDMCTL	= $22f	; shadow of DMACTL
+   169 = 026F			GPRIOR	= $26f	; shadow of PRIOR
+   170
+   171 = 02C0			PCOLR0	= $2c0	; shadow of COLPM0
+   172 = 02C1			PCOLR1  = $2c1
+   173 = 02C2			PCOLR2  = $2c2
+   174 = 02C3			PCOLR3  = $2c3
+   175 = 02C4			COLOR0	= $2c4	; shadow of COLPF0
+   176 = 02C5			COLOR1  = $2c5
+   177 = 02C6			COLOR2  = $2c6
+   178 = 02C7			COLOR3  = $2c7
+   179 = 02C8			COLOR4  = $2c8
+   180
+   181 = 02E0			RUNAD	= $2e0
+   182 = 02E2			INITAD	= $2e2
+   183
+   184 = 0014			RTCLOCK	= $14
+   185 = 0041			SOUNDR	= $41
+   186 = 0042			CRITIC	= $42
+   187 = 004D			ATRACT	= 77
+   188
+   189 = 0052			LMARGN = $52
+   190 = 0053			RMARGN = $53
+   191 = 0062			PALNTS = $62
+   192 = 006A			RAMTOP = $6A
+   193
+   194 = 02F4			CHBAS	= $2F4	; shadow of CHBASE
+   195 = 02FC			CH	= $2FC
+   196 = 02F3			CHACT	= $2F3  ; 
+   197
+   198 = 0340			ICHID = $340
+   199 = 0341			ICDNO = $341
+   200 = 0342			ICCMD = $342
+   201 = 0343			ICSTA = $343
+   202 = 0344			ICBAL = $344
+   203 = 0345			ICBAH = $345
+   204 = 0346			ICPTL = $346
+   205 = 0347			ICPTH = $347
+   206 = 0348			ICBLL = $348
+   207 = 0349			ICBLH = $349
+   208 = 034A			ICAX1 = $34A
+   209 = 034B			ICAX2 = $34B
+   210
+   211 = 03F8			BASICF  = $3f8
+   212 = 03FA			GINTLK  = $3fa
+   213
+   214
+   215 = 0230			SDLSTL	= $230	; display list address
+   216 = 0200			VDSLST	= $200	; DLI address
+   217
+   218 = 0301			DUNIT	= $301
+   219 = 0302			DCOMND	= $302
+   220 = 0303			DSTATS	= $303
+   221 = 0304			DBUFLO	= $304
+   222 = 0305			DBUFHI	= $305
+   223
+   224 = 030A			DAUX1	= $30A
+   225 = 030B			DAUX2	= $30B
+   226
+   227
+   228 = 0270			PADDL0	= 624	; 0-228 , shadow of POT0
+   229 = 027C			PTRIG0	= 636	; 0 = PRESSED , shadow of PTRG0
+   230 = 0278			STICK0	= 632	; 0000 = RLDU , shadow of PORTA
+   231 = 0284			STRIG0	= 644	; 0 = PRESSED , shadow of TRIG0
+   232
+   233 = 0244			COLDST	= $244	; non zero --> do a cold start when pressing the reset key
+   234
+   235 				;----------------------------------------
+   236 				; VBI:
+   237 				;----------------------------------------
+   238
+   239 = E45C			SETVBV			= $E45C
+   240 = E45F			XITVB_I			= $E45F
+   241 = E45F			SYSVBV			= $E45F
+   242 = E462			XITVB_D			= $E462
+   243 = E462			XITVBV			= $E462
+   244 = 0006			VBI_I			= 6
+   245 = 0007			VBI_D			= 7
+   246 = C0E2			NORMAL_VBI_I	= 49378
+   247 = C28A			NORMAL_VBI_D	= 49802
+   248 = 0222			VVBLKI			= 546
+   249 = 0224			VVBLKD			= 548
+   250 = E462			XITVB			= XITVB_D
+   251
+   252 				;----------------------------------------
+   253 				; Handler vectors:
+   254 				;----------------------------------------
+   255
+   256 = FFFA			NMIH_VECTOR		= 65530
+   257 = FFFC			RESH_VECTOR		= 65532
+   258 = FFFE			IRQH_VECTOR		= 65534
+   259
+   260 				;----------------------------------------
+   261 				; I/O:
+   262 				;----------------------------------------
+   263
+   264 = E456			CIOV			= $E456	; (58454)
+   265 = E459			SIOV			= $E459	; (58457)
+   266
+   267 				;----------------------------------------
+   268 				; Restart routines
+   269 				;----------------------------------------
+   270
+   271 = E474			WARMSV			= $E474
+   272 = E477			COLDSV			= $E477
+   273
+   274 				;----------------------------------------
+   275 				; Bit values:
+   276 				;----------------------------------------
+   277
+   278 				; DMA values
+   279 = 0020			DV_DMA_ON			= %00100000
+   280 = 0010			DV_PM_ONE_LINE		= %00010000
+   281 = 0008			DV_PLAYERS_ON		= %00001000
+   282 = 0004			DV_MISSILES_ON		= %00000100
+   283 = 0003			DV_WIDE_PF			= %00000011
+   284 = 0002			DV_NORMAL_PF		= %00000010
+   285 = 0001			DV_NARROW_PF		= %00000001
+   286
+   287 				; Display list values
+   288 = 0080			DL_DLI_MASK		= %10000000
+   289 = 0040			DL_LMS_MASK		= %01000000
+   290 = 0020			DL_VSCROLL_MASK	= %00100000
+   291 = 0010			DL_HSCROLL_MASK	= %00010000
+   292
+   293 = 0001			DL_JMP		= 1
+   294 = 0041			DL_JVB		= 65
+   295
+   296 = 0000			DL_BLANK_1	= 0
+   297 = 0010			DL_BLANK_2	= 16
+   298 = 0020			DL_BLANK_3	= 32
+   299 = 0030			DL_BLANK_4	= 48
+   300 = 0040			DL_BLANK_5	= 64
+   301 = 0050			DL_BLANK_6	= 80
+   302 = 0060			DL_BLANK_7	= 96
+   303 = 0070			DL_BLANK_8	= 112
+   304
+   305 				; Antic graphic modes
+   306 = 0002			GM_CHAR_A2	= 2			; 2 colors, 40x24, 960b, 40xline, 8 scanlines
+   307 = 0006			GM_CHAR_A6	= 6			; 4 colors, 20x24, 480b, 40xline, 8 scanlines
+   308 = 0007			GM_CHAR_A7	= 7			; 4 colors, 20x12, 240b, 20xline, 16 scanlines
+   309 = 0004			GM_CHAR_A4	= 4			; 5 colors, 40x24, 960b, 40xline, 8 scanlines
+   310 = 0005			GM_CHAR_A5	= 5			; 5 colors, 40x12, 480b, 40xline, 16 scanlines
+   311 = 0003			GM_CHAR_A3	= 3			; 2 colors, 40x24, 760b, 40xline, 10 scanlines
+   312
+   313 				; Basic graphic modes
+   314 = 0002			GM_CHAR_G0	= 2			; 2 colors, 40x24, 960b, 40xline, 8 scanlines
+   315 = 0006			GM_CHAR_G1	= 6			; 4 colors, 20x24, 480b, 40xline, 8 scanlines
+   316 = 0007			GM_CHAR_G2	= 7			; 4 colors, 20x12, 240b, 20xline, 16 scanlines
+   317 = 0004			GM_CHAR_G12	= 4			; 5 colors, 40x24, 960b, 40xline, 8 scanlines
+   318 = 0005			GM_CHAR_G13	= 5			; 5 colors, 40x12, 480b, 40xline, 16 scanlines
+   319
+   320 = 0008			GM_PIXEL_G3	= 8			; 4 colors, 40x24, 240b, 10xline, 8 scanline
+   321 = 0009			GM_PIXEL_G4	= 9			; 2 colors, 80x48, 480b, 10xline, 4 scanline
+   322 = 000A			GM_PIXEL_G5	= 10		; 4 colors, 80x48, 960b, 20xline, 4 scanline
+   323 = 000B			GM_PIXEL_G6	= 11		; 2 colors, 160x96, 1920b, 20xline, 2 scanline
+   324 = 000D			GM_PIXEL_G7	= 13		; 4 colors, 160x96, 3840b, 40xline, 2 scanline
+   325 = 000F			GM_PIXEL_G8	= 15		; 2 colors, 320x192, 7680b, 40xline, 1 scanline
+   326 = 000C			GM_PIXEL_G14	= 12	; 2 colors, 160x192, 3840b, 20xline, 1 scanline
+   327 = 000E			GM_PIXEL_G15	= 14	; 4 colors, 160x192, 7680b, 40xline, 1 scanline
+   328
+   329 = 000F			GM_PIXEL_G9	= 15		; 1 color, 80x192, 7680b, 40xline, 1 scanline
+   330 = 000F			GM_PIXEL_G10	= 15	; 9 colors, 80x192, 7680b, 40xline, 1 scanline
+   331 = 000F			GM_PIXEL_G11	= 15	; 16 colors, 80x192, 7680b, 40xline, 1 scanline
+   332
+   333 				; Prior values
+   334 = 0001			PRV_PM_PRIORITY_1	= %00000001		; p0 p1 p2 p3 / pf0 pf1 pf2 pf3 (p5) / bk
+   335 = 0002			PRV_PM_PRIORITY_2	= %00000010		; p0 p1 / pf0 pf1 pf2 pf3 (p5) / p2 p3 / bk
+   336 = 0004			PRV_PM_PRIORITY_3	= %00000100		; pf0 pf1 pf2 pf3 (p5) /  p0 p1 p2 p3 / bk
+   337 = 0008			PRV_PM_PRIORITY_4	= %00001000		; pf1 pf2 /  p0 p1 p2 p3 / pf0 pf3 (p5) / bk
+   338 = 0010			PRV_FIFTH_PLAYER	= %00010000
+   339 = 0020			PRV_PM_OVERLAP		= %00100000
+   340 = 0040			PRV_GTIA_9			= %01000000
+   341 = 0080			PRV_GTIA_10			= %10000000
+   342 = 00C0			PRV_GTIA_11			= %11000000
+   343
+   344 				; Gractl values
+   345 = 0001			GCTL_MISSILES		= %001
+   346 = 0002			GCTL_PLAYERS		= %010
+   347 = 0004			GCTL_LATCH_TRIGGERS	= %100
+   348
+   349 				; Consol values:
+   350 = 0001			CNV_START_MASK		= %001
+   351 = 0002			CNV_OPTION_MASK		= %010
+   352 = 0004			CNV_SELECT_MASK		= %100
+   353
+   354 				; Stick values:
+   355 = 0008			STV_RIGHT_MASK		= %1000
+   356 = 0004			STV_LEFT_MASK		= %0100
+   357 = 0002			STV_DOWN_MASK		= %0010
+   358 = 0001			STV_UP_MASK			= %0001
+   359
+   360 = 0008			STICK_MASK_RIGHT	= %1000
+   361 = 0004			STICK_MASK_LEFT		= %0100
+   362 = 0002			STICK_MASK_DOWN		= %0010
+   363 = 0001			STICK_MASK_UP		= %0001
+   364
+   365 = 0007			STICK_VALUE_RIGHT	= %0111
+   366 = 000B			STICK_VALUE_LEFT	= %1011
+   367 = 000D			STICK_VALUE_DOWN	= %1101
+   368 = 000E			STICK_VALUE_UP		= %1110
+   369
+   370 				/*
+   371 				KBCode Hexadecimal Values
+   372 				 	$00	$01	$02	$03	$04	$05	$06	$07	$08	$09	$0A	$0B	$0C	$0D	$0E	$0F
+   373 				$00	L	J	;	F1	F2	K	+	*	O	 	P	U	CR	I	-	=
+   374 				$10	V	Hlp	C	F3	F4	B	X	Z	4	 	3	6	Esc	5	2	1
+   375 				$20	,	Spc	.	N	 	M	/	Inv	R	 	E	Y	Tab	T	W	Q
+   376 				$30	9	 	0	7	BS	8	<	>	F	H	D	 	Cap	G	S	A
+   377
+   378 				together with Shift Key: add +$40
+   379 				together with Control key: add +$80 
+   380 				*/
+   380
+    33 					icl "../../base/sys_macros.m65"
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65
+     1 				;================================================================================
+     2 				; System macros, Atari XL + mads [NRV 2009]
+     3 				;================================================================================
+     4
+     5 				;--------------------------------------------------------------------------------
+     6 				; SetVector [address] [word]
+     7 				;--------------------------------------------------------------------------------
+     8
+     9 					.macro SetVector
+    10 					   .if :0 <> 2
+    11 					      .error "SetVector error"
+    12 				
+    13 					   .else
+    14 					      lda #<:2
+    15 					      sta :1
+    16 					      lda #>:2
+    17 					      sta :1+1
+    18 					   .endif
+    19 				
+    20 					.endm
+    21
+    22
+    23 				;--------------------------------------------------------------------------------
+    24 				; SetColor [0..4] [0..255]
+    25 				; SetColor [0..4] [0..15] [0..15]
+    26 				;--------------------------------------------------------------------------------
+    27
+    28 					.macro SetColor
+    29 					   .if :0 < 2 .or :0 > 3
+    30 					      .error "SetColor error"
+    31 				
+    32 					   .else
+    33 					      .if :0 = 2
+    34 					          lda #:2
+    35 					          sta COLPF0+:1
+    36 					      .else
+    37 					          lda #[:2 * 16 + :3]
+    38 					          sta COLPF0+:1
+    39 					      .endif
+    40 					   .endif
+    41 				
+    42 					.endm
+    43
+    44
+    45 				;--------------------------------------------------------------------------------
+    46 				; SetPMColor [0..3] [0..255]
+    47 				; SetPMColor [0..3] [0..15] [0..15]
+    48 				;--------------------------------------------------------------------------------
+    49
+    50 					.macro SetPMColor
+    51 					   .if :0 < 2 .or :0 > 3
+    52 					      .error "SetPMColor error"
+    53 				
+    54 					   .else
+    55 					      .if :0 = 2
+    56 					          lda #:2
+    57 					          sta COLPM0+:1
+    58 					      .else
+    59 					          lda #[:2 * 16 + :3]
+    60 					          sta COLPM0+:1
+    61 					      .endif
+    62 					   .endif
+    63 				
+    64 					.endm
+    65
+    66
+    67 				;--------------------------------------------------------------------------------
+    68 				; VcountSync [0..130]
+    69 				; (maximum limit is different on PAL: 155)
+    70 				; (could wait forever if there are interrupts activated!)
+    71 				; (or if some other "thread" uses "wsync")
+    72 				;--------------------------------------------------------------------------------
+    73
+    74 					.macro VcountSync
+    75 					   .if :0 <> 1
+    76 					      .error "VcountSync error"
+    77 				
+    78 					   .else
+    79 					      sta WSYNC
+    80 				
+    81 					      lda #:1
+    82 				VSync1	 cmp VCOUNT
+    83 					      bne VSync1
+    84 				
+    85 					      lda #:1+1
+    86 				VSync2	 cmp VCOUNT
+    87 					      bne VSync2
+    88 				
+    89 					      sta WSYNC
+    90 					   .endif
+    91 				
+    92 					.endm
+    93
+    94
+    95 				;--------------------------------------------------------------------------------
+    96 				; VcountWait [0..130]
+    97 				; (maximum limit is different on PAL: 155)
+    98 				;--------------------------------------------------------------------------------
+    99
+   100 					.macro VcountWait
+   101 					   .if :0 <> 1
+   102 					      .error "VcountWait error"
+   103 				
+   104 					   .else
+   105 					      lda #:1
+   106 				VWait1	 cmp VCOUNT
+   107 					      bne VWait1
+   108 					   .endif
+   109 				
+   110 					.endm
+   111
+   112
+   113 				;--------------------------------------------------------------------------------
+   114 				; VcountWaitUntilEnter [0..129] [(p1+1)..130]
+   115 				; (maximum limit is different on PAL: 155)
+   116 				;--------------------------------------------------------------------------------
+   117
+   118 					.macro VcountWaitUntilEnter
+   119 					   .if :0 <> 2 .or :1 >= :2
+   120 					      .error "VcountWaitUntilEnter error"
+   121 				
+   122 					   .else
+   123 				VWait1     lda VCOUNT
+   124 						 cmp #:1
+   125 						 beq VExit
+   126 					      bcc VWait1	; VCOUNT < :1
+   127 						 cmp #:2
+   128 						 beq VExit
+   129 					      bcs VWait1	; VCOUNT >= :2
+   130 				VExit
+   131 					   .endif
+   132 				
+   133 					.endm
+   134
+   135
+   136 				;--------------------------------------------------------------------------------
+   137 				; VcountWaitUntilExit [0..129] [(p1+1)..130]
+   138 				; (maximum limit is different on PAL: 155)
+   139 				;--------------------------------------------------------------------------------
+   140
+   141 					.macro VcountWaitUntilExit
+   142 					   .if :0 <> 2 .or :1 >= :2
+   143 					      .error "VcountWaitUntilExit error"
+   144 				
+   145 					   .else
+   146 				VWait1     lda VCOUNT
+   147 						 cmp #:1
+   148 						 beq VWait1
+   149 					      bcc VExit	; VCOUNT < :1
+   150 						 cmp #:2
+   151 					      bcc VWait1	; VCOUNT < :2
+   152 						 beq VWait1
+   153 				VExit
+   154 					   .endif
+   155 				
+   156 					.endm
+   157
+   158
+   159 				;--------------------------------------------------------------------------------
+   160 				; MarkScanLine [0..255] [0..255]
+   161 				; (mark the current scan line with a color)
+   162 				;--------------------------------------------------------------------------------
+   163
+   164 					.macro MarkScanLine
+   165 					   .if :0 <> 0 .and :0 <> 2
+   166 					      .error "MarkScanLine error"
+   167 				
+   168 					   .else
+   169 					  	   .if :0 = 0
+   170 				  		      sta WSYNC
+   171 				  	     	 lda #255		; mark color
+   172 					  	      sta COLBK
+   173 				
+   174 				  		      sta WSYNC
+   175 				  	     	 lda #0		; restore color
+   176 					  	      sta COLBK
+   177 				
+   178 				  		   .else
+   179 					     	 sta WSYNC
+   180 						      lda #:1		; mark color
+   181 						      sta COLBK
+   182 				
+   183 						      sta WSYNC
+   184 						      lda #:2		; restore color
+   185 					     	 sta COLBK
+   186 						   .endif
+   187 					   .endif
+   188 				
+   189 					.endm
+   190
+   191
+   192 				;--------------------------------------------------------------------------------
+   193 				; MarkScanLineIfConsol [0..255] [0..255]
+   194 				; (mark the current scan line with a color, if a consol key is pressed)
+   195 				;--------------------------------------------------------------------------------
+   196
+   197 					.macro MarkScanLineIfConsol
+   198 					   .if :0 <> 0 .and :0 <> 2
+   199 					      .error "MarkScanLineIfConsol error"
+   200 				
+   201 					   .else
+   202 						 .if :0 = 0
+   203 						      lda CONSOL
+   204 						      and #%111
+   205 					     	 cmp #%111
+   206 						      beq ExitMarkScanLineIfConsol
+   207 				
+   208 						      sta WSYNC
+   209 						      lda #255		; mark color
+   210 						      sta COLBK
+   211 				
+   212 						      sta WSYNC
+   213 						      lda #0		; restore color
+   214 					     	 sta COLBK
+   215 				
+   216 					   	 .else
+   217 						      lda CONSOL
+   218 						      and #%111
+   219 					     	 cmp #%111
+   220 						      beq ExitMarkScanLineIfConsol
+   221 				
+   222 						      sta WSYNC
+   223 					     	 lda #:1		; mark color
+   224 						      sta COLBK
+   225 				
+   226 						      sta WSYNC
+   227 					     	 lda #:2		; restore color
+   228 						      sta COLBK
+   229 				
+   230 					   	 .endif
+   231 					   .endif
+   232 				
+   233 				ExitMarkScanLineIfConsol
+   234 				
+   235 					.endm
+   236
+   237
+   238 				;--------------------------------------------------------------------------------
+   239 				; MarkCyclesIfConsol [0..255] [0..255]
+   240 				; (mark the current scan position with a color, for some cycles)
+   241 				;--------------------------------------------------------------------------------
+   242
+   243 					.macro MarkCyclesIfConsol
+   244 					   .if :0 = 0
+   245 					      lda CONSOL
+   246 					      and #%111
+   247 					      cmp #%111
+   248 					      beq ExitMarkCyclesIfConsol
+   249 				
+   250 					      lda #255		; mark color
+   251 					      sta COLBK
+   252 				
+   253 					      lda ($00),y	; dummy 5 cycles
+   254 					      lda ($00),y	; dummy 5 cycles
+   255 					      lda ($00),y	; dummy 5 cycles
+   256 					      lda ($00),y	; dummy 5 cycles
+   257 					      lda ($00),y	; dummy 5 cycles
+   258 					      lda ($00),y	; dummy 5 cycles
+   259 				
+   260 					      lda #0		; restore color
+   261 					      sta COLBK
+   262 				
+   263 					   .elseif :0 = 2
+   264 					      lda CONSOL
+   265 					      and #%111
+   266 					      cmp #%111
+   267 					      beq ExitMarkCyclesIfConsol
+   268 				
+   269 					      lda #:1		; mark color
+   270 					      sta COLBK
+   271 				
+   272 					      lda ($00),y	; dummy 5 cycles
+   273 					      lda ($00),y	; dummy 5 cycles
+   274 					      lda ($00),y	; dummy 5 cycles
+   275 					      lda ($00),y	; dummy 5 cycles
+   276 					      lda ($00),y	; dummy 5 cycles
+   277 					      lda ($00),y	; dummy 5 cycles
+   278 				
+   279 					      lda #:2		; restore color
+   280 					      sta COLBK
+   281 				
+   282 					   .else
+   283 					      .error "MarkCyclesIfConsol error"
+   284 				
+   285 					   .endif
+   286 				
+   287 				ExitMarkCyclesIfConsol
+   288 				
+   289 					.endm
+   290
+   291
+   292 				;--------------------------------------------------------------------------------
+   293 				; SetBasic [0,1]
+   294 				;--------------------------------------------------------------------------------
+   295
+   296 					.macro SetBasic
+   297 					   .if :0 <> 1
+   298 					      .error "SetBasic error"
+   299 				
+   300 					   .else
+   301 					      .if :1 = 0
+   302 					         lda PORTB	; deactivate Basic
+   303 					         ora #%00000010
+   304 					         sta PORTB
+   305 					      .else
+   306 					         lda PORTB	; activate Basic
+   307 					         and #%11111101
+   308 					         sta PORTB
+   309 					      .endif
+   310 					   .endif
+   311 				
+   312 					.endm
+   313
+   314
+   315 				;--------------------------------------------------------------------------------
+   316 				; SetOperativeSystem [0,1]
+   317 				;--------------------------------------------------------------------------------
+   318
+   319 					.macro SetOperativeSystem
+   320 					   .if :0 <> 1
+   321 					      .error "SetOperativeSystem error"
+   322 				
+   323 					   .else
+   324 					      .if :1 = 0
+   325 					         lda PORTB	; deactivate Operative System
+   326 					         and #%11111110
+   327 					         sta PORTB
+   328 					      .else
+   329 					         lda PORTB	; activate Operative System
+   330 					         ora #%00000001
+   331 					         sta PORTB
+   332 					      .endif
+   333 					   .endif
+   334 				
+   335 					.endm
+   336
+   337
+   338 				;--------------------------------------------------------------------------------
+   339 				; EnableBasic
+   340 				;--------------------------------------------------------------------------------
+   341
+   342 					.macro EnableBasic
+   343 					   .if :0 <> 0
+   344 					      .error "EnableBasic error"
+   345 				
+   346 					   .else
+   347 					      SetBasic 1
+   348 					   .endif
+   349 				
+   350 					.endm
+   351
+   352
+   353 				;--------------------------------------------------------------------------------
+   354 				; DisableBasic
+   355 				;--------------------------------------------------------------------------------
+   356
+   357 					.macro DisableBasic
+   358 					   .if :0 <> 0
+   359 					      .error "DisableBasic error"
+   360 				
+   361 					   .else
+   362 					      SetBasic 0
+   363 					   .endif
+   364 				
+   365 					.endm
+   366
+   367
+   368 				;--------------------------------------------------------------------------------
+   369 				; EnableOperativeSystem
+   370 				;--------------------------------------------------------------------------------
+   371
+   372 					.macro EnableOperativeSystem
+   373 					   .if :0 <> 0
+   374 					      .error "EnableOperativeSystem error"
+   375 				
+   376 					   .else
+   377 					      SetOperativeSystem 1
+   378 					   .endif
+   379 				
+   380 					.endm
+   381
+   382
+   383 				;--------------------------------------------------------------------------------
+   384 				; DisableOperativeSystem
+   385 				;--------------------------------------------------------------------------------
+   386
+   387 					.macro DisableOperativeSystem
+   388 					   .if :0 <> 0
+   389 					      .error "DisableOperativeSystem error"
+   390 				
+   391 					   .else
+   392 					      SetOperativeSystem 0
+   393 					   .endif
+   394 				
+   395 					.endm
+   396
+   397
+   398 				;--------------------------------------------------------------------------------
+   399 				; EnableNormalInterrupts
+   400 				;--------------------------------------------------------------------------------
+   401
+   402 					.macro EnableNormalInterrupts
+   403 					   .if :0 <> 0
+   404 					      .error "EnableNormalInterrupts error"
+   405 				
+   406 					   .else
+   407 					      cli
+   408 				;	      lda #[8+16+32]	; serial I/O interrupts
+   409 				;	      lda #[64+128]		; keyboard and break interrupts (only ones enabled on powerup)
+   410 				;	      sta IRQEN
+   411 					      lda #64			; VBI interrupt
+   412 					      sta NMIEN
+   413 					   .endif
+   414 				
+   415 					.endm
+   416
+   417
+   418 				;--------------------------------------------------------------------------------
+   419 				; DisableNormalInterrupts
+   420 				;--------------------------------------------------------------------------------
+   421
+   422 					.macro DisableNormalInterrupts
+   423 					   .if :0 <> 0
+   424 					      .error "DisableNormalInterrupts error"
+   425 				
+   426 					   .else
+   427 					      sei
+   428 					      lda #0
+   429 					      sta IRQEN
+   430 					      sta NMIEN
+   431 					   .endif
+   432 				
+   433 					.endm
+   434
+   435
+   436 				;--------------------------------------------------------------------------------
+   437 				; ClearSystem
+   438 				;--------------------------------------------------------------------------------
+   439
+   440 					.macro ClearSystem
+   441 					   .if :0 <> 0
+   442 					      .error "ClearSystem error"
+   443 				
+   444 					   .else
+   445 					      clc
+   446 					      cld
+   447 				
+   448 					      sei
+   449 				
+   450 					      lda #0
+   451 					      sta IRQEN	; clear interrupts and screen
+   452 					      sta NMIEN
+   453 				
+   454 					      sta DMACTL
+   455 					      sta COLBK
+   456 				
+   457 					      sta GRACTL	; clear P/M
+   458 					      sta GRAFP0
+   459 					      sta GRAFP1
+   460 					      sta GRAFP2
+   461 					      sta GRAFP3
+   462 					      sta GRAFM
+   463 				
+   464 					      sta HPOSP0
+   465 					      sta HPOSP1
+   466 					      sta HPOSP2
+   467 					      sta HPOSP3
+   468 					      sta HPOSM0
+   469 					      sta HPOSM1
+   470 					      sta HPOSM2
+   471 					      sta HPOSM3
+   472 				
+   473 					      sta PRIOR	; clear GTIA also
+   474 				
+   475 					      sta AUDCTL	; clear sound
+   476 					      sta AUDC1
+   477 					      sta AUDC2
+   478 					      sta AUDC3
+   479 					      sta AUDC4
+   480 				
+   481 					      lda #3
+   482 					      sta SKCTL
+   483 					   .endif
+   484 				
+   485 					.endm
+   486
+   487
+   488 				;--------------------------------------------------------------------------------
+   489 				; SetDisplayListAddress [word]
+   490 				; (use when the screen is not being displayed!)
+   491 				; (remember to not cross the 1K limit..)
+   492 				;--------------------------------------------------------------------------------
+   493
+   494 					.macro SetDisplayListAddress
+   495 					   .if :0 <> 1
+   496 					      .error "SetDisplayListAddress error"
+   497 				
+   498 					   .else
+   499 					      SetVector DLISTL, :1
+   500 				
+   501 				;	      lda #<:1
+   502 				;	      sta DLISTL
+   503 				;	      lda #>:1
+   504 				;	      sta DLISTH
+   505 					   .endif
+   506 				
+   507 					.endm
+   508
+   509
+   510 				;--------------------------------------------------------------------------------
+   511 				; SetFontAddress [word]
+   512 				; (remember that this transform to a page a number)
+   513 				;--------------------------------------------------------------------------------
+   514
+   515 					.macro SetFontAddress
+   516 					   .if :0 <> 1
+   517 					      .error "SetFontAddress error"
+   518 				
+   519 					   .else
+   520 					      lda #>:1
+   521 					      sta CHBASE
+   522 					   .endif
+   523 				
+   524 					.endm
+   525
+   526
+   527 				;--------------------------------------------------------------------------------
+   528 				; SetPMBaseAddress [word]
+   529 				; (remember that this transform to a page a number)
+   530 				;--------------------------------------------------------------------------------
+   531
+   532 					.macro SetPMBaseAddress
+   533 					   .if :0 <> 1
+   534 					      .error "SetPMBaseAddress error"
+   535 				
+   536 					   .else
+   537 					      lda #>:1
+   538 					      sta PMBASE
+   539 					   .endif
+   540 				
+   541 					.endm
+   542
+   543
+   544 				;--------------------------------------------------------------------------------
+   545 				; SetMemory [address] [bytes] [value]
+   546 				;--------------------------------------------------------------------------------
+   547
+   548 				; warning, using some page zero memory
+   549
+   550 					.macro SetMemory
+   551 				
+   552 				setMemPtr	= 254
+   553 				setMemCounter	= 252
+   554 				
+   555 					   .if :0 <> 3
+   556 					      .error "SetMemory error"
+   557 				
+   558 					   .else
+   559 					      ldy #0
+   560 				
+   561 					      lda #<:1
+   562 					      sta setMemPtr
+   563 					      lda #>:1
+   564 					      sta setMemPtr+1
+   565 				
+   566 					      .if :2 < 256
+   567 					         lda #:3
+   568 				setMemLoop1
+   569 					         sta (setMemPtr),y
+   570 					         iny
+   571 					         cpy #:2
+   572 					         bne setMemLoop1
+   573 				
+   574 					      .else
+   575 					         lda #<:2
+   576 					         sta setMemCounter
+   577 					         lda #>:2
+   578 					         sta setMemCounter+1
+   579 				
+   580 				setMemLoop2
+   581 					         lda #:3
+   582 					         sta (setMemPtr),y
+   583 					         iny
+   584 					         bne setMemB1
+   585 					         inc setMemPtr+1
+   586 				setMemB1
+   587 					         lda setMemCounter
+   588 					         bne setMemB2
+   589 					         dec setMemCounter+1
+   590 				setMemB2
+   591 					         dec setMemCounter
+   592 				
+   593 					         lda setMemCounter
+   594 					         ora setMemCounter+1
+   595 					         bne setMemLoop2
+   596 					      .endif
+   597 					   .endif
+   598 				
+   599 					.endm
+   600
+   601
+   602 				;--------------------------------------------------------------------------------
+   603 				; SetMemoryRandom [address] [bytes]
+   604 				;--------------------------------------------------------------------------------
+   605
+   606 				; warning, using some page zero memory
+   607
+   608 					.macro SetMemoryRandom
+   609 				
+   610 				setMemRPtr	= 254
+   611 				setMemRCounter	= 252
+   612 				
+   613 					   .if :0 <> 2
+   614 					      .error "SetMemoryRandom error"
+   615 				
+   616 					   .else
+   617 					      ldy #0
+   618 				
+   619 					      lda #<:1
+   620 					      sta setMemRPtr
+   621 					      lda #>:1
+   622 					      sta setMemRPtr+1
+   623 				
+   624 					      .if :2 < 256
+   625 				setMemRLoop1
+   626 					         lda RANDOM
+   627 					         sta (setMemRPtr),y
+   628 					         iny
+   629 					         cpy #:2
+   630 					         bne setMemRLoop1
+   631 				
+   632 					      .else
+   633 					         lda #<:2
+   634 					         sta setMemRCounter
+   635 					         lda #>:2
+   636 					         sta setMemRCounter+1
+   637 				
+   638 				setMemRLoop2
+   639 					         lda RANDOM
+   640 					         sta (setMemRPtr),y
+   641 					         iny
+   642 					         bne setMemRB1
+   643 					         inc setMemRPtr+1
+   644 				setMemRB1
+   645 					         lda setMemRCounter
+   646 					         bne setMemRB2
+   647 					         dec setMemRCounter+1
+   648 				setMemRB2
+   649 					         dec setMemRCounter
+   650 				
+   651 					         lda setMemRCounter
+   652 					         ora setMemRCounter+1
+   653 					         bne setMemRLoop2
+   654 					      .endif
+   655 					   .endif
+   656 				
+   657 					.endm
+   658
+   659
+   660 				;--------------------------------------------------------------------------------
+   661 				; ClampMemory [address] [bytes] [min value] [max value]
+   662 				;--------------------------------------------------------------------------------
+   663
+   664 				; warning, using some page zero memory
+   665
+   666 					.macro ClampMemory
+   667 				
+   668 				clampMemPtr	= 254
+   669 				clampMemCounter	= 252
+   670 				
+   671 					   .if :0 <> 4
+   672 					      .error "ClampMemory error"
+   673 				
+   674 					   .else
+   675 					      ldy #0
+   676 				
+   677 					      lda #<:1
+   678 					      sta clampMemPtr
+   679 					      lda #>:1
+   680 					      sta clampMemPtr+1
+   681 				
+   682 					      .if :2 < 256
+   683 				clampMemLoop1
+   684 					         lda (clampMemPtr),y
+   685 					         cmp #:3
+   686 					         bcs clampMemB3		; if >= min then continue
+   687 					         lda #:3
+   688 					         jmp clampMemB4
+   689 				clampMemB3
+   690 					         cmp #:4
+   691 					         bcc clampMemB4		; if < max then continue
+   692 				;	         beq clampMemB4		; if = max then continue
+   693 					         lda #:4
+   694 				clampMemB4
+   695 					         sta (clampMemPtr),y
+   696 				
+   697 					         iny
+   698 					         cpy #:2
+   699 					         bne clampMemLoop1
+   700 				
+   701 					      .else
+   702 					         lda #<:2
+   703 					         sta clampMemCounter
+   704 					         lda #>:2
+   705 					         sta clampMemCounter+1
+   706 				
+   707 				clampMemLoop2
+   708 					         lda (clampMemPtr),y
+   709 					         cmp #:3
+   710 					         bcs clampMemB5		; if >= min then continue
+   711 					         lda #:3
+   712 					         jmp clampMemB6
+   713 				clampMemB5
+   714 					         cmp #:4
+   715 					         bcc clampMemB6		; if < max then continue
+   716 				;	         beq clampMemB6		; if = max then continue
+   717 					         lda #:4
+   718 				clampMemB6
+   719 					         sta (clampMemPtr),y
+   720 				
+   721 					         iny
+   722 					         bne clampMemB1
+   723 					         inc clampMemPtr+1
+   724 				clampMemB1
+   725 					         lda clampMemCounter
+   726 					         bne clampMemB2
+   727 					         dec clampMemCounter+1
+   728 				clampMemB2
+   729 					         dec clampMemCounter
+   730 				
+   731 					         lda clampMemCounter
+   732 					         ora clampMemCounter+1
+   733 					         bne clampMemLoop2
+   734 					      .endif
+   735 					   .endif
+   736 				
+   737 					.endm
+   738
+   739
+   740 				;--------------------------------------------------------------------------------
+   741 				; AndMemory [address] [bytes] [value]
+   742 				;--------------------------------------------------------------------------------
+   743
+   744 				; warning, using some page zero memory
+   745
+   746 					.macro AndMemory
+   747 				
+   748 				andMemPtr	= 254
+   749 				andMemCounter	= 252
+   750 				
+   751 					   .if :0 <> 3
+   752 					      .error "AndMemory error"
+   753 				
+   754 					   .else
+   755 					      ldy #0
+   756 				
+   757 					      lda #<:1
+   758 					      sta andMemPtr
+   759 					      lda #>:1
+   760 					      sta andMemPtr+1
+   761 				
+   762 					      .if :2 < 256
+   763 				andMemLoop1
+   764 					         lda (andMemPtr),y
+   765 					         and #:3
+   766 					         sta (andMemPtr),y
+   767 					         iny
+   768 					         cpy #:2
+   769 					         bne andMemLoop1
+   770 				
+   771 					      .else
+   772 					         lda #<:2
+   773 					         sta andMemCounter
+   774 					         lda #>:2
+   775 					         sta andMemCounter+1
+   776 				
+   777 				andMemLoop2
+   778 					         lda (andMemPtr),y
+   779 					         and #:3
+   780 					         sta (andMemPtr),y
+   781 					         iny
+   782 					         bne andMemB1
+   783 					         inc andMemPtr+1
+   784 				andMemB1
+   785 					         lda andMemCounter
+   786 					         bne andMemB2
+   787 					         dec andMemCounter+1
+   788 				andMemB2
+   789 					         dec andMemCounter
+   790 				
+   791 					         lda andMemCounter
+   792 					         ora andMemCounter+1
+   793 					         bne andMemLoop2
+   794 					      .endif
+   795 					   .endif
+   796 				
+   797 					.endm
+   798
+   799
+   800 				;--------------------------------------------------------------------------------
+   801 				; CopyMemory [source address] [dest address] [bytes]
+   802 				;--------------------------------------------------------------------------------
+   803
+   804 				; warning, using some page zero memory
+   805
+   806 					.macro CopyMemory
+   807 				
+   808 				copyMemPtr1	= 254
+   809 				copyMemPtr2	= 252
+   810 				copyMemCounter	= 250
+   811 				
+   812 					   .if :0 <> 3
+   813 					      .error "CopyMemory error"
+   814 				
+   815 					   .else
+   816 					      ldy #0
+   817 				
+   818 					      .if :3 <= 256
+   819 				copyMemLoop1
+   820 						lda :1,y
+   821 						sta :2,y
+   822 						iny
+   823 						.if :3 < 256
+   824 							cpy #<:3
+   825 						.endif
+   826 						bne copyMemLoop1
+   827 				
+   828 					      .else
+   829 					        lda #<:1
+   830 					        sta copyMemPtr1
+   831 					        lda #>:1
+   832 					        sta copyMemPtr1+1
+   833 						lda #<:2
+   834 						sta copyMemPtr2
+   835 						lda #>:2
+   836 						sta copyMemPtr2+1
+   837 						lda #<:3
+   838 						sta copyMemCounter
+   839 						lda #>:3
+   840 						sta copyMemCounter+1
+   841 				
+   842 				copyMemLoop2
+   843 						lda (copyMemPtr1),y
+   844 						sta (copyMemPtr2),y
+   845 						iny
+   846 						bne copyMemB1
+   847 						inc copyMemPtr1+1
+   848 						inc copyMemPtr2+1
+   849 				copyMemB1
+   850 						lda copyMemCounter
+   851 						bne copyMemB2
+   852 						dec copyMemCounter+1
+   853 				copyMemB2
+   854 						dec copyMemCounter
+   855 				
+   856 						lda copyMemCounter
+   857 						ora copyMemCounter+1
+   858 						bne copyMemLoop2
+   859 					      .endif
+   860 					   .endif
+   861 				
+   862 					.endm
+   863
+   864
+   865 				;--------------------------------------------------------------------------------
+   866 				; CreateDisplayList [DL address] [DL mode] [memory address]
+   867 				; (remember to not cross the 1K limit.. and the 4K limit)
+   868 				;--------------------------------------------------------------------------------
+   869
+   870 				; 	.macro CreateDisplayList
+   871 				; 	   .if :0 <> 3
+   872 				; 	      .error "CreateDisplayList error"
+   873 				; 
+   874 				; 	   .else
+   875 				; 
+   876 				; 	   .endif
+   877 				; 
+   878 				; 	.endm
+   879
+   880
+   881 				;--------------------------------------------------------------------------------
+   882 				;
+   883 				;--------------------------------------------------------------------------------
+   884
+   885
+   886
+    34 					
+    35 				// Now a cart type definition
+    36
+    37 				//Cartridge types available
+    38 				// 1: Atarimax 8 Mbit
+    39 				// 2: Switchable XEGS 8 Mbit
+    40 				// 3: Atarimax 1 Mbit
+    41 				// 4: Atrax 128 Kbytes (1 Mbit)
+    42 				// 5: Megacart 128 KB
+    43 				// 6: Megacart 1024 KB
+    44
+    45 = 0001			TYPE_CART =1
+    46
+    47 				.if TYPE_CART = 1 
+    48 = A000				start_cartridge = $A000
+    49 = C000				end_bank = $C000
+    50 = 0080				cart_banks = 128
+    51 = D5FF				cart_apaga = $D5FF
+    52 = 0000				FLAG_16KB = $00
+    53 				.elseif TYPE_CART = 2
+    54 					start_cartridge = $8000
+    55 					end_bank = $A000
+    56 					cart_banks = 128
+    57 					cart_apaga = $D5FF
+    58 					FLAG_16KB = $00
+    59 				.elseif TYPE_CART = 3
+    60 					start_cartridge = $A000
+    61 					end_bank = $C000
+    62 					cart_banks = 16
+    63 					cart_apaga = $D51F
+    64 					FLAG_16KB = $00
+    65 				.elseif TYPE_CART = 4
+    66 					start_cartridge = $A000
+    67 					end_bank = $C000
+    68 					cart_banks = 16
+    69 					cart_apaga = $D5FF
+    70 					FLAG_16KB = $00
+    71 				.elseif TYPE_CART = 5
+    72 					start_cartridge = $8000
+    73 					end_bank = $C000
+    74 					cart_banks = 8
+    75 					cart_apaga = $D5FF
+    76 					FLAG_16KB = $01
+    77 				.elseif TYPE_CART = 6
+    78 					start_cartridge = $8000
+    79 					end_bank = $C000
+    80 					cart_banks = 64
+    81 					cart_apaga = $D5FF
+    82 					FLAG_16KB = $01
+    83 				.else
+    84 					.error "Cartridge type not defined"
+    85 				.endif
+    86
+    87 				//Parameters to init the loader
+    88
+    89 = 0400			start_loader = $0400
+    90 = CC00			start_loader2 = $cc00		//Dungeon loader.
+    91 = CD00			start_cart_io =$cd00		//Cartridge IO routines.
+    92 = 0480			start_init2 = $480
+    93 = 0100			start_exit = $100
+    94
+    95 				// Page zero parameters
+    96 = 0032			BUFRLO 	= $32
+    97 = 0033			BUFRHI 	= $33
+    98 = 0034			AUX1	= $34
+    99 = 0035			AUX2	= $35
+   100 = 0036			c_bank	= $36
+   101
+   102 				//Starting the cartridge
+   103
+   104 					org start_cartridge
+   105 A000				lmb #$00	//BANK 0
+   106
+   107 				// First, copy the loader routine and get back to the OS. You can do whatever you want to initialize.
+   108 				Copy_init
+   109 				.proc init
+   110 				// 1st stage: checks OPTION and puts the first disk loader into memory.
+   111 A000 A9 FF 8D 01 D3		mva #$ff portb
+   112 A005 A9 01 8D F8 03		mva #$01 basicf
+   113 A00A AD 1F D0			lda consol
+   114 A00D 29 04			and #$04	//OPTION??
+   115 A00F D0 10			bne NO_OPTION	//NO!
+   116 A011				CopyMemory Copy_Exit,start_exit,(.len Exit)
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A011 A0 00			      ldy #0
+    13 A013			copyMemLoop1
+    14 A013 B9 0A A2				lda COPY_EXIT,y
+    15 A016 99 00 01				sta START_EXIT,y
+    16 A019 C8					iny
+    18 A01A C0 20					cpy #<(.LEN EXIT)
+    20 A01C D0 F5				bne copyMemLoop1
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   117 A01E 4C 00 01			jmp exit
+   118 A021			NO_OPTION
+   119 A021 18				clc
+   120 A022 60				rts
+   121 				.endp
+   122 A023			.proc init1
+   123 A023				CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A023 A0 00			      ldy #0
+    13 A025			copyMemLoop1
+    14 A025 B9 21 A3				lda COPY_LOADER,y
+    15 A028 99 00 04				sta START_LOADER,y
+    16 A02B C8					iny
+    18 A02C C0 67					cpy #<(.LEN LOADER)
+    20 A02E D0 F5				bne copyMemLoop1
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   124 A030 A9 00 8D 53 04		mva #$00 loader.flag	//Avoid turning the cartridge off
+   125 A035 A9 00 8D 04 03 A9 + 	mwa #$600 dbuflo	
+   126 A03F A9 01 8D 0A 03 A9 + 	mwa #$01  daux1
+   127 A049 A9 52 8D 02 03		mva #$52  dcomnd
+   128 A04E 20 00 04			jsr loader		//Read 1st sector
+   129 A051 A9 00 8D 33 06 A9 + 	mwa #loader $633	//Patch SIO call
+   130 A05B A9 6D 8D 3E 06 A9 + 	mwa #cont $63e		//Patch final instruction
+   131 A065 A9 70 8D 2E 06		mva #$70 $62e		//Patch address for DL.
+   132 A06A 4C 06 06			jmp $606
+   133 A06D			cont
+   134 A06D A9 70			lda #$70
+   135 A06F 8D 05 70			sta $7005	//Rellocating credits screen from $b000 to $7000
+   136 A072 8D 19 70			sta $7019	
+   137 A075 8D 20 70			sta $7020
+   138 A078 8D 3F 70			sta $703f
+   139 A07B 8D 7E 70			sta $707e
+   140 A07E A9 7D			lda #$7d
+   141 A080 8D 0F 70			sta $700f
+   142 A083 8D 67 70			sta $7067	//Done!
+   143 A086 A9 00 8D 46 70 A9 + 	mwa #loader $7046	//Patch SIO call
+   144
+   145 A090 A9 00 8D 01 70 A9 + 	mwa #$600 $7001		//Patching "ahoy!" message so it doesn't appear somewhere else.
+   146 A09A A9 4C 8D 24 70		mva #$4c $7024		//Once loaded the screen, go to 'CONT2'
+   147 A09F A9 AC 8D 25 70 A9 + 	mwa #cont2 $7025	//Done!
+   148 A0A9 4C 00 70			jmp $7000		//Go credits screen!
+   149 A0AC			cont2
+   150 A0AC A9 FF 8D 53 04		mva #$ff loader.flag	//Resume turning the cartridge off after reading the cartridge
+   151 A0B1				CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A0B1 A0 00			      ldy #0
+    13 A0B3			copyMemLoop1
+    14 A0B3 B9 2A A2				lda COPY_INIT2,y
+    15 A0B6 99 80 04				sta INIT2,y
+    16 A0B9 C8					iny
+    18 A0BA C0 F7					cpy #<(.LEN INIT2)
+    20 A0BC D0 F5				bne copyMemLoop1
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   152 A0BE A9 00 8D 63 70		mva #$00 $7063
+   153 A0C3 8D 68 70			sta $7068
+   154 A0C6 A9 60 8D 64 70		mva #$60 $7064
+   155 A0CB 8D 69 70			sta $7069
+   156 A0CE				CopyMemory init2.dl_patch,$707b, (init2.dl_end-init2.dl_patch+1)
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A0CE A0 00			      ldy #0
+    13 A0D0			copyMemLoop1
+    14 A0D0 B9 1F 05				lda INIT2.DL_PATCH,y
+    15 A0D3 99 7B 70				sta $707B,y
+    16 A0D6 C8					iny
+    18 A0D7 C0 09					cpy #<(INIT2.DL_END-INIT2.DL_PATCH+1)
+    20 A0D9 D0 F5				bne copyMemLoop1
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   157 A0DB A5 14			lda rtclock
+   158 A0DD C5 14		loop0	cmp rtclock
+   159 A0DF F0 FC			beq loop0
+   160
+   161
+   162 A0E1				CopyMemory $c000,$800,$1000				//Copy OS to RAM
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A0E1 A0 00			      ldy #0
+    23 A0E3 A9 00			        lda #<$C000
+    24 A0E5 85 FE			        sta copyMemPtr1
+    25 A0E7 A9 C0			        lda #>$C000
+    26 A0E9 85 FF			        sta copyMemPtr1+1
+    27 A0EB A9 00				lda #<$800
+    28 A0ED 85 FC				sta copyMemPtr2
+    29 A0EF A9 08				lda #>$800
+    30 A0F1 85 FD				sta copyMemPtr2+1
+    31 A0F3 A9 00				lda #<$1000
+    32 A0F5 85 FA				sta copyMemCounter
+    33 A0F7 A9 10				lda #>$1000
+    34 A0F9 85 FB				sta copyMemCounter+1
+    36 A0FB			copyMemLoop2
+    37 A0FB B1 FE				lda (copyMemPtr1),y
+    38 A0FD 91 FC				sta (copyMemPtr2),y
+    39 A0FF C8					iny
+    40 A100 D0 04				bne copyMemB1
+    41 A102 E6 FF				inc copyMemPtr1+1
+    42 A104 E6 FD				inc copyMemPtr2+1
+    43 A106			copyMemB1
+    44 A106 A5 FA				lda copyMemCounter
+    45 A108 D0 02				bne copyMemB2
+    46 A10A C6 FB				dec copyMemCounter+1
+    47 A10C			copyMemB2
+    48 A10C C6 FA				dec copyMemCounter
+    50 A10E A5 FA				lda copyMemCounter
+    51 A110 05 FB				ora copyMemCounter+1
+    52 A112 D0 E7				bne copyMemLoop2
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   163 A114				CopyMemory $d800,$1800,$2800
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A114 A0 00			      ldy #0
+    23 A116 A9 00			        lda #<$D800
+    24 A118 85 FE			        sta copyMemPtr1
+    25 A11A A9 D8			        lda #>$D800
+    26 A11C 85 FF			        sta copyMemPtr1+1
+    27 A11E A9 00				lda #<$1800
+    28 A120 85 FC				sta copyMemPtr2
+    29 A122 A9 18				lda #>$1800
+    30 A124 85 FD				sta copyMemPtr2+1
+    31 A126 A9 00				lda #<$2800
+    32 A128 85 FA				sta copyMemCounter
+    33 A12A A9 28				lda #>$2800
+    34 A12C 85 FB				sta copyMemCounter+1
+    36 A12E			copyMemLoop2
+    37 A12E B1 FE				lda (copyMemPtr1),y
+    38 A130 91 FC				sta (copyMemPtr2),y
+    39 A132 C8					iny
+    40 A133 D0 04				bne copyMemB1
+    41 A135 E6 FF				inc copyMemPtr1+1
+    42 A137 E6 FD				inc copyMemPtr2+1
+    43 A139			copyMemB1
+    44 A139 A5 FA				lda copyMemCounter
+    45 A13B D0 02				bne copyMemB2
+    46 A13D C6 FB				dec copyMemCounter+1
+    47 A13F			copyMemB2
+    48 A13F C6 FA				dec copyMemCounter
+    50 A141 A5 FA				lda copyMemCounter
+    51 A143 05 FB				ora copyMemCounter+1
+    52 A145 D0 E7				bne copyMemLoop2
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   164 A147 A9 20			lda #$20						//Avoid flashing screen!
+   165 A149 8D F4 02			sta chbas						//while copying OS to RAM.
+   166 A14C 8D 09 D4			sta chbase						//Done!
+   167 A14F A5 14			lda rtclock						//Wait 1 frame
+   168 A151 C5 14		loop1	cmp rtclock
+   169 A153 F0 FC			beq loop1						//Done!
+   170
+   171 A155 78				sei
+   172 A156 A9 00 8D 0E D4		mva #$00 nmien						//disabling IRQs, NMIs
+   173 A15B A9 FE 8D 01 D3		mva #$fe portb						//Enabling upper RAM.
+   174 A160				CopyMemory $800,$c000,$1000				//Put OS on upper RAM
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A160 A0 00			      ldy #0
+    23 A162 A9 00			        lda #<$800
+    24 A164 85 FE			        sta copyMemPtr1
+    25 A166 A9 08			        lda #>$800
+    26 A168 85 FF			        sta copyMemPtr1+1
+    27 A16A A9 00				lda #<$C000
+    28 A16C 85 FC				sta copyMemPtr2
+    29 A16E A9 C0				lda #>$C000
+    30 A170 85 FD				sta copyMemPtr2+1
+    31 A172 A9 00				lda #<$1000
+    32 A174 85 FA				sta copyMemCounter
+    33 A176 A9 10				lda #>$1000
+    34 A178 85 FB				sta copyMemCounter+1
+    36 A17A			copyMemLoop2
+    37 A17A B1 FE				lda (copyMemPtr1),y
+    38 A17C 91 FC				sta (copyMemPtr2),y
+    39 A17E C8					iny
+    40 A17F D0 04				bne copyMemB1
+    41 A181 E6 FF				inc copyMemPtr1+1
+    42 A183 E6 FD				inc copyMemPtr2+1
+    43 A185			copyMemB1
+    44 A185 A5 FA				lda copyMemCounter
+    45 A187 D0 02				bne copyMemB2
+    46 A189 C6 FB				dec copyMemCounter+1
+    47 A18B			copyMemB2
+    48 A18B C6 FA				dec copyMemCounter
+    50 A18D A5 FA				lda copyMemCounter
+    51 A18F 05 FB				ora copyMemCounter+1
+    52 A191 D0 E7				bne copyMemLoop2
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   175 A193				CopyMemory $1800,$d800,$2800
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A193 A0 00			      ldy #0
+    23 A195 A9 00			        lda #<$1800
+    24 A197 85 FE			        sta copyMemPtr1
+    25 A199 A9 18			        lda #>$1800
+    26 A19B 85 FF			        sta copyMemPtr1+1
+    27 A19D A9 00				lda #<$D800
+    28 A19F 85 FC				sta copyMemPtr2
+    29 A1A1 A9 D8				lda #>$D800
+    30 A1A3 85 FD				sta copyMemPtr2+1
+    31 A1A5 A9 00				lda #<$2800
+    32 A1A7 85 FA				sta copyMemCounter
+    33 A1A9 A9 28				lda #>$2800
+    34 A1AB 85 FB				sta copyMemCounter+1
+    36 A1AD			copyMemLoop2
+    37 A1AD B1 FE				lda (copyMemPtr1),y
+    38 A1AF 91 FC				sta (copyMemPtr2),y
+    39 A1B1 C8					iny
+    40 A1B2 D0 04				bne copyMemB1
+    41 A1B4 E6 FF				inc copyMemPtr1+1
+    42 A1B6 E6 FD				inc copyMemPtr2+1
+    43 A1B8			copyMemB1
+    44 A1B8 A5 FA				lda copyMemCounter
+    45 A1BA D0 02				bne copyMemB2
+    46 A1BC C6 FB				dec copyMemCounter+1
+    47 A1BE			copyMemB2
+    48 A1BE C6 FA				dec copyMemCounter
+    50 A1C0 A5 FA				lda copyMemCounter
+    51 A1C2 05 FB				ora copyMemCounter+1
+    52 A1C4 D0 E7				bne copyMemLoop2
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   176 A1C6 A9 E0			lda #$e0						//Restore font to original address
+   177 A1C8 8D F4 02			sta chbas
+   178 A1CB 8D 09 D4			sta chbase
+   179 A1CE A9 40 8D 0E D4		mva #$40 nmien						//Restore NMIs
+   180 A1D3				CopyMemory Copy_loader2, start_loader2,(.len loader2)
+Macro: COPYMEMORY [Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
+     2 = 00FE			copyMemPtr1	= 254
+     3 = 00FC			copyMemPtr2	= 252
+     4 = 00FA			copyMemCounter	= 250
+    10 A1D3 A0 00			      ldy #0
+    23 A1D5 A9 88			        lda #<COPY_LOADER2
+    24 A1D7 85 FE			        sta copyMemPtr1
+    25 A1D9 A9 A3			        lda #>COPY_LOADER2
+    26 A1DB 85 FF			        sta copyMemPtr1+1
+    27 A1DD A9 00				lda #<START_LOADER2
+    28 A1DF 85 FC				sta copyMemPtr2
+    29 A1E1 A9 CC				lda #>START_LOADER2
+    30 A1E3 85 FD				sta copyMemPtr2+1
+    31 A1E5 A9 51				lda #<(.LEN LOADER2)
+    32 A1E7 85 FA				sta copyMemCounter
+    33 A1E9 A9 03				lda #>(.LEN LOADER2)
+    34 A1EB 85 FB				sta copyMemCounter+1
+    36 A1ED			copyMemLoop2
+    37 A1ED B1 FE				lda (copyMemPtr1),y
+    38 A1EF 91 FC				sta (copyMemPtr2),y
+    39 A1F1 C8					iny
+    40 A1F2 D0 04				bne copyMemB1
+    41 A1F4 E6 FF				inc copyMemPtr1+1
+    42 A1F6 E6 FD				inc copyMemPtr2+1
+    43 A1F8			copyMemB1
+    44 A1F8 A5 FA				lda copyMemCounter
+    45 A1FA D0 02				bne copyMemB2
+    46 A1FC C6 FB				dec copyMemCounter+1
+    47 A1FE			copyMemB2
+    48 A1FE C6 FA				dec copyMemCounter
+    50 A200 A5 FA				lda copyMemCounter
+    51 A202 05 FB				ora copyMemCounter+1
+    52 A204 D0 E7				bne copyMemLoop2
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   181 A206 58				cli							//Restore IRQs
+   182 A207 4C 80 04			jmp init2						//Go to second part!
+   183 				.endp
+   184 A20A			Copy_exit		//exit to boot routine.
+   185 A20A			.proc exit, start_exit
+   186 0100 78				sei
+   187 0101 A9 00			lda #$00
+   188 0103 8D 0E D4			sta nmien	//disable NMIs
+   189 0106 A9 FF			lda #$ff
+   190 0108 8D F8 03			sta basicf	//Turn basic off
+   191 010B 8D FF D5			sta cart_apaga	//Turn cartridge off
+   192 010E AD 13 D0			lda trig3
+   193 0111 8D FA 03			sta gintlk	//Avoid the computer to hang up.
+   194 0114 A9 40			lda #$40
+   195 0116 8D 0E D4			sta nmien	//Restoring NMIs
+   196 0119 A9 01			lda #$01
+   197 011B 8D FD BF			sta $BFFD	//Boot disk! It's a trick to not to use illegal routines
+   198 011E 58				cli		//Restore IRQs
+   199 011F 60				rts		//Go to BOOT!
+   200 				.endp
+   201
+   202 A22A			Copy_init2
+   203 A22A			.proc init2, start_init2
+   204 0480 78				sei			//Turn IRQs off
+   205 0481 A9 00 8D 0E D4		mva #$00 nmien		//Turn NMIs off
+   206 0486 A2 FF			ldx #$ff
+   207 0488 9A				txs			//Reset stack pointer.
+   208 0489 8E FF D5			stx cart_apaga		//Turn the cartridge off.
+   209 048C AD 13 D0 8D FA 03		mva trig3 gintlk	//Avoid hanging up
+   210 0492 A9 40 8D 0E D4		mva #$40 nmien		//Restore NMIs
+   211 0497 58				cli			//Restore IRQs
+   212 					
+   213 0498 A9 A5 8D 41 70 A9 + 	mwa #cont2 $7041	//Patch final instruction
+   214 04A2 4C 2A 70			jmp $702A		//GO!
+   215 04A5			cont2
+   216 04A5 A9 22			lda #$22
+   217 04A7 8D 2F 02			sta sdmctl
+   218 04AA 8D 00 D4			sta dmactl		//Turn screen on
+   219 04AD A9 00 8D 43 1E A9 + 	mwa #loader $1e43	//Patch SIO call 1
+   220 04B7 A9 00 8D 7D 1E A9 + 	mwa #loader $1e7d	//Patch SIO call 2
+   221 04C1 A9 CE 8D 7A 1E A9 + 	mwa #cont3 $1e7a	//Patch final instruction
+   222 04CB 4C 00 20			jmp $2000		//Execute intro!!
+   223 04CE			cont3
+   224 04CE A9 20			lda #$20		//NO "48K" display!!
+   225 04D0 8D 8F 81			sta $818f
+   226 04D3 8D 90 81			sta $8190
+   227 04D6 8D 91 81			sta $8191		//Done!
+   228 04D9 A9 4C 8D A4 81		mva #$4c $81a4		//Skip
+   229 04DE A9 21 8D A5 81 A9 + 	mwa #$8221 $81a5	//RAM size detection, Force 48K RAM.
+   230
+   231 				//TO DO: patch custom SIO command to $CC00
+   232 				//What to know:
+   233 				//	$230 = SIO drive ID ($31-$34)
+   234 				//	$231 = SIO command ($52 read, $53 status, $50 put, $22 format)
+   235 				//	$232 = SIO aux1 (sector number lo byte)
+   236 				//	$233 = SIO aux2 (sector number hi byte)
+   237
+   238 04E8 A9 00 8D A1 24 A9 + 	mwa #loader2 $24a1
+   239 04F2 A9 00 8D E1 80		mva #$00 $80e1		//Just detect D1: We won't use D2:,D3: or D4:
+   240 				//	lda #$4c		//NOPs to force detection on D1:
+   241 				//	sta $80e0
+   242 				//	mwa #$810d $80e1
+   243 04F7 A9 EA			lda #$ea		//Store NOPs
+   244 04F9 8D 93 28			sta $2893		//Forces no checksum
+   245 04FC 8D 94 28			sta $2894		//Forces no checksum
+   246 04FF 8D 8B 28			sta $288b		//Forces no checksum
+   247 0502 8D 8C 28			sta $288c		//Forces no checksum
+   248 0505 8D 0B 81			sta $810b
+   249 0508 8D 0C 81			sta $810c		//Don't check D1: a second time.
+   250 050B A2 00			ldx #$00
+   251 050D 8E 4F 02			stx $24f		//Virtual D2: enabled!	
+   252 0510 8E 51 02			stx $251		//Virtual D4: enabled!
+   253 0513 CA				dex
+   254 0514 8E 50 02			stx $250		//D3: disabled 
+   255 0517 A9 34 8D 0E 81		mva #$34 $810e		//Use D4: as main drive
+   256 051C 4C 7E 80			jmp $807e		//Go to the game!
+   257
+   258 051F			dl_patch
+   259 051F 70 42			.by $70,$42
+   260 0521 27 05			.word dl_text
+   261 0523 02				.by $02
+   262 0524 41				.by $41
+   263 0525 60 70			.word $7060
+   264 0527			dl_end
+   265 0527			dl_text
+   266 0527 00 00 00 00 00 00 + 	.sb "        Cartridge conversion 2020       "
+   267 054F 00 00 00 27 75 69 + 	.sb "   Guillermo Fuenzalida & Mark Keates   "
+   268 				.endp
+   269
+   270 A321			Copy_init3
+   271
+   272 				// Now, we put the loader
+   273 A321			Copy_Loader
+   274 A321			.proc	loader , start_loader
+   275 0400 78				sei		// No IRQs!
+   276 0401 A9 00			lda #$00	
+   277 0403 8D 0E D4			sta nmien	// No NMIs!
+   278 0406 AD 04 03			lda dbuflo	// Take LSB of the address to store
+   279 0409 85 32			sta bufrlo	// Store it on Page Zero!
+   280 040B AD 05 03			lda dbufhi	// Take MSB of the addres to store
+   281 040E 85 33			sta bufrhi	// Store it!
+   282 0410 38				sec		// Let's substract 1
+   283 0411 AD 0A 03			lda daux1	// To the sector number!
+   284 0414 E9 01			sbc #$01
+   285 0416 85 34			sta aux1	// Store it!
+   286 0418 AD 0B 03			lda daux2	// Take MSB of the sector to read
+   287 041B E9 00			sbc #$00	// Make sure we store it
+   288 041D 85 35			sta aux2	// on page zero!
+   289 041F 18				clc		// Clear the carry.
+   290 0420 A5 34			lda aux1	// Take new sector number
+   291 0422 48				pha		// save it!
+   292 					.if FLAG_16KB = 0
+   293 0423 29 C0				and #$c0	// Take bits 6 and 7
+   294 					.else
+   295 						and #$80	//In case of 16 kb banks just take bit 7
+   296
+   297 					.endif
+   298 0425 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
+   299 					.if FLAG_16KB = 1
+   300 						lsr	// Or bit 7 to 0 in case of 16kb banks
+   301 					.endif
+   302 042B 85 34			sta aux1	// Store it!
+   303 042D A5 35			lda aux2	// Take MSB of the sector.
+   304 042F 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+   305 					.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
+   306 0430 0A					asl		// Done!
+   307 					.endif
+   308 0431 05 34			ora aux1	// Put bits 0 and 1 on from the previous calculation 
+   309 0433 18				clc		// Preparing to add 1
+   310 = 0435			parameter=*+1		// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+   311 0434 69 01			adc #$01	// Add it!
+   312 0436 85 36			sta c_bank	// Store cartridge bank!
+   313 0438 68				pla		// take previous LSB of the sector number.
+   314 					.if FLAG_16KB = 0
+   315 0439 29 3F				and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+   316 					.else
+   317 						and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
+   318 					.endif
+   319 043B 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+   320 043C 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
+   321 043E 85 35			sta aux2	// Store it as MSB from the address to read from the cartridge
+   322 0440 A9 00			lda #$00	// Taking carry
+   323 0442 6A				ror		// To determine if LSB is $00 or $80
+   324 0443 85 34			sta aux1	// Save it!
+   325 0445 A0 7F			ldy #$7F	// Number of bytes to read from cartridge (128)
+   326 0447			loop
+   327 0447 A5 36			lda c_bank	// First, we take the cartridge bank calculated
+   328 0449 AA				tax		// Transfer to register X
+   329 044A 9D 00 D5			sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
+   330 044D B1 34			lda (aux1),y	// Read the byte from the cartridge
+   331 044F 48				pha		// Store it before turning off the cartridge
+   332 0450 A9 FF			lda #$FF	// Let's turn the cartridge off
+   333 = 0453			flag = *+1
+   334 0452 8D FF D5			sta cart_apaga	// Done!
+   335 0455 68				pla		// Recover byte reading
+   336 0456 91 32			sta (bufrlo),y	// Store it to the final address
+   337 0458 88				dey		// Are we done with the byte copying?
+   338 0459 10 EC			bpl loop	// Not yet
+   339 045B A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
+   340 045D 8D 0E D4			sta nmien	// Recover NMIs
+   341 0460 58				cli		// Recover IRQs
+   342 0461 A0 01			ldy #$01	// All done without errors
+   343 0463 8C 03 03			sty dstats	// Save it to DSTATS!
+   344 0466 60				rts		// BYE!!
+   345 0467			fin_loader
+   346 				.endp
+   347
+   348 A388			Copy_loader2
+   349 A388			.proc	loader2 , start_loader2
+   350
+   351 				;aux1 = $02
+   352 				;aux2 = aux1+1
+   353 = 0230			drivenum =$230
+   354 = 0231			drivecommand =$231
+   355 = 0232			driveseclo =$232
+   356 = 0233			drivesechi =$233
+   357 = 023D			status1 = $23d
+   358 = 0246			status2 = $246
+   359 = 0100			buffer = $100
+   360 = CFF0			backupbuffer =$cff0
+   361
+   362 				//	lda drivecommand
+   363 				//	cmp #$53 	//status command?
+   364 				//	beq go_drive1
+   365 CC00 AD 30 02			lda drivenum
+   366 CC03 C9 31			cmp #$31	//Is it drive 1?
+   367 CC05 D0 17			jne no_drive1	//No!
+   368 CC07 20 4E 20			jsr $204e
+   369 CC0A 10 11			bpl end_drive1
+   370 CC0C 08				php
+   371 CC0D AD 31 02			lda drivecommand
+   372 CC10 C9 53			cmp #$53
+   373 CC12 D0 02			bne no_status
+   374 CC14 28				plp
+   375 CC15 60				rts
+   376 CC16			no_status
+   377 CC16 EE 30 02			inc drivenum
+   378 CC19 28				plp
+   379 CC1A 4C 00 CC			jmp loader2
+   380 CC1D			end_drive1
+   381 CC1D 60				rts
+   382 CC1E			no_drive1
+   383 CC1E C9 34			cmp #$34	//Is virtual D4: drive?
+   384 CC20 F0 03 4C 0F CD		jne drive2	//No! It's the character disk.
+   385 				//	beq drive4
+   386 				//	jmp $204e	// Use the disk drive!!!
+   387 CC25			drive4	
+   388 CC25 78				sei		// No IRQs!
+   389 CC26 A9 00			lda #$00	
+   390 CC28 8D 0E D4			sta nmien	// No NMIs!
+   391
+   392 CC2B 38				sec		// Let's substract 1
+   393 CC2C AD 32 02			lda driveseclo	// To the sector number!
+   394 CC2F E9 01			sbc #$01
+   395 CC31 8D 72 CC			sta d4_aux1	// Store it!
+   396 CC34 AD 33 02			lda drivesechi	// Take MSB of the sector to read
+   397 CC37 E9 00			sbc #$00	// Make sure we store it
+   398 CC39 8D 73 CC			sta d4_aux2	// on page zero!
+   399 CC3C 18				clc		// Clear the carry.
+   400 CC3D AD 72 CC			lda d4_aux1	// Take new sector number
+   401 CC40 48				pha		// save it!
+   402 					.if FLAG_16KB = 0
+   403 CC41 29 C0				and #$c0	// Take bits 6 and 7
+   404 					.else
+   405 						and #$80	//In case of 16 kb banks just take bit 7
+   406
+   407 					.endif
+   408 CC43 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
+   409 					.if FLAG_16KB = 1
+   410 						lsr	// Or bit 7 to 0 in case of 16kb banks
+   411 					.endif
+   412 CC49 8D 72 CC			sta d4_aux1	// Store it!
+   413 CC4C AD 73 CC			lda d4_aux2	// Take MSB of the sector.
+   414 CC4F 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+   415 					.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
+   416 CC50 0A					asl		// Done!
+   417 					.endif
+   418 CC51 0D 72 CC			ora d4_aux1	// Put bits 0 and 1 on from the previous calculation 
+   419 CC54 18				clc		// Preparing to add 1
+   420 = CC56			d4_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+   421 CC55 69 01			adc #$01	// Add it!
+   422 CC57 8D 6C CC			sta d4_c_bank	// Store cartridge bank!
+   423 CC5A 68				pla		// take previous LSB of the sector number.
+   424 					.if FLAG_16KB = 0
+   425 CC5B 29 3F				and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+   426 					.else
+   427 						and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
+   428 					.endif
+   429 CC5D 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+   430 CC5E 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
+   431 CC60 8D 73 CC			sta d4_aux2	// Store it as MSB from the address to read from the cartridge
+   432 CC63 A9 00			lda #$00	// Taking carry
+   433 CC65 6A				ror		// To determine if LSB is $00 or $80
+   434 CC66 8D 72 CC			sta d4_aux1	// Save it!
+   435 CC69 A0 7F			ldy #$7F	// Number of bytes to read from cartridge (128)
+   436 CC6B			d4_ldacbank
+   437 CC6B A9 FF			lda #$FF	// First, we take the cartridge bank calculated
+   438 = CC6C			d4_c_bank = d4_ldacbank+1
+   439 CC6D AA				tax		// Transfer to register X
+   440 CC6E 9D 00 D5			sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
+   441 CC71			d4_loop
+   442 CC71 B9 FF FF			lda $FFFF,y	// Read the byte from the cartridge
+   443 = CC72			d4_aux1 = d4_loop+1
+   444 = CC73			d4_aux2 = d4_aux1+1
+   445 CC74 99 00 01			sta buffer,y	// Store it to the final address
+   446 CC77 88				dey		// Are we done with the byte copying?
+   447 CC78 10 F7			bpl d4_loop	// Not yet
+   448 CC7A A9 FF			lda #$ff
+   449 CC7C 8D FF D5			sta cart_apaga
+   450 CC7F A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
+   451 CC81 8D 0E D4			sta nmien	// Recover NMIs
+   452 CC84 58				cli		// Recover IRQs
+   453
+   454
+   455 				//Let's patch the SPACE BAR for character disk
+   456 CC85 AD BE 7E			lda $7ebe
+   457 CC88 C9 30			cmp #$30
+   458 CC8A D0 16			bne d4_2nd
+   459 CC8C AD BF 7E			lda $7ebf
+   460 CC8F C9 FB			cmp #$fb
+   461 CC91 D0 0F			bne d4_2nd
+   462 					
+   463 				//Let's patch the SPACE BAR from the first menu!	
+   464 CC93 A9 4C			lda #$4c
+   465 CC95 8D BE 7E			sta $7ebe
+   466 CC98 A9 CB			lda #$cb
+   467 CC9A 8D BF 7E			sta $7ebf
+   468 CC9D A9 7E			lda #$7e
+   469 CC9F 8D C0 7E			sta $7ec0
+   470 					
+   471 CCA2			d4_2nd
+   472 CCA2 AD 2F 76			lda $762f
+   473 CCA5 C9 30			cmp #$30
+   474 CCA7 D0 0F			bne d4_3rd
+   475 CCA9 AD 30 76			lda $7630
+   476 CCAC C9 FB			cmp #$fb
+   477 CCAE D0 08			bne d4_3rd
+   478 				//Let's patch the SPACE BAR from saving the character during the game
+   479 CCB0 A9 EA			lda #$ea
+   480 CCB2 8D 2F 76			sta $762f
+   481 CCB5 8D 30 76			sta $7630
+   482 CCB8			d4_3rd
+   483 CCB8 AD 08 76			lda $7608
+   484 CCBB C9 20			cmp #$20	//JSR?
+   485 CCBD D0 16			bne d4_4th	//No!
+   486 CCBF A9 18			lda #$18
+   487 CCC1 CD 09 76			cmp $7609
+   488 CCC4 D0 0F			bne d4_4th
+   489 CCC6 CD 0A 76			cmp $760a
+   490 CCC9 D0 0A			bne d4_4th
+   491 CCCB A9 1B 8D 09 76 A9 + 	mwa #put_31 $7609
+   492 CCD5			d4_4th
+   493 CCD5 AD 04 84			lda $8404
+   494 CCD8 C9 A9			cmp #$A9	//LDA?
+   495 CCDA D0 11			bne d4_5th
+   496 CCDC AD 05 84			lda $8405
+   497 CCDF C9 31			cmp #$31	//Drive 1?
+   498 CCE1 D0 0A			bne d4_5th	//Nope!
+   499 CCE3 A9 23 8D 02 84 A9 + 	mwa #char_format $8402
+   500 CCED			d4_5th
+   501 CCED AD BF 77			lda $77bf
+   502 CCF0 C9 A9			cmp #$a9
+   503 CCF2 D0 12			bne d4_end
+   504 CCF4 AD C0 77			lda $77c0
+   505 CCF7 C9 57			cmp #$57
+   506 CCF9 D0 0B			bne d4_end
+   507 CCFB A9 50			lda #$50
+   508 CCFD 8D 6C 77			sta $776c
+   509 CD00 8D A3 77			sta $77a3
+   510 CD03 8D C0 77			sta $77c0
+   511
+   512 CD06			d4_end
+   513 CD06 A0 01			ldy #$01	// All done without errors
+   514 CD08 8C 3D 02			sty status1	// Save it to DSTATS!
+   515 CD0B 8C 46 02			sty status2
+   516 CD0E 60				rts		// BYE!!
+   517
+   518 CD0F			drive2
+   519 CD0F AD 31 02			lda drivecommand
+   520 CD12 C9 21			cmp #$21	//Is it a format command?
+   521 CD14 D0 27			jne no_format	//No! It's a write or read
+   522
+   523 				//Let's format it! Will erase all sectors for D1:
+   524 CD16 A9 0A			lda #$0a
+   525 CD18 20 BE CE			jsr erasebk	//Erase bank $0a (Header info)
+   526 CD1B A9 0B			lda #$0b
+   527 CD1D 20 BE CE			jsr erasebk	//Erase bank $0b (save state 1)
+   528 CD20 A9 0C			lda #$0c
+   529 CD22 20 BE CE			jsr erasebk	//Erase bank $0c (save state 2)
+   530 CD25 A9 0D			lda #$0d
+   531 CD27 20 BE CE			jsr erasebk	//Erase bank $0d (save state 3)
+   532 CD2A A9 0E			lda #$0e
+   533 CD2C 20 BE CE			jsr erasebk	//Erase bank $0e (save state 4)
+   534 CD2F A9 FF			lda #$ff
+   535 CD31 8D FF D5			sta cart_apaga
+   536 CD34 A0 01			ldy #$01	// All done without errors
+   537 CD36 8C 3D 02			sty status1	// Save it to DSTATS!
+   538 CD39 8C 46 02			sty status2
+   539 CD3C 60				rts		//Formatting successful
+   540 CD3D			no_format
+   541
+   542
+   543 				//	rts		//NEED TO BE REMOVED!!!!
+   544
+   545
+   546 CD3D 48				pha		//Store command for a while
+   547 				//Now will check if it's the initial sector from the block of the disk.
+   548 				//In case it's the initial one, it erases the entire sector
+   549 CD3E A2 00			ldx #$00	//Counter
+   550 CD40 8E 7B CE			stx sector_selected
+   551 CD43 A0 01			ldy #$01	//Start with no detection!!
+   552 CD45			d2_loop1
+   553 CD45 AD 33 02			lda drivesechi		//Take MSB of the sector
+   554 CD48 DD 56 CE			cmp sec_table+1,x	//Is it from the table?
+   555 CD4B F0 04			beq d2_loop1_0 
+   556 CD4D 90 12			bcc d2_loop2		//NO! It's higher. Don't count this.
+   557 CD4F D0 0D			bne d2_loop1_2		//No! It's lower. Take x to the sector selected.
+   558
+   559 CD51			d2_loop1_0
+   560 CD51 AD 32 02			lda driveseclo		//It's equal. Now let's get LSB of the sector.
+   561 CD54 DD 55 CE			cmp sec_table,x		//Is it from the table?
+   562 CD57 F0 04			beq d2_loop1_1
+   563 CD59 90 06			bcc d2_loop2		//No, it's higher. next sector!
+   564 CD5B D0 01			bne d2_loop1_2		//No, it's lower. Take x to the sector selected.
+   565 CD5D			d2_loop1_1
+   566 CD5D 88				dey			//It's the same! Put Y = 0.
+   567 CD5E			d2_loop1_2
+   568 CD5E 8E 7B CE			stx sector_selected
+   569 CD61			d2_loop2
+   570 CD61 E8				inx
+   571 CD62 E8				inx
+   572 CD63 E0 0A			cpx #$0a	//All 5 sectors checked?
+   573 CD65 D0 DE			bne d2_loop1	//Not yet!
+   574 CD67 AE 7B CE			ldx sector_selected
+   575 CD6A BD 5F CE			lda offset_table,x	//Take the offset
+   576 CD6D 8D 69 CE			sta sec_offset		//Store it!
+   577 CD70 BD 60 CE			lda offset_table+1,x	//MSB offset
+   578 CD73 8D 6A CE			sta sec_offset+1	//Store it!
+   579 CD76 4E 7B CE			lsr sector_selected
+   580 CD79 AE 7B CE			ldx sector_selected
+   581 CD7C BD 75 CE			lda bank_table,x
+   582 CD7F 8D B5 CD			sta d2_parameter	//Change initial bank to take
+   583
+   584 CD82			drive2_put
+   585 CD82 78				sei		// No IRQs!
+   586 CD83 A9 00			lda #$00	
+   587 CD85 8D 0E D4			sta nmien	// No NMIs!
+   588
+   589 CD88 38				sec		// Let's substract 1
+   590 CD89 AD 32 02			lda driveseclo	// To the sector number!
+   591 CD8C ED 69 CE			sbc sec_offset
+   592 CD8F 8D E3 CD			sta d2_read_aux1	// Store it!
+   593 CD92 AD 33 02			lda drivesechi	// Take MSB of the sector to read
+   594 CD95 ED 6A CE			sbc sec_offset+1	// Make sure we store it
+   595 CD98 8D E4 CD			sta d2_read_aux2	// on page zero!
+   596 CD9B 18				clc		// Clear the carry.
+   597 CD9C AD E3 CD			lda d2_read_aux1	// Take new sector number
+   598 CD9F 48				pha		// save it!
+   599 CDA0 29 C0			and #$c0	// Take bits 6 and 7
+   600 CDA2 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
+   601 CDA8 8D E3 CD			sta d2_read_aux1	// Store it!
+   602 CDAB AD E4 CD			lda d2_read_aux2	// Take MSB of the sector.
+   603 CDAE 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+   604 CDAF 0A				asl		// Done!
+   605 CDB0 0D E3 CD			ora d2_read_aux1	// Put bits 0 and 1 on from the previous calculation 
+   606 CDB3 18				clc		// Preparing to add 1
+   607 = CDB5			d2_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+   608 CDB4 69 01			adc #$01	// Add it!
+   609 CDB6 8D DD CD			sta d2_read_c_bank	// Store cartridge bank!
+   610 CDB9 8D FA CD			sta d2_write_c_bank
+   611 CDBC 68				pla		// take previous LSB of the sector number.
+   612 CDBD 29 3F			and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+   613 CDBF 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+   614 CDC0 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
+   615 CDC2 8D E4 CD			sta d2_read_aux2	// Store it as MSB from the address to read from the cartridge
+   616 CDC5 8D 03 CE			sta d2_write_aux2
+   617 CDC8 A9 00			lda #$00	// Taking carry
+   618 CDCA 6A				ror		// To determine if LSB is $00 or $80
+   619 CDCB 8D E3 CD			sta d2_read_aux1	// Save it!
+   620 CDCE 8D 02 CE			sta d2_write_aux1
+   621
+   622 				//Now we start to copy the bytes (read/write)
+   623
+   624 CDD1 A2 7F			ldx #$7f
+   625 CDD3 68				pla		//Restore command
+   626 CDD4 C9 57			cmp #$57	//Write?
+   627 CDD6 F0 15			beq d2_write
+   628 CDD8 C9 50			cmp #$50
+   629 CDDA F0 11			beq d2_write
+   630 CDDC			d2_read_ldacbank
+   631 CDDC A9 FF			lda #$ff
+   632 = CDDD			d2_read_c_bank =d2_read_ldacbank+1
+   633 CDDE A8				tay
+   634 CDDF 99 00 D5			sta $d500,y
+   635 CDE2			d2_read_loop
+   636 CDE2 BD FF FF			lda $FFFF,x	// Read the byte from the cartridge
+   637 = CDE3			d2_read_aux1 = d2_read_loop+1
+   638 = CDE4			d2_read_aux2 = d2_read_aux1+1
+   639 CDE5 9D 00 01			sta buffer,x	// Store it to the final address
+   640 CDE8 CA				dex		// Are we done with the byte copying?
+   641 CDE9 10 F7			bpl d2_read_loop	// Not yet
+   642 CDEB 30 1A			bmi d2_end	//Let's finish
+   643
+   644 CDED			d2_write
+   645 CDED 98				tya		//Is is first sector?
+   646 CDEE D0 09			bne d2_write_cont	//Nope, let's continue
+   647 CDF0 AD 7B CE			lda sector_selected	
+   648 CDF3 18				clc
+   649 CDF4 69 0A			adc #$0a
+   650 CDF6 20 BE CE			jsr erasebk		//Erase the bank and start writing!
+   651 CDF9			d2_write_cont
+   652
+   653 CDF9			d2_write_loop
+   654 CDF9			d2_write_ldacbank
+   655 CDF9 A9 FF			lda #$ff
+   656 = CDFA			d2_write_c_bank =d2_write_ldacbank+1
+   657 CDFB 20 9D CE			jsr enable_write
+   658 CDFE BD 00 01			lda buffer,x
+   659 CE01			d2_write_sta	
+   660 CE01 9D FF FF			sta $FFFF,x
+   661 = CE02			d2_write_aux1 = d2_write_sta+1
+   662 = CE03			d2_write_aux2 = d2_write_aux1+1
+   663 CE04 CA				dex
+   664 CE05 10 F2			bpl d2_write_loop
+   665
+   666 CE07			d2_end
+   667 CE07 A9 FF			lda #$ff
+   668 CE09 8D FF D5			sta cart_apaga
+   669 CE0C A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
+   670 CE0E 8D 0E D4			sta nmien	// Recover NMIs
+   671 CE11 58				cli		// Recover IRQs
+   672 CE12 A0 01			ldy #$01	// All done without errors
+   673 CE14 8C 3D 02			sty status1	// Save it to DSTATS!
+   674 CE17 8C 46 02			sty status2
+   675 CE1A 60				rts		// BYE!!
+   676
+   677 CE1B			put_31
+   678 CE1B A9 31			lda #$31	//Put D1: first
+   679 CE1D 8D 30 02			sta drivenum	
+   680 CE20 4C 18 18			jmp $1818	//Go!
+   681
+   682 CE23			char_format
+   683 CE23 20 27 18			jsr $1827
+   684 CE26 A2 31			ldx #$31
+   685 CE28 AD 4E 02			lda $24e
+   686 CE2B 10 01			bpl char_format_si31
+   687 CE2D E8				inx
+   688 CE2E			char_format_si31
+   689 CE2E 8E 05 84			stx $8405	//Store drive number
+   690 CE31 A9 4C			lda #$4c
+   691 CE33 8D 21 84			sta $8421
+   692 CE36 A9 41 8D 22 84 A9 + 	mwa #char_format_error $8422	//Patch format error.
+   693 CE40 60				rts
+   694
+   695 CE41			char_format_error
+   696 CE41 A9 FE			lda #$fe
+   697 CE43 85 16			sta $16
+   698 CE45 AD 30 02			lda $230
+   699 CE48 C9 31			cmp #$31
+   700 CE4A F0 03			beq char_format_error_31
+   701 CE4C 4C 25 84			jmp $8425
+   702 CE4F			char_format_error_31
+   703 CE4F EE 30 02			inc $230
+   704 CE52 4C 09 84			jmp $8409
+   705
+   706 CE55			sec_table		//List of initial sectors to write on 
+   707
+   708 				//This table marks the sectors we'll take into account to erase the entire sector.
+   709 				//That is, the initial disk sector from we'll erase.
+   710 CE55 02 00 03 00 BB 00 + 	.word $0002,$0003,$00bb,$0173,$022b
+   711 CE5F			offset_table
+   712 CE5F 01 00 03 00 BB 00 + 	.word $0001,$0003,$00bb,$0173,$022b
+   713 CE69			sec_offset
+   714 CE69 00 00			.word $0000	//Sector offset to substract from original cartridge sector.
+   715 				//bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
+   716 CE6B 00 00 00 00 00 00 + 	.by $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   717 CE75			bank_table
+   718 CE75 50 58 60 68 70 78		.by $50,$58,$60,$68,$70,$78
+   719 CE7B			sector_selected
+   720 CE7B 00				.by $00		//By default, sector 0
+   721 CE7C			bank_selected
+   722 CE7C 00				.by $00		//By default, bank 0
+   723
+   724 				//Code for managing the Atarimax flash cartridge. Please take note that this routine
+   725 				//is implemented just for the second chip.
+   726 				//To add functionality to the first chip, you must change the wr5555, wr2aaa and add a chip mask routine.
+   727
+   728
+   729 CE7D			fcode
+   730 CE7D			setsec
+   731 CE7D 29 0F			and #$0F	//Only $00-$0F allowed
+   732 CE7F 18				clc		//Just to not set bit 7 to 1 accidentally
+   733 CE80 2A				rol		//*2
+   734 CE81 2A				rol		//*4
+   735 CE82 2A				rol		//*8
+   736 CE83 AA				tax
+   737 CE84 9D 00 D5			sta $d500,x	//Change bank!
+   738 CE87 60				rts
+   739
+   740 CE88			wr5555
+   741 CE88 8D 42 D5			sta $d542	//Setting third bank from second chip.
+   742 CE8B 8D 55 B5			sta $b555	//Store on $5555!
+   743 CE8E 60				rts
+   744
+   745 CE8F			cmd_unlock
+   746 CE8F A9 AA			lda #$AA	//Store $aa on $5555
+   747 CE91 20 88 CE			jsr wr5555	//Do it!
+   748 CE94 A9 55			lda #$55	//Store $55 on $2aaa
+   749
+   750 CE96			wr2AAA
+   751 CE96 8D 41 D5			sta $d541	//Setting second bank from second chip.
+   752 CE99 8D AA AA			sta $aaaa	//Store on $2aaa
+   753 CE9C 60				rts
+   754
+   755
+   756 				//Enable_write:
+   757 				//enables the 29F040 chip to write one byte.
+   758 				//It only enables one byte. You have to call this routine for every byte you want to write.
+   759 CE9D			enable_write
+   760 CE9D 8E FC CE			stx temp_x
+   761 CEA0 48				pha
+   762 CEA1 20 8F CE			jsr cmd_unlock	//First and second cycle
+   763 CEA4 A9 A0			lda #$a0
+   764 CEA6 20 88 CE			jsr wr5555	//Third cycle
+   765 CEA9			enable_write_cont
+   766 CEA9 68				pla
+   767 CEAA AA				tax
+   768 CEAB 9D 00 D5			sta $d500,x
+   769 CEAE AE FC CE			ldx temp_x
+   770 CEB1 60				rts
+   771
+   772 				//Enable read: not needed for now. Just to have it.
+   773 CEB2			enable_read
+   774 CEB2 48				pha
+   775 CEB3 20 8F CE			jsr cmd_unlock
+   776 CEB6 A9 F0			lda #$f0
+   777 CEB8 20 88 CE			jsr wr5555
+   778 CEBB 4C A9 CE			jmp enable_write_cont
+   779 CEBE			erasebk
+   780 CEBE 8E FC CE			stx temp_x
+   781 CEC1 48				pha
+   782 CEC2 20 8F CE			jsr cmd_unlock		//First two cycles!
+   783 CEC5 A9 80			lda #$80
+   784 CEC7 20 88 CE			jsr wr5555		//Third cycle!
+   785 CECA 20 8F CE			jsr cmd_unlock		//Fourth and fifth cycles!
+   786 CECD 68				pla
+   787 CECE 20 7D CE			jsr setsec
+   788 CED1 A9 30			lda #$30		//Sixth and final cycle!
+   789 CED3 8D 00 A0			sta start_cartridge	//Erase!
+   790 					
+   791 				//Poll_write: wait until the erase is finished.
+   792 CED6			poll_write
+   793 CED6 A9 00			lda #$00
+   794 CED8 8D FB CE			sta pollsame
+   795 CEDB			@poll_again
+   796 CEDB AD 00 A0			lda start_cartridge
+   797 CEDE CD 00 A0			cmp start_cartridge
+   798 CEE1 D0 F3			bne poll_write
+   799 CEE3 CD 00 A0			cmp start_cartridge
+   800 CEE6 D0 EE			bne poll_write
+   801 CEE8 CD 00 A0			cmp start_cartridge
+   802 CEEB D0 E9			bne poll_write
+   803 CEED EE FB CE			inc pollsame
+   804 CEF0 D0 E9			bne @poll_again
+   805 CEF2 A9 FF			lda #$ff
+   806 CEF4 8D FF D5			sta cart_apaga
+   807 CEF7 AE FC CE			ldx temp_x
+   808 CEFA 60				rts
+   809 CEFB			pollsame
+   810 CEFB 00				.by $00
+   811 CEFC 00			temp_x	.by $00
+   812 					
+   813 				//	icl "fcode.s"	//Courtesy from Wrathchild at Atariage. Thanks!
+   814
+   815 CEFD			chipmask
+   816 CEFD 00				.byte $00
+   817 CEFE			final_greeting
+   818 CEFE 23 61 72 74 72 69 + 	.sb "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
+   819 CF51			fin_loader
+   820 				.endp
+   821
+   822 					opt f+		//start filling!
+   823 					
+   824 A6D9				org end_bank-6-3	//// Put it into the end
+   825 BFF7 4C 00 A0			jmp init
+   826 BFFA 23 A0			.word init1		// Second init address first.
+   827 BFFC 00 04			.byte $00,$04		// Parameters to not to call to Disk.
+   828 BFFE 00 A0			.word init		// First init address
+   829 					opt f-			// No more filling!
+   830
+   831 				// Bank 2
+   832 C000				org start_cartridge
+   833 01,A000				lmb #$01
+   834 01,A000			start_atr
+   835 01,A000 01 01 00 06 06 + 	ins "ARD_WIP_rel3.atr",16
+   836 01,09A000		end_atr
+   837
+   838 				//Now we fill till we got cartridge size
+   839
+   840 = 01,090000		total_bytes	= end_atr - start_atr		//Total bytes of ATR
+   841 = 01,2000		bank_size	= end_bank - start_cartridge
+   842
+   843 = 01,0049		banks_used = ((total_bytes+(bank_size-1))/bank_size)+1
+   844 = 01,0037		filler_banks = cart_banks - banks_used
+   845 = 01,0000		filler_bytes = bank_size*(banks_used-1)-total_bytes
+   846
+   847 				; Llenamos los bytes
+   848
+   849 				.if filler_banks > 0
+   850 01,09A000			.sav filler_bytes
+   851 				.else
+   852 					.sav filler_bytes - 6 -8
+   853 				.endif
+   854
+   855 01,09A000		end_file
+   856
+   857
+   858 				.if filler_banks > 0
+   859 					.if filler_banks > 1
+   860 						.rept filler_banks-1
+   861 							.SAV BANK_SIZE
+   862 						.ENDR
+   862 						.endr
+Source: REPT
+   861 01,09A000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,09C000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,09E000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0A0000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0A2000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0A4000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0A6000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0A8000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0AA000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0AC000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0AE000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0B0000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0B2000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0B4000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0B6000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0B8000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0BA000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0BC000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0BE000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0C0000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0C2000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0C4000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0C6000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0C8000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0CA000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0CC000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0CE000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0D0000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0D2000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0D4000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0D6000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0D8000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0DA000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0DC000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0DE000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0E0000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0E2000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0E4000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0E6000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0E8000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0EA000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0EC000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0EE000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0F0000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0F2000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0F4000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0F6000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0F8000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0FA000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0FC000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,0FE000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,100000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,102000 00 00 00 00 +  			.SAV BANK_SIZE
+   861 01,104000 00 00 00 00 +  			.SAV BANK_SIZE
+Source: C:\jac\wudsn\Workspace\Atari800\Prueba Atari\BOOTCartridge\Alternate Reality - The dungeon\ArdungeonV8.asm
+   863 					.endif
+   864 01,106000 00 00 00 00 +  	.sav bank_size-6-8
+   865 				.endif
+   866
+   867
+   868 01,107FF2 A9 00			lda #$00
+   869 01,107FF4 8D 00 D5		sta $d500
+   870 01,107FF7 4C 00 A0		jmp init
+   871 01,107FFA 23 A0			.word init1
+   872 01,107FFC 00 04			.byte $00,$04
+   873 01,107FFE F2 BF			.word $bff2
