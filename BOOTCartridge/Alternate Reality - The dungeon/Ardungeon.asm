@@ -10,7 +10,10 @@
 
 //History:
 
-//V5: added OPTION key detection. If pressed, then boots the disk.
+//V6: relocating initialization routines, now it boots faster! Changed title credits.
+//	Removed SPACE BAR waiting routine when saving character.
+//	Removed SPACE BAR waiting routing when resuming character.
+//V5: added OPTION key detection. If pressed, then boots the disk. Optimizing booting sequence
 //V4: added writing header and character data on flash cartridge. Now it's fully cartridge operational.
 //V3: added format character disk.
 //V2: bug fixes, now the game loads and work. Need floppy disk to save character.
@@ -103,7 +106,7 @@ c_bank	= $36
 // First, copy the loader routine and get back to the OS. You can do whatever you want to initialize.
 Copy_init
 .proc init
-// 1st stage
+// 1st stage: checks OPTION and puts the first disk loader into memory.
 	mva #$ff portb
 	mva #$01 basicf
 	lda consol
@@ -112,58 +115,12 @@ Copy_init
 	CopyMemory Copy_Exit,start_exit,(.len Exit)
 	jmp exit
 NO_OPTION
-	CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
-	CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
 	clc
 	rts
 .endp
 .proc init1
-	CopyMemory $c000,$800,$1000				//Copy OS to RAM
-	CopyMemory $d800,$1800,$2800
-	lda #$20
-	sta chbas
-	sta chbase
-	lda rtclock
-loop1	cmp rtclock
-	beq loop1
-
-	sei
-	mva #$00 nmien
-	mva #$fe portb
-	CopyMemory $800,$c000,$1000				//Put OS on upper RAM
-	CopyMemory $1800,$d800,$2800
-	lda #$e0
-	sta chbas
-	sta chbase
-	mva #$40 nmien
-	CopyMemory Copy_loader2, start_loader2,(.len loader2)
-	cli
-	jmp init2
-.endp
-Copy_exit
-.proc exit, start_exit
-	sei
-	lda #$00
-	sta nmien
-	lda #$ff
-	sta basicf
-	sta cart_apaga
-	lda trig3
-	sta gintlk
-	lda #$40
-	sta nmien
-	lda #$01
-	sta $BFFD	//Boot disk!
-	cli
-	rts
-.endp
-
-Copy_init2
-.proc init2, start_init2
-	ldx #$ff
-	txs
-	stx cart_apaga
-	mva trig3 gintlk
+	CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
+	mva #$00 loader.flag
 	mwa #$600 dbuflo
 	mwa #$01  daux1
 	mva #$52  dcomnd
@@ -173,21 +130,83 @@ Copy_init2
 	mva #$70 $62e
 	jmp $606
 cont
-;	lda #$00
-;	sta sdmctl
-;	sta dmactl		//Turn screen off
 	lda #$70
-	sta $7005
-	sta $7019
+	sta $7005	//Rellocating credits screen from $b000 to $7000
+	sta $7019	
 	sta $7020
 	sta $703f
 	sta $707e
 	lda #$7d
 	sta $700f
-	sta $7067
+	sta $7067	//Done!
 	mwa #loader $7046	//Patch SIO call
+
+	mwa #$600 $7001		//Patching "ahoy!" message so it doesn't appear somewhere else.
+	mva #$4c $7024		//Once loaded the screen, go to 'CONT2'
+	mwa #cont2 $7025	//Done!
+	jmp $7000		//Go credits screen!
+cont2
+	mva #$ff loader.flag
+	CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
+	mva #$00 $7063
+	sta $7068
+	mva #$60 $7064
+	sta $7069
+	CopyMemory init2.dl_patch,$707b, (init2.dl_end-init2.dl_patch+1)
+	lda rtclock
+loop0	cmp rtclock
+	beq loop0
+
+
+	CopyMemory $c000,$800,$1000				//Copy OS to RAM
+	CopyMemory $d800,$1800,$2800
+	lda #$20						//Avoid flashing screen!
+	sta chbas						//while copying OS to RAM.
+	sta chbase						//Done!
+	lda rtclock						//Wait 1 frame
+loop1	cmp rtclock
+	beq loop1						//Done!
+
+	sei
+	mva #$00 nmien						//disabling IRQs, NMIs
+	mva #$fe portb						//Enabling upper RAM.
+	CopyMemory $800,$c000,$1000				//Put OS on upper RAM
+	CopyMemory $1800,$d800,$2800
+	lda #$e0						//Restore font to original address
+	sta chbas
+	sta chbase
+	mva #$40 nmien						//Restore NMIs
+	CopyMemory Copy_loader2, start_loader2,(.len loader2)
+	cli							//Restore IRQs
+	jmp init2						//Go to second part!
+.endp
+Copy_exit		//exit to boot routine.
+.proc exit, start_exit
+	sei
+	lda #$00
+	sta nmien	//disable NMIs
+	lda #$ff
+	sta basicf	//Turn basic off
+	sta cart_apaga	//Turn cartridge off
+	lda trig3
+	sta gintlk	//Avoid the computer to hang up.
+	lda #$40
+	sta nmien	//Restoring NMIs
+	lda #$01
+	sta $BFFD	//Boot disk! It's a trick to not to use illegal routines
+	cli		//Restore IRQs
+	rts		//Go to BOOT!
+.endp
+
+Copy_init2
+.proc init2, start_init2
+	ldx #$ff
+	txs
+	stx cart_apaga
+	mva trig3 gintlk
+
 	mwa #cont2 $7041	//Patch final instruction
-	jmp $7000		//GO!
+	jmp $702A		//GO!
 cont2
 	lda #$22
 	sta sdmctl
@@ -223,10 +242,21 @@ cont3
 	sta $288b		//Forces no checksum
 	sta $288c		//Forces no checksum
 	lda #$00
-	sta $24e		//Virtual D1: enabled!
+	sta $24f		//Virtual D1: enabled!
 	sta $251		//Virtual D4: enabled! 
 	mva #$34 $810e		//Use D4: as main drive
 	jmp $807e		//Go to the game!
+
+dl_patch
+	.by $70,$42
+	.word dl_text
+	.by $02
+	.by $41
+	.word $7060
+dl_end
+dl_text
+	.sb "        Cartridge conversion 2020       "
+	.sb "          Guillermo Fuenzalida          "
 .endp
 
 Copy_init3
@@ -294,6 +324,7 @@ loop
 	lda (aux1),y	// Read the byte from the cartridge
 	pha		// Store it before turning off the cartridge
 	lda #$FF	// Let's turn the cartridge off
+flag = *+1
 	sta cart_apaga	// Done!
 	pla		// Recover byte reading
 	sta (bufrlo),y	// Store it to the final address
@@ -391,6 +422,37 @@ d4_aux2 = d4_aux1+1
 	lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
 	sta nmien	// Recover NMIs
 	cli		// Recover IRQs
+
+
+//Let's patch the SPACE BAR for character disk
+	lda $7ebe
+	cmp #$30
+	bne d4_2nd
+	lda $7ebf
+	cmp #$fb
+	bne d4_2nd
+	
+//Let's patch the SPACE BAR from the first menu!	
+	lda #$4c
+	sta $7ebf
+	lda #$cb
+	sta $7ec0
+	lda #$7e
+	sta $7ec1
+	
+d4_2nd
+	lda $762f
+	cmp #$30
+	bne d4_end
+	lda $7630
+	cmp #$fb
+	bne d4_end
+
+//Let's patch the SPACE BAR from saving the character during the game
+	lda #$ea
+	sta $762f
+	sta $7630
+d4_end
 	ldy #$01	// All done without errors
 	sty status1	// Save it to DSTATS!
 	sty status2
@@ -666,7 +728,7 @@ temp_x	.by $00
 chipmask
 	.byte $00
 final_greeting
-	.sb "Cartridge version (C) 2020 by Guillermo Fuenzalida"
+	.sb "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
 fin_loader
 .endp
 
