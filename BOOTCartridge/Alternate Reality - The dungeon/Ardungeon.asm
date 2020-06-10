@@ -10,6 +10,7 @@
 
 //History:
 
+//V7: Added D1:functionality from physical drive.
 //V6: relocating initialization routines, now it boots faster! Changed title credits.
 //	Removed SPACE BAR waiting routine when saving character.
 //	Removed SPACE BAR waiting routing when resuming character.
@@ -120,14 +121,14 @@ NO_OPTION
 .endp
 .proc init1
 	CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
-	mva #$00 loader.flag
-	mwa #$600 dbuflo
+	mva #$00 loader.flag	//Avoid turning the cartridge off
+	mwa #$600 dbuflo	
 	mwa #$01  daux1
 	mva #$52  dcomnd
 	jsr loader		//Read 1st sector
 	mwa #loader $633	//Patch SIO call
 	mwa #cont $63e		//Patch final instruction
-	mva #$70 $62e
+	mva #$70 $62e		//Patch address for DL.
 	jmp $606
 cont
 	lda #$70
@@ -146,7 +147,7 @@ cont
 	mwa #cont2 $7025	//Done!
 	jmp $7000		//Go credits screen!
 cont2
-	mva #$ff loader.flag
+	mva #$ff loader.flag	//Resume turning the cartridge off after reading the cartridge
 	CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
 	mva #$00 $7063
 	sta $7068
@@ -200,11 +201,15 @@ Copy_exit		//exit to boot routine.
 
 Copy_init2
 .proc init2, start_init2
+	sei			//Turn IRQs off
+	mva #$00 nmien		//Turn NMIs off
 	ldx #$ff
-	txs
-	stx cart_apaga
-	mva trig3 gintlk
-
+	txs			//Reset stack pointer.
+	stx cart_apaga		//Turn the cartridge off.
+	mva trig3 gintlk	//Avoid hanging up
+	mva #$40 nmien		//Restore NMIs
+	cli			//Restore IRQs
+	
 	mwa #cont2 $7041	//Patch final instruction
 	jmp $702A		//GO!
 cont2
@@ -221,7 +226,7 @@ cont3
 	sta $8190
 	sta $8191		//Done!
 	mva #$4c $81a4		//Skip
-	mwa #$8221 $81a5	//RAM size detection
+	mwa #$8221 $81a5	//RAM size detection, Force 48K RAM.
 
 //TO DO: patch custom SIO command to $CC00
 //What to know:
@@ -229,21 +234,24 @@ cont3
 //	$231 = SIO command ($52 read, $53 status, $50 put, $22 format)
 //	$232 = SIO aux1 (sector number lo byte)
 //	$233 = SIO aux2 (sector number hi byte)
-// Pending: where to locate the buffer ($CD00? or similar.)
 
 	mwa #loader2 $24a1
-//	mva #$02 $80e1		//Skip Virtual D4: detection
-	lda #$4c		//NOPs to force detection on D1:
-	sta $80e0
-	mwa #$810d $80e1
+	mva #$00 $80e1		//Just detect D1: We won't use D2:,D3: or D4:
+//	lda #$4c		//NOPs to force detection on D1:
+//	sta $80e0
+//	mwa #$810d $80e1
 	lda #$ea		//Store NOPs
 	sta $2893		//Forces no checksum
 	sta $2894		//Forces no checksum
 	sta $288b		//Forces no checksum
 	sta $288c		//Forces no checksum
-	lda #$00
-	sta $24f		//Virtual D1: enabled!
-	sta $251		//Virtual D4: enabled! 
+	sta $810b
+	sta $810c		//Don't check D1: a second time.
+	ldx #$00
+	stx $24f		//Virtual D2: enabled!	
+	stx $251		//Virtual D4: enabled!
+	dex
+	stx $250		//D3: disabled 
 	mva #$34 $810e		//Use D4: as main drive
 	jmp $807e		//Go to the game!
 
@@ -256,7 +264,7 @@ dl_patch
 dl_end
 dl_text
 	.sb "        Cartridge conversion 2020       "
-	.sb "          Guillermo Fuenzalida          "
+	.sb "   Guillermo Fuenzalida & Mark Keates   "
 .endp
 
 Copy_init3
@@ -265,8 +273,6 @@ Copy_init3
 Copy_Loader
 .proc	loader , start_loader
 	sei		// No IRQs!
-	lda nmien	// Save NMIEN
-	pha		// Store it
 	lda #$00	
 	sta nmien	// No NMIs!
 	lda dbuflo	// Take LSB of the address to store
@@ -330,7 +336,7 @@ flag = *+1
 	sta (bufrlo),y	// Store it to the final address
 	dey		// Are we done with the byte copying?
 	bpl loop	// Not yet
-	pla		// Ending the cartridge reading process. Now we recover the computer status
+	lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
 	sta nmien	// Recover NMIs
 	cli		// Recover IRQs
 	ldy #$01	// All done without errors
@@ -351,9 +357,82 @@ drivesechi =$233
 status1 = $23d
 status2 = $246
 buffer = $100
+backupbuffer =$cff0
+
+//	lda drivecommand
+//	cmp #$53 	//status command?
+//	beq go_drive1
 	lda drivenum
+	cmp #$31	//Is it drive 1?
+	jne no_drive1	//No!
+	jsr $204e
+	bpl end_drive1
+	inc $230
+	jmp $cc00
+end_drive1
+	rts
+
+	lda drivecommand
+	cmp #$21	//Is it a format?
+	beq go_drive1	//Yes!
+
+	lda drivesechi	//>=256?
+	bne go_drive1	//No! Reading sector 01-255
+	lda driveseclo
+	cmp #$02	//Is it sector 2?
+	bne go_drive1	//No! Sector 1 or 3-255
+
+	ldx #$0f
+loop_savebuffer
+	lda buffer,x
+	sta backupbuffer,x
+	dex
+	bpl loop_savebuffer
+	inx
+loop_save230
+	lda $230,x
+	pha
+	inx
+	cpx #$05
+	bne loop_save230
+	lda #$03
+	sta $232
+	lda #$00
+	sta $233
+	lda #$80
+	sta $234
+	jsr $24a3	//Status D1:
+	php
+	pla
+	sta temp_x
+	ldx #$04
+loop_read230
+	pla
+	sta $230,x
+	dex
+	bpl loop_read230
+	ldx #$0f
+loop_recoverbuffer
+	lda backupbuffer,x
+	sta buffer,x
+	dex
+	bpl loop_recoverbuffer
+	lda temp_x
+	pha
+	plp
+	bpl go_drive1
+	lda #$ff
+	sta $24e
+	inc drivenum
+	ldy #$8a
+	sty status1
+	sty status2
+	rts
+go_drive1
+	jmp $204e	//Yes, continue disk access
+no_drive1
 	cmp #$34	//Is virtual D4: drive?
-	jne drive1	//No! It's the character disk.
+	jne drive2	//No! It's the character disk.
 //	beq drive4
 //	jmp $204e	// Use the disk drive!!!
 drive4	
@@ -443,22 +522,49 @@ d4_aux2 = d4_aux1+1
 d4_2nd
 	lda $762f
 	cmp #$30
-	bne d4_end
+	bne d4_3rd
 	lda $7630
 	cmp #$fb
-	bne d4_end
-
+	bne d4_3rd
 //Let's patch the SPACE BAR from saving the character during the game
 	lda #$ea
 	sta $762f
 	sta $7630
+d4_3rd
+	lda $7608
+	cmp #$20	//JSR?
+	bne d4_4th	//No!
+	lda #$18
+	cmp $7609
+	bne d4_4th
+	cmp $760a
+	bne d4_4th
+	mwa #put_31 $7609
+d4_4th
+	lda $8404
+	cmp #$A9	//LDA?
+	bne d4_5th
+	lda $8405
+	cmp #$31
+	bne d4_5th
+	mwa #char_format $8402
+d4_5th
+	lda $776b
+	cmp #$a9
+	bne d4_end
+	lda $776c
+	cmp #$57
+	bne d4_end
+	lda #$50
+	sta $776c
+
 d4_end
 	ldy #$01	// All done without errors
 	sty status1	// Save it to DSTATS!
 	sty status2
 	rts		// BYE!!
 
-drive1
+drive2
 	lda drivecommand
 	cmp #$21	//Is it a format command?
 	jne no_format	//No! It's a write or read
@@ -492,28 +598,28 @@ no_format
 	ldx #$00	//Counter
 	stx sector_selected
 	ldy #$01	//Start with no detection!!
-d1_loop1
+d2_loop1
 	lda drivesechi		//Take MSB of the sector
 	cmp sec_table+1,x	//Is it from the table?
-	beq d1_loop1_0 
-	bcc d1_loop2		//NO! It's higher. Don't count this.
-	bne d1_loop1_2		//No! It's lower. Take x to the sector selected.
+	beq d2_loop1_0 
+	bcc d2_loop2		//NO! It's higher. Don't count this.
+	bne d2_loop1_2		//No! It's lower. Take x to the sector selected.
 
-d1_loop1_0
+d2_loop1_0
 	lda driveseclo		//It's equal. Now let's get LSB of the sector.
 	cmp sec_table,x		//Is it from the table?
-	beq d1_loop1_1
-	bcc d1_loop2		//No, it's higher. next sector!
-	bne d1_loop1_2		//No, it's lower. Take x to the sector selected.
-d1_loop1_1
+	beq d2_loop1_1
+	bcc d2_loop2		//No, it's higher. next sector!
+	bne d2_loop1_2		//No, it's lower. Take x to the sector selected.
+d2_loop1_1
 	dey			//It's the same! Put Y = 0.
-d1_loop1_2
+d2_loop1_2
 	stx sector_selected
-d1_loop2
+d2_loop2
 	inx
 	inx
 	cpx #$0a	//All 5 sectors checked?
-	bne d1_loop1	//Not yet!
+	bne d2_loop1	//Not yet!
 	ldx sector_selected
 	lda offset_table,x	//Take the offset
 	sta sec_offset		//Store it!
@@ -522,9 +628,9 @@ d1_loop2
 	lsr sector_selected
 	ldx sector_selected
 	lda bank_table,x
-	sta d1_parameter	//Change initial bank to take
+	sta d2_parameter	//Change initial bank to take
 
-drive1_put
+drive2_put
 	sei		// No IRQs!
 	lda #$00	
 	sta nmien	// No NMIs!
@@ -532,79 +638,81 @@ drive1_put
 	sec		// Let's substract 1
 	lda driveseclo	// To the sector number!
 	sbc sec_offset
-	sta d1_read_aux1	// Store it!
+	sta d2_read_aux1	// Store it!
 	lda drivesechi	// Take MSB of the sector to read
 	sbc sec_offset+1	// Make sure we store it
-	sta d1_read_aux2	// on page zero!
+	sta d2_read_aux2	// on page zero!
 	clc		// Clear the carry.
-	lda d1_read_aux1	// Take new sector number
+	lda d2_read_aux1	// Take new sector number
 	pha		// save it!
 	and #$c0	// Take bits 6 and 7
 	:6 lsr		// Move it to bit 0 and 1!
-	sta d1_read_aux1	// Store it!
-	lda d1_read_aux2	// Take MSB of the sector.
+	sta d2_read_aux1	// Store it!
+	lda d2_read_aux2	// Take MSB of the sector.
 	asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
 	asl		// Done!
-	ora d1_read_aux1	// Put bits 0 and 1 on from the previous calculation 
+	ora d2_read_aux1	// Put bits 0 and 1 on from the previous calculation 
 	clc		// Preparing to add 1
-d1_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+d2_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
 	adc #$01	// Add it!
-	sta d1_read_c_bank	// Store cartridge bank!
-	sta d1_write_c_bank
+	sta d2_read_c_bank	// Store cartridge bank!
+	sta d2_write_c_bank
 	pla		// take previous LSB of the sector number.
 	and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
 	lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
 	ora #>start_cartridge	// Establish the initial address from the cartridge
-	sta d1_read_aux2	// Store it as MSB from the address to read from the cartridge
-	sta d1_write_aux2
+	sta d2_read_aux2	// Store it as MSB from the address to read from the cartridge
+	sta d2_write_aux2
 	lda #$00	// Taking carry
 	ror		// To determine if LSB is $00 or $80
-	sta d1_read_aux1	// Save it!
-	sta d1_write_aux1
+	sta d2_read_aux1	// Save it!
+	sta d2_write_aux1
 
 //Now we start to copy the bytes (read/write)
 
 	ldx #$7f
 	pla		//Restore command
 	cmp #$57	//Write?
-	beq d1_write
-d1_read_ldacbank
+	beq d2_write
+	cmp #$50
+	beq d2_write
+d2_read_ldacbank
 	lda #$ff
-d1_read_c_bank =d1_read_ldacbank+1
+d2_read_c_bank =d2_read_ldacbank+1
 	tay
 	sta $d500,y
-d1_read_loop
+d2_read_loop
 	lda $FFFF,x	// Read the byte from the cartridge
-d1_read_aux1 = d1_read_loop+1
-d1_read_aux2 = d1_read_aux1+1
+d2_read_aux1 = d2_read_loop+1
+d2_read_aux2 = d2_read_aux1+1
 	sta buffer,x	// Store it to the final address
 	dex		// Are we done with the byte copying?
-	bpl d1_read_loop	// Not yet
-	bmi d1_end	//Let's finish
+	bpl d2_read_loop	// Not yet
+	bmi d2_end	//Let's finish
 
-d1_write
+d2_write
 	tya		//Is is first sector?
-	bne d1_write_cont	//Nope, let's continue
+	bne d2_write_cont	//Nope, let's continue
 	lda sector_selected	
 	clc
 	adc #$0a
 	jsr erasebk		//Erase the bank and start writing!
-d1_write_cont
+d2_write_cont
 
-d1_write_loop
-d1_write_ldacbank
+d2_write_loop
+d2_write_ldacbank
 	lda #$ff
-d1_write_c_bank =d1_write_ldacbank+1
+d2_write_c_bank =d2_write_ldacbank+1
 	jsr enable_write
 	lda buffer,x
-d1_write_sta	
+d2_write_sta	
 	sta $FFFF,x
-d1_write_aux1 = d1_write_sta+1
-d1_write_aux2 = d1_write_aux1+1
+d2_write_aux1 = d2_write_sta+1
+d2_write_aux2 = d2_write_aux1+1
 	dex
-	bpl d1_write_loop
+	bpl d2_write_loop
 
-d1_end
+d2_end
 	lda #$ff
 	sta cart_apaga
 	lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
@@ -615,6 +723,34 @@ d1_end
 	sty status2
 	rts		// BYE!!
 
+put_31
+	lda #$31
+	sta drivenum
+	jmp $1818
+
+char_format
+	jsr $1827
+	ldx #$31
+	lda $24e
+	bpl char_format_si31
+	inx
+char_format_si31
+	stx $8405
+	lda #$4c
+	sta $8421
+	mwa #char_format_error $8422
+	rts
+
+char_format_error
+	lda #$fe
+	sta $16
+	lda $230
+	cmp #$31
+	beq char_format_error_31
+	jmp $8425
+char_format_error_31
+	inc $230
+	jmp $8409
 
 sec_table		//List of initial sectors to write on 
 
