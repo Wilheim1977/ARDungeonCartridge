@@ -6,8 +6,15 @@
 // *                                                  *
 // ****************************************************
 
+//Alternate Reality: The Dungeon Cartridge conversion
 
+//History:
 
+//V5: added OPTION key detection. If pressed, then boots the disk.
+//V4: added writing header and character data on flash cartridge. Now it's fully cartridge operational.
+//V3: added format character disk.
+//V2: bug fixes, now the game loads and work. Need floppy disk to save character.
+//V1: initial release. Can load the menu. Game doesn't work.
 
 // First, we will define the extension as .rom
 
@@ -79,7 +86,7 @@ start_loader = $0400
 start_loader2 = $cc00		//Dungeon loader.
 start_cart_io =$cd00		//Cartridge IO routines.
 start_init2 = $480
-
+start_exit = $100
 
 // Page zero parameters
 BUFRLO 	= $32
@@ -102,26 +109,39 @@ Copy_init
 	lda consol
 	and #$04	//OPTION??
 	bne NO_OPTION	//NO!
-	CopyMemory Copy_Exit,$100,(.len Exit)
-	jmp $100
+	CopyMemory Copy_Exit,start_exit,(.len Exit)
+	jmp exit
 NO_OPTION
 	CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
 	CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
+	clc
+	rts
+.endp
+.proc init1
+	CopyMemory $c000,$800,$1000				//Copy OS to RAM
+	CopyMemory $d800,$1800,$2800
+	lda #$20
+	sta chbas
+	sta chbase
+	lda rtclock
+loop1	cmp rtclock
+	beq loop1
+
 	sei
 	mva #$00 nmien
-	CopyMemory $c000,$600,$1000				//Copy OS to RAM
-	CopyMemory $d800,$1600,$2800
 	mva #$fe portb
-	CopyMemory $600,$c000,$1000				//Put OS on upper RAM
-	CopyMemory $1600,$d800,$2800
+	CopyMemory $800,$c000,$1000				//Put OS on upper RAM
+	CopyMemory $1800,$d800,$2800
+	lda #$e0
+	sta chbas
+	sta chbase
 	mva #$40 nmien
 	CopyMemory Copy_loader2, start_loader2,(.len loader2)
 	cli
-	clc	// No errors!
-	rts	// Done
+	jmp init2
 .endp
 Copy_exit
-.proc exit,$100
+.proc exit, start_exit
 	sei
 	lda #$00
 	sta nmien
@@ -132,9 +152,9 @@ Copy_exit
 	sta gintlk
 	lda #$40
 	sta nmien
+	lda #$01
+	sta $BFFD	//Boot disk!
 	cli
-	clc
-	jmp $e474
 	rts
 .endp
 
@@ -193,7 +213,7 @@ cont3
 // Pending: where to locate the buffer ($CD00? or similar.)
 
 	mwa #loader2 $24a1
-	mva #$02 $80e1		//Skip Virtual D4: detection
+//	mva #$02 $80e1		//Skip Virtual D4: detection
 	lda #$4c		//NOPs to force detection on D1:
 	sta $80e0
 	mwa #$810d $80e1
@@ -376,24 +396,6 @@ d4_aux2 = d4_aux1+1
 	sty status2
 	rts		// BYE!!
 
-
-sec_table		//List of initial sectors to write on 
-
-//This table marks the sectors we'll take into account to erase the entire sector.
-//That is, the initial disk sector from we'll erase.
-	.word $0002,$0003,$00bb,$0173,$022b
-offset_table
-	.word $0001,$0003,$00bb,$0173,$022b
-sec_offset
-	.word $0000	//Sector offset to substract from original cartridge sector.
-//bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
-	.by $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-bank_table
-	.by $50,$58,$60,$68,$70,$78
-sector_selected
-	.by $00		//By default, sector 0
-bank_selected
-	.by $00		//By default, bank 0
 drive1
 	lda drivecommand
 	cmp #$21	//Is it a format command?
@@ -552,6 +554,28 @@ d1_end
 	rts		// BYE!!
 
 
+sec_table		//List of initial sectors to write on 
+
+//This table marks the sectors we'll take into account to erase the entire sector.
+//That is, the initial disk sector from we'll erase.
+	.word $0002,$0003,$00bb,$0173,$022b
+offset_table
+	.word $0001,$0003,$00bb,$0173,$022b
+sec_offset
+	.word $0000	//Sector offset to substract from original cartridge sector.
+//bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
+	.by $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+bank_table
+	.by $50,$58,$60,$68,$70,$78
+sector_selected
+	.by $00		//By default, sector 0
+bank_selected
+	.by $00		//By default, bank 0
+
+//Code for managing the Atarimax flash cartridge. Please take note that this routine
+//is implemented just for the second chip.
+//To add functionality to the first chip, you must change the wr5555, wr2aaa and add a chip mask routine.
+
 
 fcode
 setsec
@@ -565,33 +589,38 @@ setsec
 	rts
 
 wr5555
-	sta $d542
-	sta $b555
+	sta $d542	//Setting third bank from second chip.
+	sta $b555	//Store on $5555!
 	rts
 
 cmd_unlock
-	lda #$AA
-	jsr wr5555
-	lda #$55
+	lda #$AA	//Store $aa on $5555
+	jsr wr5555	//Do it!
+	lda #$55	//Store $55 on $2aaa
 
 wr2AAA
-	sta $d541
-	sta $aaaa
+	sta $d541	//Setting second bank from second chip.
+	sta $aaaa	//Store on $2aaa
 	rts
-	
+
+
+//Enable_write:
+//enables the 29F040 chip to write one byte.
+//It only enables one byte. You have to call this routine for every byte you want to write.
 enable_write
 	stx temp_x
 	pha
-	jsr cmd_unlock
+	jsr cmd_unlock	//First and second cycle
 	lda #$a0
-	jsr wr5555
+	jsr wr5555	//Third cycle
 enable_write_cont
 	pla
 	tax
 	sta $d500,x
 	ldx temp_x
 	rts
-	
+
+//Enable read: not needed for now. Just to have it.
 enable_read
 	pha
 	jsr cmd_unlock
@@ -610,7 +639,7 @@ erasebk
 	lda #$30		//Sixth and final cycle!
 	sta start_cartridge	//Erase!
 	
-
+//Poll_write: wait until the erase is finished.
 poll_write
 	lda #$00
 	sta pollsame
@@ -645,7 +674,7 @@ fin_loader
 	
 	org end_bank-6-3	//// Put it into the end
 	jmp init
-	.word init2		// Second init address first.
+	.word init1		// Second init address first.
 	.byte $00,$04		// Parameters to not to call to Disk.
 	.word init		// First init address
 	opt f-			// No more filling!
@@ -690,6 +719,6 @@ end_file
 	lda #$00
 	sta $d500
 	jmp init
-	.word init2
+	.word init1
 	.byte $00,$04
 	.word $bff2
