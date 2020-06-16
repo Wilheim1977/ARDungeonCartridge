@@ -12,27 +12,28 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
     10
     11 				//History:
     12
-    13 				//V8: various bug fixes and optimized D1: access
-    14 				//V7: Added D1:functionality from physical drive.
-    15 				//V6: relocating initialization routines, now it boots faster! Changed title credits.
-    16 				//	Removed SPACE BAR waiting routine when saving character.
-    17 				//	Removed SPACE BAR waiting routing when resuming character.
-    18 				//V5: added OPTION key detection. If pressed, then boots the disk. Optimizing booting sequence
-    19 				//V4: added writing header and character data on flash cartridge. Now it's fully cartridge operational.
-    20 				//V3: added format character disk.
-    21 				//V2: bug fixes, now the game loads and work. Need floppy disk to save character.
-    22 				//V1: initial release. Can load the menu. Game doesn't work.
-    23
-    24 				// First, we will define the extension as .rom
-    25
-    26 				;	@com.wudsn.ide.asm.outputfileextension=.rom
-    27
-    28 				// Now we set no binary headers
-    29
-    30 					opt h-
-    31
-    32 				; include files, useful macros:
-    33 					icl "../../base/sys_equates.m65"
+    13 				//V9: added 3 seconds of waiting in the credit screen. You can skip it by pressing a key, consol key or joystick button.
+    14 				//V8: various bug fixes and optimized D1: access
+    15 				//V7: Added D1:functionality from physical drive.
+    16 				//V6: relocating initialization routines, now it boots faster! Changed title credits.
+    17 				//	Removed SPACE BAR waiting routine when saving character.
+    18 				//	Removed SPACE BAR waiting routing when resuming character.
+    19 				//V5: added OPTION key detection. If pressed, then boots the disk. Optimizing booting sequence
+    20 				//V4: added writing header and character data on flash cartridge. Now it's fully cartridge operational.
+    21 				//V3: added format character disk.
+    22 				//V2: bug fixes, now the game loads and work. Need floppy disk to save character.
+    23 				//V1: initial release. Can load the menu. Game doesn't work.
+    24
+    25 				// First, we will define the extension as .rom
+    26
+    27 				;	@com.wudsn.ide.asm.outputfileextension=.rom
+    28
+    29 				// Now we set no binary headers
+    30
+    31 					opt h-
+    32
+    33 				; include files, useful macros:
+    34 					icl "../../base/sys_equates.m65"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_equates.m65
      1 				;================================================================================
      2 				; System equates, Atari XL + mads [NRV 2009]
@@ -415,7 +416,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    379 				together with Control key: add +$80 
    380 				*/
    380
-    34 					icl "../../base/sys_macros.m65"
+    35 					icl "../../base/sys_macros.m65"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65
      1 				;================================================================================
      2 				; System macros, Atari XL + mads [NRV 2009]
@@ -1303,1118 +1304,1168 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    884
    885
    886
-    35 					
-    36 				// Now a cart type definition
-    37
-    38 				//Cartridge types available
-    39 				// 1: Atarimax 8 Mbit
-    40 				// 2: Switchable XEGS 8 Mbit
-    41 				// 3: Atarimax 1 Mbit
-    42 				// 4: Atrax 128 Kbytes (1 Mbit)
-    43 				// 5: Megacart 128 KB
-    44 				// 6: Megacart 1024 KB
-    45
-    46 = 0001			TYPE_CART =1
-    47
-    48 				.if TYPE_CART = 1 
-    49 = A000				start_cartridge = $A000
-    50 = C000				end_bank = $C000
-    51 = 0080				cart_banks = 128
-    52 = D5FF				cart_apaga = $D5FF
-    53 = 0000				FLAG_16KB = $00
-    54 				.elseif TYPE_CART = 2
-    55 					start_cartridge = $8000
-    56 					end_bank = $A000
-    57 					cart_banks = 128
-    58 					cart_apaga = $D5FF
-    59 					FLAG_16KB = $00
-    60 				.elseif TYPE_CART = 3
-    61 					start_cartridge = $A000
-    62 					end_bank = $C000
-    63 					cart_banks = 16
-    64 					cart_apaga = $D51F
-    65 					FLAG_16KB = $00
-    66 				.elseif TYPE_CART = 4
-    67 					start_cartridge = $A000
-    68 					end_bank = $C000
-    69 					cart_banks = 16
-    70 					cart_apaga = $D5FF
-    71 					FLAG_16KB = $00
-    72 				.elseif TYPE_CART = 5
-    73 					start_cartridge = $8000
-    74 					end_bank = $C000
-    75 					cart_banks = 8
-    76 					cart_apaga = $D5FF
-    77 					FLAG_16KB = $01
-    78 				.elseif TYPE_CART = 6
-    79 					start_cartridge = $8000
-    80 					end_bank = $C000
-    81 					cart_banks = 64
-    82 					cart_apaga = $D5FF
-    83 					FLAG_16KB = $01
-    84 				.else
-    85 					.error "Cartridge type not defined"
-    86 				.endif
-    87
-    88 				//Parameters to init the loader
-    89
-    90 = 0400			start_loader = $0400
-    91 = CC00			start_loader2 = $cc00		//Dungeon loader.
-    92 = CD00			start_cart_io =$cd00		//Cartridge IO routines.
-    93 = 0480			start_init2 = $480
-    94 = 0100			start_exit = $100
-    95
-    96 				// Page zero parameters
-    97 = 0032			BUFRLO 	= $32
-    98 = 0033			BUFRHI 	= $33
-    99 = 0034			AUX1	= $34
-   100 = 0035			AUX2	= $35
-   101 = 0036			c_bank	= $36
-   102
-   103 				//Starting the cartridge
-   104
-   105 					org start_cartridge
-   106 A000				lmb #$00	//BANK 0
-   107
-   108 				// First, copy the loader routine and get back to the OS. You can do whatever you want to initialize.
-   109 				Copy_init
-   110 				.proc init
-   111 				// 1st stage: checks OPTION and puts the first disk loader into memory.
-   112 A000 A9 FF 8D 01 D3		mva #$ff portb
-   113 A005 A9 01 8D F8 03		mva #$01 basicf
-   114 A00A AD 1F D0			lda consol
-   115 A00D 29 04			and #$04	//OPTION??
-   116 A00F D0 10			bne NO_OPTION	//NO!
-   117 A011				CopyMemory Copy_Exit,start_exit,(.len Exit)
+    36 					
+    37 				// Now a cart type definition
+    38
+    39 				//Cartridge types available
+    40 				// 1: Atarimax 8 Mbit
+    41 				// 2: Switchable XEGS 8 Mbit
+    42 				// 3: Atarimax 1 Mbit
+    43 				// 4: Atrax 128 Kbytes (1 Mbit)
+    44 				// 5: Megacart 128 KB
+    45 				// 6: Megacart 1024 KB
+    46
+    47 = 0001			TYPE_CART =1
+    48
+    49 				.if TYPE_CART = 1 
+    50 = A000				start_cartridge = $A000
+    51 = C000				end_bank = $C000
+    52 = 0080				cart_banks = 128
+    53 = D5FF				cart_apaga = $D5FF
+    54 = 0000				FLAG_16KB = $00
+    55 				.elseif TYPE_CART = 2
+    56 					start_cartridge = $8000
+    57 					end_bank = $A000
+    58 					cart_banks = 128
+    59 					cart_apaga = $D5FF
+    60 					FLAG_16KB = $00
+    61 				.elseif TYPE_CART = 3
+    62 					start_cartridge = $A000
+    63 					end_bank = $C000
+    64 					cart_banks = 16
+    65 					cart_apaga = $D51F
+    66 					FLAG_16KB = $00
+    67 				.elseif TYPE_CART = 4
+    68 					start_cartridge = $A000
+    69 					end_bank = $C000
+    70 					cart_banks = 16
+    71 					cart_apaga = $D5FF
+    72 					FLAG_16KB = $00
+    73 				.elseif TYPE_CART = 5
+    74 					start_cartridge = $8000
+    75 					end_bank = $C000
+    76 					cart_banks = 8
+    77 					cart_apaga = $D5FF
+    78 					FLAG_16KB = $01
+    79 				.elseif TYPE_CART = 6
+    80 					start_cartridge = $8000
+    81 					end_bank = $C000
+    82 					cart_banks = 64
+    83 					cart_apaga = $D5FF
+    84 					FLAG_16KB = $01
+    85 				.else
+    86 					.error "Cartridge type not defined"
+    87 				.endif
+    88
+    89 				//Parameters to init the loader
+    90
+    91 = 0400			start_loader = $0400
+    92 = CC00			start_loader2 = $cc00		//Dungeon loader.
+    93 = CD00			start_cart_io =$cd00		//Cartridge IO routines.
+    94 = 0480			start_init2 = $480
+    95 = 0100			start_exit = $100
+    96
+    97 				// Page zero parameters
+    98 = 0032			BUFRLO 	= $32
+    99 = 0033			BUFRHI 	= $33
+   100 = 0034			AUX1	= $34
+   101 = 0035			AUX2	= $35
+   102 = 0036			c_bank	= $36
+   103
+   104 				//Starting the cartridge
+   105
+   106 					org start_cartridge
+   107 A000				lmb #$00	//BANK 0
+   108
+   109 				// First, copy the loader routine and get back to the OS. You can do whatever you want to initialize.
+   110 				Copy_init
+   111 				.proc init
+   112 				// 1st stage: checks OPTION and puts the first disk loader into memory.
+   113 A000 A9 FF 8D 01 D3		mva #$ff portb
+   114 A005 A9 01 8D F8 03		mva #$01 basicf
+   115 A00A AD 1F D0			lda consol
+   116 A00D 29 04			and #$04	//OPTION??
+   117 A00F D0 10			bne NO_OPTION	//NO!
+   118 A011				CopyMemory Copy_Exit,start_exit,(.len Exit)
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
     10 A011 A0 00			      ldy #0
     13 A013			copyMemLoop1
-    14 A013 B9 0A A2				lda COPY_EXIT,y
+    14 A013 B9 30 A2				lda COPY_EXIT,y
     15 A016 99 00 01				sta START_EXIT,y
     16 A019 C8					iny
     18 A01A C0 20					cpy #<(.LEN EXIT)
     20 A01C D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   118 A01E 4C 00 01			jmp exit
-   119 A021			NO_OPTION
-   120 A021 18				clc
-   121 A022 60				rts
-   122 				.endp
-   123 A023			.proc init1
-   124 A023				CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
+   119 A01E 4C 00 01			jmp exit
+   120 A021			NO_OPTION
+   121 A021 18				clc
+   122 A022 60				rts
+   123 				.endp
+   124 A023			.proc init1
+   125 A023				CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
     10 A023 A0 00			      ldy #0
     13 A025			copyMemLoop1
-    14 A025 B9 21 A3				lda COPY_LOADER,y
+    14 A025 B9 78 A3				lda COPY_LOADER,y
     15 A028 99 00 04				sta START_LOADER,y
     16 A02B C8					iny
     18 A02C C0 67					cpy #<(.LEN LOADER)
     20 A02E D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   125 A030 A9 00 8D 53 04		mva #$00 loader.flag	//Avoid turning the cartridge off
-   126 A035 A9 00 8D 04 03 A9 + 	mwa #$600 dbuflo	
-   127 A03F A9 01 8D 0A 03 A9 + 	mwa #$01  daux1
-   128 A049 A9 52 8D 02 03		mva #$52  dcomnd
-   129 A04E 20 00 04			jsr loader		//Read 1st sector
-   130 A051 A9 00 8D 33 06 A9 + 	mwa #loader $633	//Patch SIO call
-   131 A05B A9 6D 8D 3E 06 A9 + 	mwa #cont $63e		//Patch final instruction
-   132 A065 A9 70 8D 2E 06		mva #$70 $62e		//Patch address for DL.
-   133 A06A 4C 06 06			jmp $606
-   134 A06D			cont
-   135 A06D A9 70			lda #$70
-   136 A06F 8D 05 70			sta $7005	//Rellocating credits screen from $b000 to $7000
-   137 A072 8D 19 70			sta $7019	
-   138 A075 8D 20 70			sta $7020
-   139 A078 8D 3F 70			sta $703f
-   140 A07B 8D 7E 70			sta $707e
-   141 A07E A9 7D			lda #$7d
-   142 A080 8D 0F 70			sta $700f
-   143 A083 8D 67 70			sta $7067	//Done!
-   144 A086 A9 00 8D 46 70 A9 + 	mwa #loader $7046	//Patch SIO call
-   145
-   146 A090 A9 00 8D 01 70 A9 + 	mwa #$600 $7001		//Patching "ahoy!" message so it doesn't appear somewhere else.
-   147 A09A A9 4C 8D 24 70		mva #$4c $7024		//Once loaded the screen, go to 'CONT2'
-   148 A09F A9 AC 8D 25 70 A9 + 	mwa #cont2 $7025	//Done!
-   149 A0A9 4C 00 70			jmp $7000		//Go credits screen!
-   150 A0AC			cont2
-   151 A0AC A9 FF 8D 53 04		mva #$ff loader.flag	//Resume turning the cartridge off after reading the cartridge
-   152 A0B1				CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
+   126 A030 A9 00 8D 53 04		mva #$00 loader.flag	//Avoid turning the cartridge off
+   127 A035 A9 00 8D 04 03 A9 + 	mwa #$600 dbuflo	
+   128 A03F A9 01 8D 0A 03 A9 + 	mwa #$01  daux1
+   129 A049 A9 52 8D 02 03		mva #$52  dcomnd
+   130 A04E 20 00 04			jsr loader		//Read 1st sector
+   131 A051 A9 00 8D 33 06 A9 + 	mwa #loader $633	//Patch SIO call
+   132 A05B A9 6D 8D 3E 06 A9 + 	mwa #cont $63e		//Patch final instruction
+   133 A065 A9 70 8D 2E 06		mva #$70 $62e		//Patch address for DL.
+   134 A06A 4C 06 06			jmp $606
+   135 A06D			cont
+   136 A06D A9 70			lda #$70
+   137 A06F 8D 05 70			sta $7005	//Rellocating credits screen from $b000 to $7000
+   138 A072 8D 19 70			sta $7019	
+   139 A075 8D 20 70			sta $7020
+   140 A078 8D 3F 70			sta $703f
+   141 A07B 8D 7E 70			sta $707e
+   142 A07E A9 7D			lda #$7d
+   143 A080 8D 0F 70			sta $700f
+   144 A083 8D 67 70			sta $7067	//Done!
+   145 A086 A9 00 8D 46 70 A9 + 	mwa #loader $7046	//Patch SIO call
+   146
+   147 A090 A9 00 8D 01 70 A9 + 	mwa #$600 $7001		//Patching "ahoy!" message so it doesn't appear somewhere else.
+   148 A09A A9 4C 8D 24 70		mva #$4c $7024		//Once loaded the screen, go to 'CONT2'
+   149 A09F A9 AC 8D 25 70 A9 + 	mwa #cont2 $7025	//Done!
+   150 A0A9 4C 00 70			jmp $7000		//Go credits screen!
+   151 A0AC			cont2
+   152 A0AC A9 FF 8D 53 04		mva #$ff loader.flag	//Resume turning the cartridge off after reading the cartridge
+   153 A0B1				CopyMemory Copy_init2, init2, (.len init2)		//Copy second init routine if necessary.
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
     10 A0B1 A0 00			      ldy #0
-    13 A0B3			copyMemLoop1
-    14 A0B3 B9 2A A2				lda COPY_INIT2,y
-    15 A0B6 99 80 04				sta INIT2,y
-    16 A0B9 C8					iny
-    18 A0BA C0 F7					cpy #<(.LEN INIT2)
-    20 A0BC D0 F5				bne copyMemLoop1
+    23 A0B3 A9 50			        lda #<COPY_INIT2
+    24 A0B5 85 FE			        sta copyMemPtr1
+    25 A0B7 A9 A2			        lda #>COPY_INIT2
+    26 A0B9 85 FF			        sta copyMemPtr1+1
+    27 A0BB A9 80				lda #<INIT2
+    28 A0BD 85 FC				sta copyMemPtr2
+    29 A0BF A9 04				lda #>INIT2
+    30 A0C1 85 FD				sta copyMemPtr2+1
+    31 A0C3 A9 28				lda #<(.LEN INIT2)
+    32 A0C5 85 FA				sta copyMemCounter
+    33 A0C7 A9 01				lda #>(.LEN INIT2)
+    34 A0C9 85 FB				sta copyMemCounter+1
+    36 A0CB			copyMemLoop2
+    37 A0CB B1 FE				lda (copyMemPtr1),y
+    38 A0CD 91 FC				sta (copyMemPtr2),y
+    39 A0CF C8					iny
+    40 A0D0 D0 04				bne copyMemB1
+    41 A0D2 E6 FF				inc copyMemPtr1+1
+    42 A0D4 E6 FD				inc copyMemPtr2+1
+    43 A0D6			copyMemB1
+    44 A0D6 A5 FA				lda copyMemCounter
+    45 A0D8 D0 02				bne copyMemB2
+    46 A0DA C6 FB				dec copyMemCounter+1
+    47 A0DC			copyMemB2
+    48 A0DC C6 FA				dec copyMemCounter
+    50 A0DE A5 FA				lda copyMemCounter
+    51 A0E0 05 FB				ora copyMemCounter+1
+    52 A0E2 D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   153 A0BE A9 00 8D 63 70		mva #$00 $7063
-   154 A0C3 8D 68 70			sta $7068
-   155 A0C6 A9 60 8D 64 70		mva #$60 $7064
-   156 A0CB 8D 69 70			sta $7069
-   157 A0CE				CopyMemory init2.dl_patch,$707b, (init2.dl_end-init2.dl_patch+1)
+   154 A0E4 A9 00 8D 63 70		mva #$00 $7063
+   155 A0E9 8D 68 70			sta $7068
+   156 A0EC A9 60 8D 64 70		mva #$60 $7064
+   157 A0F1 8D 69 70			sta $7069
+   158 A0F4				CopyMemory init2.dl_patch,$707b, (init2.dl_end-init2.dl_patch+1)
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 A0CE A0 00			      ldy #0
-    13 A0D0			copyMemLoop1
-    14 A0D0 B9 1F 05				lda INIT2.DL_PATCH,y
-    15 A0D3 99 7B 70				sta $707B,y
-    16 A0D6 C8					iny
-    18 A0D7 C0 09					cpy #<(INIT2.DL_END-INIT2.DL_PATCH+1)
-    20 A0D9 D0 F5				bne copyMemLoop1
+    10 A0F4 A0 00			      ldy #0
+    13 A0F6			copyMemLoop1
+    14 A0F6 B9 50 05				lda INIT2.DL_PATCH,y
+    15 A0F9 99 7B 70				sta $707B,y
+    16 A0FC C8					iny
+    18 A0FD C0 09					cpy #<(INIT2.DL_END-INIT2.DL_PATCH+1)
+    20 A0FF D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   158 A0DB A5 14			lda rtclock
-   159 A0DD C5 14		loop0	cmp rtclock
-   160 A0DF F0 FC			beq loop0
-   161
+   159 A101 A5 14			lda rtclock
+   160 A103 C5 14		loop0	cmp rtclock
+   161 A105 F0 FC			beq loop0
    162
-   163 A0E1				CopyMemory $c000,$800,$1000				//Copy OS to RAM
+   163
+   164 A107				CopyMemory $c000,$800,$1000				//Copy OS to RAM
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 A0E1 A0 00			      ldy #0
-    23 A0E3 A9 00			        lda #<$C000
-    24 A0E5 85 FE			        sta copyMemPtr1
-    25 A0E7 A9 C0			        lda #>$C000
-    26 A0E9 85 FF			        sta copyMemPtr1+1
-    27 A0EB A9 00				lda #<$800
-    28 A0ED 85 FC				sta copyMemPtr2
-    29 A0EF A9 08				lda #>$800
-    30 A0F1 85 FD				sta copyMemPtr2+1
-    31 A0F3 A9 00				lda #<$1000
-    32 A0F5 85 FA				sta copyMemCounter
-    33 A0F7 A9 10				lda #>$1000
-    34 A0F9 85 FB				sta copyMemCounter+1
-    36 A0FB			copyMemLoop2
-    37 A0FB B1 FE				lda (copyMemPtr1),y
-    38 A0FD 91 FC				sta (copyMemPtr2),y
-    39 A0FF C8					iny
-    40 A100 D0 04				bne copyMemB1
-    41 A102 E6 FF				inc copyMemPtr1+1
-    42 A104 E6 FD				inc copyMemPtr2+1
-    43 A106			copyMemB1
-    44 A106 A5 FA				lda copyMemCounter
-    45 A108 D0 02				bne copyMemB2
-    46 A10A C6 FB				dec copyMemCounter+1
-    47 A10C			copyMemB2
-    48 A10C C6 FA				dec copyMemCounter
-    50 A10E A5 FA				lda copyMemCounter
-    51 A110 05 FB				ora copyMemCounter+1
-    52 A112 D0 E7				bne copyMemLoop2
+    10 A107 A0 00			      ldy #0
+    23 A109 A9 00			        lda #<$C000
+    24 A10B 85 FE			        sta copyMemPtr1
+    25 A10D A9 C0			        lda #>$C000
+    26 A10F 85 FF			        sta copyMemPtr1+1
+    27 A111 A9 00				lda #<$800
+    28 A113 85 FC				sta copyMemPtr2
+    29 A115 A9 08				lda #>$800
+    30 A117 85 FD				sta copyMemPtr2+1
+    31 A119 A9 00				lda #<$1000
+    32 A11B 85 FA				sta copyMemCounter
+    33 A11D A9 10				lda #>$1000
+    34 A11F 85 FB				sta copyMemCounter+1
+    36 A121			copyMemLoop2
+    37 A121 B1 FE				lda (copyMemPtr1),y
+    38 A123 91 FC				sta (copyMemPtr2),y
+    39 A125 C8					iny
+    40 A126 D0 04				bne copyMemB1
+    41 A128 E6 FF				inc copyMemPtr1+1
+    42 A12A E6 FD				inc copyMemPtr2+1
+    43 A12C			copyMemB1
+    44 A12C A5 FA				lda copyMemCounter
+    45 A12E D0 02				bne copyMemB2
+    46 A130 C6 FB				dec copyMemCounter+1
+    47 A132			copyMemB2
+    48 A132 C6 FA				dec copyMemCounter
+    50 A134 A5 FA				lda copyMemCounter
+    51 A136 05 FB				ora copyMemCounter+1
+    52 A138 D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   164 A114				CopyMemory $d800,$1800,$2800
+   165 A13A				CopyMemory $d800,$1800,$2800
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 A114 A0 00			      ldy #0
-    23 A116 A9 00			        lda #<$D800
-    24 A118 85 FE			        sta copyMemPtr1
-    25 A11A A9 D8			        lda #>$D800
-    26 A11C 85 FF			        sta copyMemPtr1+1
-    27 A11E A9 00				lda #<$1800
-    28 A120 85 FC				sta copyMemPtr2
-    29 A122 A9 18				lda #>$1800
-    30 A124 85 FD				sta copyMemPtr2+1
-    31 A126 A9 00				lda #<$2800
-    32 A128 85 FA				sta copyMemCounter
-    33 A12A A9 28				lda #>$2800
-    34 A12C 85 FB				sta copyMemCounter+1
-    36 A12E			copyMemLoop2
-    37 A12E B1 FE				lda (copyMemPtr1),y
-    38 A130 91 FC				sta (copyMemPtr2),y
-    39 A132 C8					iny
-    40 A133 D0 04				bne copyMemB1
-    41 A135 E6 FF				inc copyMemPtr1+1
-    42 A137 E6 FD				inc copyMemPtr2+1
-    43 A139			copyMemB1
-    44 A139 A5 FA				lda copyMemCounter
-    45 A13B D0 02				bne copyMemB2
-    46 A13D C6 FB				dec copyMemCounter+1
-    47 A13F			copyMemB2
-    48 A13F C6 FA				dec copyMemCounter
-    50 A141 A5 FA				lda copyMemCounter
-    51 A143 05 FB				ora copyMemCounter+1
-    52 A145 D0 E7				bne copyMemLoop2
+    10 A13A A0 00			      ldy #0
+    23 A13C A9 00			        lda #<$D800
+    24 A13E 85 FE			        sta copyMemPtr1
+    25 A140 A9 D8			        lda #>$D800
+    26 A142 85 FF			        sta copyMemPtr1+1
+    27 A144 A9 00				lda #<$1800
+    28 A146 85 FC				sta copyMemPtr2
+    29 A148 A9 18				lda #>$1800
+    30 A14A 85 FD				sta copyMemPtr2+1
+    31 A14C A9 00				lda #<$2800
+    32 A14E 85 FA				sta copyMemCounter
+    33 A150 A9 28				lda #>$2800
+    34 A152 85 FB				sta copyMemCounter+1
+    36 A154			copyMemLoop2
+    37 A154 B1 FE				lda (copyMemPtr1),y
+    38 A156 91 FC				sta (copyMemPtr2),y
+    39 A158 C8					iny
+    40 A159 D0 04				bne copyMemB1
+    41 A15B E6 FF				inc copyMemPtr1+1
+    42 A15D E6 FD				inc copyMemPtr2+1
+    43 A15F			copyMemB1
+    44 A15F A5 FA				lda copyMemCounter
+    45 A161 D0 02				bne copyMemB2
+    46 A163 C6 FB				dec copyMemCounter+1
+    47 A165			copyMemB2
+    48 A165 C6 FA				dec copyMemCounter
+    50 A167 A5 FA				lda copyMemCounter
+    51 A169 05 FB				ora copyMemCounter+1
+    52 A16B D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   165 A147 A9 20			lda #$20						//Avoid flashing screen!
-   166 A149 8D F4 02			sta chbas						//while copying OS to RAM.
-   167 A14C 8D 09 D4			sta chbase						//Done!
-   168 A14F A5 14			lda rtclock						//Wait 1 frame
-   169 A151 C5 14		loop1	cmp rtclock
-   170 A153 F0 FC			beq loop1						//Done!
-   171
-   172 A155 78				sei
-   173 A156 A9 00 8D 0E D4		mva #$00 nmien						//disabling IRQs, NMIs
-   174 A15B A9 FE 8D 01 D3		mva #$fe portb						//Enabling upper RAM.
-   175 A160				CopyMemory $800,$c000,$1000				//Put OS on upper RAM
+   166 A16D A9 20			lda #$20						//Avoid flashing screen!
+   167 A16F 8D F4 02			sta chbas						//while copying OS to RAM.
+   168 A172 8D 09 D4			sta chbase						//Done!
+   169 A175 A5 14			lda rtclock						//Wait 1 frame
+   170 A177 C5 14		loop1	cmp rtclock
+   171 A179 F0 FC			beq loop1						//Done!
+   172
+   173 A17B 78				sei
+   174 A17C A9 00 8D 0E D4		mva #$00 nmien						//disabling IRQs, NMIs
+   175 A181 A9 FE 8D 01 D3		mva #$fe portb						//Enabling upper RAM.
+   176 A186				CopyMemory $800,$c000,$1000				//Put OS on upper RAM
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 A160 A0 00			      ldy #0
-    23 A162 A9 00			        lda #<$800
-    24 A164 85 FE			        sta copyMemPtr1
-    25 A166 A9 08			        lda #>$800
-    26 A168 85 FF			        sta copyMemPtr1+1
-    27 A16A A9 00				lda #<$C000
-    28 A16C 85 FC				sta copyMemPtr2
-    29 A16E A9 C0				lda #>$C000
-    30 A170 85 FD				sta copyMemPtr2+1
-    31 A172 A9 00				lda #<$1000
-    32 A174 85 FA				sta copyMemCounter
-    33 A176 A9 10				lda #>$1000
-    34 A178 85 FB				sta copyMemCounter+1
-    36 A17A			copyMemLoop2
-    37 A17A B1 FE				lda (copyMemPtr1),y
-    38 A17C 91 FC				sta (copyMemPtr2),y
-    39 A17E C8					iny
-    40 A17F D0 04				bne copyMemB1
-    41 A181 E6 FF				inc copyMemPtr1+1
-    42 A183 E6 FD				inc copyMemPtr2+1
-    43 A185			copyMemB1
-    44 A185 A5 FA				lda copyMemCounter
-    45 A187 D0 02				bne copyMemB2
-    46 A189 C6 FB				dec copyMemCounter+1
-    47 A18B			copyMemB2
-    48 A18B C6 FA				dec copyMemCounter
-    50 A18D A5 FA				lda copyMemCounter
-    51 A18F 05 FB				ora copyMemCounter+1
-    52 A191 D0 E7				bne copyMemLoop2
+    10 A186 A0 00			      ldy #0
+    23 A188 A9 00			        lda #<$800
+    24 A18A 85 FE			        sta copyMemPtr1
+    25 A18C A9 08			        lda #>$800
+    26 A18E 85 FF			        sta copyMemPtr1+1
+    27 A190 A9 00				lda #<$C000
+    28 A192 85 FC				sta copyMemPtr2
+    29 A194 A9 C0				lda #>$C000
+    30 A196 85 FD				sta copyMemPtr2+1
+    31 A198 A9 00				lda #<$1000
+    32 A19A 85 FA				sta copyMemCounter
+    33 A19C A9 10				lda #>$1000
+    34 A19E 85 FB				sta copyMemCounter+1
+    36 A1A0			copyMemLoop2
+    37 A1A0 B1 FE				lda (copyMemPtr1),y
+    38 A1A2 91 FC				sta (copyMemPtr2),y
+    39 A1A4 C8					iny
+    40 A1A5 D0 04				bne copyMemB1
+    41 A1A7 E6 FF				inc copyMemPtr1+1
+    42 A1A9 E6 FD				inc copyMemPtr2+1
+    43 A1AB			copyMemB1
+    44 A1AB A5 FA				lda copyMemCounter
+    45 A1AD D0 02				bne copyMemB2
+    46 A1AF C6 FB				dec copyMemCounter+1
+    47 A1B1			copyMemB2
+    48 A1B1 C6 FA				dec copyMemCounter
+    50 A1B3 A5 FA				lda copyMemCounter
+    51 A1B5 05 FB				ora copyMemCounter+1
+    52 A1B7 D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   176 A193				CopyMemory $1800,$d800,$2800
+   177 A1B9				CopyMemory $1800,$d800,$2800
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 A193 A0 00			      ldy #0
-    23 A195 A9 00			        lda #<$1800
-    24 A197 85 FE			        sta copyMemPtr1
-    25 A199 A9 18			        lda #>$1800
-    26 A19B 85 FF			        sta copyMemPtr1+1
-    27 A19D A9 00				lda #<$D800
-    28 A19F 85 FC				sta copyMemPtr2
-    29 A1A1 A9 D8				lda #>$D800
-    30 A1A3 85 FD				sta copyMemPtr2+1
-    31 A1A5 A9 00				lda #<$2800
-    32 A1A7 85 FA				sta copyMemCounter
-    33 A1A9 A9 28				lda #>$2800
-    34 A1AB 85 FB				sta copyMemCounter+1
-    36 A1AD			copyMemLoop2
-    37 A1AD B1 FE				lda (copyMemPtr1),y
-    38 A1AF 91 FC				sta (copyMemPtr2),y
-    39 A1B1 C8					iny
-    40 A1B2 D0 04				bne copyMemB1
-    41 A1B4 E6 FF				inc copyMemPtr1+1
-    42 A1B6 E6 FD				inc copyMemPtr2+1
-    43 A1B8			copyMemB1
-    44 A1B8 A5 FA				lda copyMemCounter
-    45 A1BA D0 02				bne copyMemB2
-    46 A1BC C6 FB				dec copyMemCounter+1
-    47 A1BE			copyMemB2
-    48 A1BE C6 FA				dec copyMemCounter
-    50 A1C0 A5 FA				lda copyMemCounter
-    51 A1C2 05 FB				ora copyMemCounter+1
-    52 A1C4 D0 E7				bne copyMemLoop2
+    10 A1B9 A0 00			      ldy #0
+    23 A1BB A9 00			        lda #<$1800
+    24 A1BD 85 FE			        sta copyMemPtr1
+    25 A1BF A9 18			        lda #>$1800
+    26 A1C1 85 FF			        sta copyMemPtr1+1
+    27 A1C3 A9 00				lda #<$D800
+    28 A1C5 85 FC				sta copyMemPtr2
+    29 A1C7 A9 D8				lda #>$D800
+    30 A1C9 85 FD				sta copyMemPtr2+1
+    31 A1CB A9 00				lda #<$2800
+    32 A1CD 85 FA				sta copyMemCounter
+    33 A1CF A9 28				lda #>$2800
+    34 A1D1 85 FB				sta copyMemCounter+1
+    36 A1D3			copyMemLoop2
+    37 A1D3 B1 FE				lda (copyMemPtr1),y
+    38 A1D5 91 FC				sta (copyMemPtr2),y
+    39 A1D7 C8					iny
+    40 A1D8 D0 04				bne copyMemB1
+    41 A1DA E6 FF				inc copyMemPtr1+1
+    42 A1DC E6 FD				inc copyMemPtr2+1
+    43 A1DE			copyMemB1
+    44 A1DE A5 FA				lda copyMemCounter
+    45 A1E0 D0 02				bne copyMemB2
+    46 A1E2 C6 FB				dec copyMemCounter+1
+    47 A1E4			copyMemB2
+    48 A1E4 C6 FA				dec copyMemCounter
+    50 A1E6 A5 FA				lda copyMemCounter
+    51 A1E8 05 FB				ora copyMemCounter+1
+    52 A1EA D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   177 A1C6 A9 E0			lda #$e0						//Restore font to original address
-   178 A1C8 8D F4 02			sta chbas
-   179 A1CB 8D 09 D4			sta chbase
-   180 A1CE A9 40 8D 0E D4		mva #$40 nmien						//Restore NMIs
-   181 A1D3				CopyMemory Copy_loader2, start_loader2,(.len loader2)
+   178 A1EC A9 E0			lda #$e0						//Restore font to original address
+   179 A1EE 8D F4 02			sta chbas
+   180 A1F1 8D 09 D4			sta chbase
+   181 A1F4 A9 40 8D 0E D4		mva #$40 nmien						//Restore NMIs
+   182 A1F9				CopyMemory Copy_loader2, start_loader2,(.len loader2)
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 A1D3 A0 00			      ldy #0
-    23 A1D5 A9 88			        lda #<COPY_LOADER2
-    24 A1D7 85 FE			        sta copyMemPtr1
-    25 A1D9 A9 A3			        lda #>COPY_LOADER2
-    26 A1DB 85 FF			        sta copyMemPtr1+1
-    27 A1DD A9 00				lda #<START_LOADER2
-    28 A1DF 85 FC				sta copyMemPtr2
-    29 A1E1 A9 CC				lda #>START_LOADER2
-    30 A1E3 85 FD				sta copyMemPtr2+1
-    31 A1E5 A9 51				lda #<(.LEN LOADER2)
-    32 A1E7 85 FA				sta copyMemCounter
-    33 A1E9 A9 03				lda #>(.LEN LOADER2)
-    34 A1EB 85 FB				sta copyMemCounter+1
-    36 A1ED			copyMemLoop2
-    37 A1ED B1 FE				lda (copyMemPtr1),y
-    38 A1EF 91 FC				sta (copyMemPtr2),y
-    39 A1F1 C8					iny
-    40 A1F2 D0 04				bne copyMemB1
-    41 A1F4 E6 FF				inc copyMemPtr1+1
-    42 A1F6 E6 FD				inc copyMemPtr2+1
-    43 A1F8			copyMemB1
-    44 A1F8 A5 FA				lda copyMemCounter
-    45 A1FA D0 02				bne copyMemB2
-    46 A1FC C6 FB				dec copyMemCounter+1
-    47 A1FE			copyMemB2
-    48 A1FE C6 FA				dec copyMemCounter
-    50 A200 A5 FA				lda copyMemCounter
-    51 A202 05 FB				ora copyMemCounter+1
-    52 A204 D0 E7				bne copyMemLoop2
+    10 A1F9 A0 00			      ldy #0
+    23 A1FB A9 DF			        lda #<COPY_LOADER2
+    24 A1FD 85 FE			        sta copyMemPtr1
+    25 A1FF A9 A3			        lda #>COPY_LOADER2
+    26 A201 85 FF			        sta copyMemPtr1+1
+    27 A203 A9 00				lda #<START_LOADER2
+    28 A205 85 FC				sta copyMemPtr2
+    29 A207 A9 CC				lda #>START_LOADER2
+    30 A209 85 FD				sta copyMemPtr2+1
+    31 A20B A9 51				lda #<(.LEN LOADER2)
+    32 A20D 85 FA				sta copyMemCounter
+    33 A20F A9 03				lda #>(.LEN LOADER2)
+    34 A211 85 FB				sta copyMemCounter+1
+    36 A213			copyMemLoop2
+    37 A213 B1 FE				lda (copyMemPtr1),y
+    38 A215 91 FC				sta (copyMemPtr2),y
+    39 A217 C8					iny
+    40 A218 D0 04				bne copyMemB1
+    41 A21A E6 FF				inc copyMemPtr1+1
+    42 A21C E6 FD				inc copyMemPtr2+1
+    43 A21E			copyMemB1
+    44 A21E A5 FA				lda copyMemCounter
+    45 A220 D0 02				bne copyMemB2
+    46 A222 C6 FB				dec copyMemCounter+1
+    47 A224			copyMemB2
+    48 A224 C6 FA				dec copyMemCounter
+    50 A226 A5 FA				lda copyMemCounter
+    51 A228 05 FB				ora copyMemCounter+1
+    52 A22A D0 E7				bne copyMemLoop2
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   182 A206 58				cli							//Restore IRQs
-   183 A207 4C 80 04			jmp init2						//Go to second part!
-   184 				.endp
-   185 A20A			Copy_exit		//exit to boot routine.
-   186 A20A			.proc exit, start_exit
-   187 0100 78				sei
-   188 0101 A9 00			lda #$00
-   189 0103 8D 0E D4			sta nmien	//disable NMIs
-   190 0106 A9 FF			lda #$ff
-   191 0108 8D F8 03			sta basicf	//Turn basic off
-   192 010B 8D FF D5			sta cart_apaga	//Turn cartridge off
-   193 010E AD 13 D0			lda trig3
-   194 0111 8D FA 03			sta gintlk	//Avoid the computer to hang up.
-   195 0114 A9 40			lda #$40
-   196 0116 8D 0E D4			sta nmien	//Restoring NMIs
-   197 0119 A9 01			lda #$01
-   198 011B 8D FD BF			sta $BFFD	//Boot disk! It's a trick to not to use illegal routines
-   199 011E 58				cli		//Restore IRQs
-   200 011F 60				rts		//Go to BOOT!
-   201 				.endp
-   202
-   203 A22A			Copy_init2
-   204 A22A			.proc init2, start_init2
-   205 0480 78				sei			//Turn IRQs off
-   206 0481 A9 00 8D 0E D4		mva #$00 nmien		//Turn NMIs off
-   207 0486 A2 FF			ldx #$ff
-   208 0488 9A				txs			//Reset stack pointer.
-   209 0489 8E FF D5			stx cart_apaga		//Turn the cartridge off.
-   210 048C AD 13 D0 8D FA 03		mva trig3 gintlk	//Avoid hanging up
-   211 0492 A9 40 8D 0E D4		mva #$40 nmien		//Restore NMIs
-   212 0497 58				cli			//Restore IRQs
-   213 					
-   214 0498 A9 A5 8D 41 70 A9 + 	mwa #cont2 $7041	//Patch final instruction
-   215 04A2 4C 2A 70			jmp $702A		//GO!
-   216 04A5			cont2
-   217 04A5 A9 22			lda #$22
-   218 04A7 8D 2F 02			sta sdmctl
-   219 04AA 8D 00 D4			sta dmactl		//Turn screen on
-   220 04AD A9 00 8D 43 1E A9 + 	mwa #loader $1e43	//Patch SIO call 1
-   221 04B7 A9 00 8D 7D 1E A9 + 	mwa #loader $1e7d	//Patch SIO call 2
-   222 04C1 A9 CE 8D 7A 1E A9 + 	mwa #cont3 $1e7a	//Patch final instruction
-   223 04CB 4C 00 20			jmp $2000		//Execute intro!!
-   224 04CE			cont3
-   225 04CE A9 20			lda #$20		//NO "48K" display!!
-   226 04D0 8D 8F 81			sta $818f
-   227 04D3 8D 90 81			sta $8190
-   228 04D6 8D 91 81			sta $8191		//Done!
-   229 04D9 A9 4C 8D A4 81		mva #$4c $81a4		//Skip
-   230 04DE A9 21 8D A5 81 A9 + 	mwa #$8221 $81a5	//RAM size detection, Force 48K RAM.
-   231
-   232 				//TO DO: patch custom SIO command to $CC00
-   233 				//What to know:
-   234 				//	$230 = SIO drive ID ($31-$34)
-   235 				//	$231 = SIO command ($52 read, $53 status, $50 put, $22 format)
-   236 				//	$232 = SIO aux1 (sector number lo byte)
-   237 				//	$233 = SIO aux2 (sector number hi byte)
-   238
-   239 04E8 A9 00 8D A1 24 A9 + 	mwa #loader2 $24a1
-   240 04F2 A9 00 8D E1 80		mva #$00 $80e1		//Just detect D1: We won't use D2:,D3: or D4:
-   241 				//	lda #$4c		//NOPs to force detection on D1:
-   242 				//	sta $80e0
-   243 				//	mwa #$810d $80e1
-   244 04F7 A9 EA			lda #$ea		//Store NOPs
-   245 04F9 8D 93 28			sta $2893		//Forces no checksum
-   246 04FC 8D 94 28			sta $2894		//Forces no checksum
-   247 04FF 8D 8B 28			sta $288b		//Forces no checksum
-   248 0502 8D 8C 28			sta $288c		//Forces no checksum
-   249 0505 8D 0B 81			sta $810b
-   250 0508 8D 0C 81			sta $810c		//Don't check D1: a second time.
-   251 050B A2 00			ldx #$00
-   252 050D 8E 4F 02			stx $24f		//Virtual D2: enabled!	
-   253 0510 8E 51 02			stx $251		//Virtual D4: enabled!
-   254 0513 CA				dex
-   255 0514 8E 50 02			stx $250		//D3: disabled 
-   256 0517 A9 34 8D 0E 81		mva #$34 $810e		//Use D4: as main drive
-   257 051C 4C 7E 80			jmp $807e		//Go to the game!
+   183 A22C 58				cli							//Restore IRQs
+   184 A22D 4C 80 04			jmp init2						//Go to second part!
+   185 				.endp
+   186 A230			Copy_exit		//exit to boot routine.
+   187 A230			.proc exit, start_exit
+   188 0100 78				sei
+   189 0101 A9 00			lda #$00
+   190 0103 8D 0E D4			sta nmien	//disable NMIs
+   191 0106 A9 FF			lda #$ff
+   192 0108 8D F8 03			sta basicf	//Turn basic off
+   193 010B 8D FF D5			sta cart_apaga	//Turn cartridge off
+   194 010E AD 13 D0			lda trig3
+   195 0111 8D FA 03			sta gintlk	//Avoid the computer to hang up.
+   196 0114 A9 40			lda #$40
+   197 0116 8D 0E D4			sta nmien	//Restoring NMIs
+   198 0119 A9 01			lda #$01
+   199 011B 8D FD BF			sta $BFFD	//Boot disk! It's a trick to not to use illegal routines
+   200 011E 58				cli		//Restore IRQs
+   201 011F 60				rts		//Go to BOOT!
+   202 				.endp
+   203
+   204 A250			Copy_init2
+   205 A250			.proc init2, start_init2
+   206 0480 78				sei			//Turn IRQs off
+   207 0481 A9 00 8D 0E D4		mva #$00 nmien		//Turn NMIs off
+   208 0486 A2 FF			ldx #$ff
+   209 0488 9A				txs			//Reset stack pointer.
+   210 0489 8E FF D5			stx cart_apaga		//Turn the cartridge off.
+   211 048C AD 13 D0 8D FA 03		mva trig3 gintlk	//Avoid hanging up
+   212 0492 A9 40 8D 0E D4		mva #$40 nmien		//Restore NMIs
+   213 0497 58				cli			//Restore IRQs
+   214 					
+   215 0498 A9 A5 8D 41 70 A9 + 	mwa #cont2 $7041	//Patch final instruction
+   216 04A2 4C 2A 70			jmp $702A		//GO!
+   217 04A5			cont2
+   218 04A5 A9 22			lda #$22
+   219 04A7 8D 2F 02			sta sdmctl
+   220 04AA 8D 00 D4			sta dmactl		//Turn screen on
+   221 04AD A9 00 8D 43 1E A9 + 	mwa #loader $1e43	//Patch SIO call 1
+   222 04B7 A9 00 8D 7D 1E A9 + 	mwa #loader $1e7d	//Patch SIO call 2
+   223 04C1 A9 FF 8D 7A 1E A9 + 	mwa #cont3 $1e7a	//Patch final instruction
+   224 04CB A9 01			lda #$01			//Put exclamation mark
+   225 04CD 8D A7 05			sta dl_text_mark	//on screen!
+   226 04D0 A5 14			lda rtclock
+   227 04D2 18				clc
+   228 04D3 A6 62			ldx palnts			//Is it PAL?
+   229 04D5 D0 02			bne cont2_pal		//Yes, 150 frames to add
+   230 04D7 69 1E			adc #30				//NTSC, 180 frames to add
+   231 04D9			cont2_pal
+   232 04D9 69 96			adc #150
+   233 04DB			cont2_loop
+   234 04DB C5 14			cmp rtclock			//Done the time?
+   235 04DD F0 1C			beq cont2_intro		//Yes, go to intro!
+   236 04DF 8D FE 04			sta save_a			//Save temporarily
+   237 04E2 AD 1F D0			lda consol			//Load consol keys
+   238 04E5 49 07			eor #$07			//Is anyone pressed?
+   239 04E7 D0 12			bne cont2_intro		//Yes! Go to intro.
+   240 04E9 AD 84 02			lda strig0			//Is joystick button pressed?
+   241 04EC F0 0D			beq cont2_intro		//Yes! Go to intro.
+   242 04EE AD FC 02			lda ch				//Load keyboard.
+   243 04F1 C9 FF			cmp #$ff			//Any key pressed?
+   244 04F3 D0 06			bne cont2_intro		//Yes! Go to intro.
+   245 04F5 AD FE 04			lda save_a			//Recover A
+   246 04F8 4C DB 04			jmp cont2_loop		//Continue the loop until 3 seconds
+   247 04FB			cont2_intro	
+   248 04FB 4C 00 20			jmp $2000		//Execute intro!!
+   249 04FE			save_a
+   250 04FE 00				.by $00
+   251 04FF			cont3
+   252 04FF A9 20			lda #$20		//NO "48K" display!!
+   253 0501 8D 8F 81			sta $818f
+   254 0504 8D 90 81			sta $8190
+   255 0507 8D 91 81			sta $8191		//Done!
+   256 050A A9 4C 8D A4 81		mva #$4c $81a4		//Skip
+   257 050F A9 21 8D A5 81 A9 + 	mwa #$8221 $81a5	//RAM size detection, Force 48K RAM.
    258
-   259 051F			dl_patch
-   260 051F 70 42			.by $70,$42
-   261 0521 27 05			.word dl_text
-   262 0523 02				.by $02
-   263 0524 41				.by $41
-   264 0525 60 70			.word $7060
-   265 0527			dl_end
-   266 0527			dl_text
-   267 0527 00 00 00 00 00 00 + 	.sb "        Cartridge conversion 2020       "
-   268 054F 00 00 00 27 75 69 + 	.sb "   Guillermo Fuenzalida & Mark Keates   "
-   269 				.endp
-   270
-   271 A321			Copy_init3
-   272
-   273 				// Now, we put the loader
-   274 A321			Copy_Loader
-   275 A321			.proc	loader , start_loader
-   276 0400 78				sei		// No IRQs!
-   277 0401 A9 00			lda #$00	
-   278 0403 8D 0E D4			sta nmien	// No NMIs!
-   279 0406 AD 04 03			lda dbuflo	// Take LSB of the address to store
-   280 0409 85 32			sta bufrlo	// Store it on Page Zero!
-   281 040B AD 05 03			lda dbufhi	// Take MSB of the addres to store
-   282 040E 85 33			sta bufrhi	// Store it!
-   283 0410 38				sec		// Let's substract 1
-   284 0411 AD 0A 03			lda daux1	// To the sector number!
-   285 0414 E9 01			sbc #$01
-   286 0416 85 34			sta aux1	// Store it!
-   287 0418 AD 0B 03			lda daux2	// Take MSB of the sector to read
-   288 041B E9 00			sbc #$00	// Make sure we store it
-   289 041D 85 35			sta aux2	// on page zero!
-   290 041F 18				clc		// Clear the carry.
-   291 0420 A5 34			lda aux1	// Take new sector number
-   292 0422 48				pha		// save it!
-   293 					.if FLAG_16KB = 0
-   294 0423 29 C0				and #$c0	// Take bits 6 and 7
-   295 					.else
-   296 						and #$80	//In case of 16 kb banks just take bit 7
-   297
-   298 					.endif
-   299 0425 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
-   300 					.if FLAG_16KB = 1
-   301 						lsr	// Or bit 7 to 0 in case of 16kb banks
-   302 					.endif
-   303 042B 85 34			sta aux1	// Store it!
-   304 042D A5 35			lda aux2	// Take MSB of the sector.
-   305 042F 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
-   306 					.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
-   307 0430 0A					asl		// Done!
-   308 					.endif
-   309 0431 05 34			ora aux1	// Put bits 0 and 1 on from the previous calculation 
-   310 0433 18				clc		// Preparing to add 1
-   311 = 0435			parameter=*+1		// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
-   312 0434 69 01			adc #$01	// Add it!
-   313 0436 85 36			sta c_bank	// Store cartridge bank!
-   314 0438 68				pla		// take previous LSB of the sector number.
-   315 					.if FLAG_16KB = 0
-   316 0439 29 3F				and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
-   317 					.else
-   318 						and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
-   319 					.endif
-   320 043B 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
-   321 043C 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
-   322 043E 85 35			sta aux2	// Store it as MSB from the address to read from the cartridge
-   323 0440 A9 00			lda #$00	// Taking carry
-   324 0442 6A				ror		// To determine if LSB is $00 or $80
-   325 0443 85 34			sta aux1	// Save it!
-   326 0445 A0 7F			ldy #$7F	// Number of bytes to read from cartridge (128)
-   327 0447			loop
-   328 0447 A5 36			lda c_bank	// First, we take the cartridge bank calculated
-   329 0449 AA				tax		// Transfer to register X
-   330 044A 9D 00 D5			sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
-   331 044D B1 34			lda (aux1),y	// Read the byte from the cartridge
-   332 044F 48				pha		// Store it before turning off the cartridge
-   333 0450 A9 FF			lda #$FF	// Let's turn the cartridge off
-   334 = 0453			flag = *+1
-   335 0452 8D FF D5			sta cart_apaga	// Done!
-   336 0455 68				pla		// Recover byte reading
-   337 0456 91 32			sta (bufrlo),y	// Store it to the final address
-   338 0458 88				dey		// Are we done with the byte copying?
-   339 0459 10 EC			bpl loop	// Not yet
-   340 045B A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
-   341 045D 8D 0E D4			sta nmien	// Recover NMIs
-   342 0460 58				cli		// Recover IRQs
-   343 0461 A0 01			ldy #$01	// All done without errors
-   344 0463 8C 03 03			sty dstats	// Save it to DSTATS!
-   345 0466 60				rts		// BYE!!
-   346 0467			fin_loader
-   347 				.endp
-   348
-   349 A388			Copy_loader2
-   350 A388			.proc	loader2 , start_loader2
-   351
-   352 				;aux1 = $02
-   353 				;aux2 = aux1+1
-   354 = 0230			drivenum =$230
-   355 = 0231			drivecommand =$231
-   356 = 0232			driveseclo =$232
-   357 = 0233			drivesechi =$233
-   358 = 023D			status1 = $23d
-   359 = 0246			status2 = $246
-   360 = 0100			buffer = $100
-   361 = CFF0			backupbuffer =$cff0
-   362
-   363 				//	lda drivecommand
-   364 				//	cmp #$53 	//status command?
-   365 				//	beq go_drive1
-   366 CC00 AD 30 02			lda drivenum
-   367 CC03 C9 31			cmp #$31	//Is it drive 1?
-   368 CC05 D0 17			jne no_drive1	//No!
-   369 CC07 20 4E 20			jsr $204e
-   370 CC0A 10 11			bpl end_drive1
-   371 CC0C 08				php
-   372 CC0D AD 31 02			lda drivecommand
-   373 CC10 C9 53			cmp #$53
-   374 CC12 D0 02			bne no_status
-   375 CC14 28				plp
-   376 CC15 60				rts
-   377 CC16			no_status
-   378 CC16 EE 30 02			inc drivenum
-   379 CC19 28				plp
-   380 CC1A 4C 00 CC			jmp loader2
-   381 CC1D			end_drive1
-   382 CC1D 60				rts
-   383 CC1E			no_drive1
-   384 CC1E C9 34			cmp #$34	//Is virtual D4: drive?
-   385 CC20 F0 03 4C 0F CD		jne drive2	//No! It's the character disk.
-   386 				//	beq drive4
-   387 				//	jmp $204e	// Use the disk drive!!!
-   388 CC25			drive4	
-   389 CC25 78				sei		// No IRQs!
-   390 CC26 A9 00			lda #$00	
-   391 CC28 8D 0E D4			sta nmien	// No NMIs!
-   392
-   393 CC2B 38				sec		// Let's substract 1
-   394 CC2C AD 32 02			lda driveseclo	// To the sector number!
-   395 CC2F E9 01			sbc #$01
-   396 CC31 8D 72 CC			sta d4_aux1	// Store it!
-   397 CC34 AD 33 02			lda drivesechi	// Take MSB of the sector to read
-   398 CC37 E9 00			sbc #$00	// Make sure we store it
-   399 CC39 8D 73 CC			sta d4_aux2	// on page zero!
-   400 CC3C 18				clc		// Clear the carry.
-   401 CC3D AD 72 CC			lda d4_aux1	// Take new sector number
-   402 CC40 48				pha		// save it!
-   403 					.if FLAG_16KB = 0
-   404 CC41 29 C0				and #$c0	// Take bits 6 and 7
-   405 					.else
-   406 						and #$80	//In case of 16 kb banks just take bit 7
-   407
-   408 					.endif
-   409 CC43 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
-   410 					.if FLAG_16KB = 1
-   411 						lsr	// Or bit 7 to 0 in case of 16kb banks
-   412 					.endif
-   413 CC49 8D 72 CC			sta d4_aux1	// Store it!
-   414 CC4C AD 73 CC			lda d4_aux2	// Take MSB of the sector.
-   415 CC4F 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
-   416 					.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
-   417 CC50 0A					asl		// Done!
-   418 					.endif
-   419 CC51 0D 72 CC			ora d4_aux1	// Put bits 0 and 1 on from the previous calculation 
-   420 CC54 18				clc		// Preparing to add 1
-   421 = CC56			d4_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
-   422 CC55 69 01			adc #$01	// Add it!
-   423 CC57 8D 6C CC			sta d4_c_bank	// Store cartridge bank!
-   424 CC5A 68				pla		// take previous LSB of the sector number.
-   425 					.if FLAG_16KB = 0
-   426 CC5B 29 3F				and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
-   427 					.else
-   428 						and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
-   429 					.endif
-   430 CC5D 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
-   431 CC5E 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
-   432 CC60 8D 73 CC			sta d4_aux2	// Store it as MSB from the address to read from the cartridge
-   433 CC63 A9 00			lda #$00	// Taking carry
-   434 CC65 6A				ror		// To determine if LSB is $00 or $80
-   435 CC66 8D 72 CC			sta d4_aux1	// Save it!
-   436 CC69 A0 7F			ldy #$7F	// Number of bytes to read from cartridge (128)
-   437 CC6B			d4_ldacbank
-   438 CC6B A9 FF			lda #$FF	// First, we take the cartridge bank calculated
-   439 = CC6C			d4_c_bank = d4_ldacbank+1
-   440 CC6D AA				tax		// Transfer to register X
-   441 CC6E 9D 00 D5			sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
-   442 CC71			d4_loop
-   443 CC71 B9 FF FF			lda $FFFF,y	// Read the byte from the cartridge
-   444 = CC72			d4_aux1 = d4_loop+1
-   445 = CC73			d4_aux2 = d4_aux1+1
-   446 CC74 99 00 01			sta buffer,y	// Store it to the final address
-   447 CC77 88				dey		// Are we done with the byte copying?
-   448 CC78 10 F7			bpl d4_loop	// Not yet
-   449 CC7A A9 FF			lda #$ff
-   450 CC7C 8D FF D5			sta cart_apaga
-   451 CC7F A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
-   452 CC81 8D 0E D4			sta nmien	// Recover NMIs
-   453 CC84 58				cli		// Recover IRQs
-   454
-   455
-   456 				//Let's patch the SPACE BAR for character disk
-   457 CC85 AD BE 7E			lda $7ebe
-   458 CC88 C9 30			cmp #$30
-   459 CC8A D0 16			bne d4_2nd
-   460 CC8C AD BF 7E			lda $7ebf
-   461 CC8F C9 FB			cmp #$fb
-   462 CC91 D0 0F			bne d4_2nd
-   463 					
-   464 				//Let's patch the SPACE BAR from the first menu!	
-   465 CC93 A9 4C			lda #$4c
-   466 CC95 8D BE 7E			sta $7ebe
-   467 CC98 A9 CB			lda #$cb
-   468 CC9A 8D BF 7E			sta $7ebf
-   469 CC9D A9 7E			lda #$7e
-   470 CC9F 8D C0 7E			sta $7ec0
-   471 					
-   472 CCA2			d4_2nd
-   473 CCA2 AD 2F 76			lda $762f
-   474 CCA5 C9 30			cmp #$30
-   475 CCA7 D0 0F			bne d4_3rd
-   476 CCA9 AD 30 76			lda $7630
-   477 CCAC C9 FB			cmp #$fb
-   478 CCAE D0 08			bne d4_3rd
-   479 				//Let's patch the SPACE BAR from saving the character during the game
-   480 CCB0 A9 EA			lda #$ea
-   481 CCB2 8D 2F 76			sta $762f
-   482 CCB5 8D 30 76			sta $7630
-   483 CCB8			d4_3rd
-   484 CCB8 AD 08 76			lda $7608
-   485 CCBB C9 20			cmp #$20	//JSR?
-   486 CCBD D0 16			bne d4_4th	//No!
-   487 CCBF A9 18			lda #$18
-   488 CCC1 CD 09 76			cmp $7609
-   489 CCC4 D0 0F			bne d4_4th
-   490 CCC6 CD 0A 76			cmp $760a
-   491 CCC9 D0 0A			bne d4_4th
-   492 CCCB A9 1B 8D 09 76 A9 + 	mwa #put_31 $7609
-   493 CCD5			d4_4th
-   494 CCD5 AD 04 84			lda $8404
-   495 CCD8 C9 A9			cmp #$A9	//LDA?
-   496 CCDA D0 11			bne d4_5th
-   497 CCDC AD 05 84			lda $8405
-   498 CCDF C9 31			cmp #$31	//Drive 1?
-   499 CCE1 D0 0A			bne d4_5th	//Nope!
-   500 CCE3 A9 23 8D 02 84 A9 + 	mwa #char_format $8402
-   501 CCED			d4_5th
-   502 CCED AD BF 77			lda $77bf
-   503 CCF0 C9 A9			cmp #$a9
-   504 CCF2 D0 12			bne d4_end
-   505 CCF4 AD C0 77			lda $77c0
-   506 CCF7 C9 57			cmp #$57
-   507 CCF9 D0 0B			bne d4_end
-   508 CCFB A9 50			lda #$50
-   509 CCFD 8D 6C 77			sta $776c
-   510 CD00 8D A3 77			sta $77a3
-   511 CD03 8D C0 77			sta $77c0
-   512
-   513 CD06			d4_end
-   514 CD06 A0 01			ldy #$01	// All done without errors
-   515 CD08 8C 3D 02			sty status1	// Save it to DSTATS!
-   516 CD0B 8C 46 02			sty status2
-   517 CD0E 60				rts		// BYE!!
-   518
-   519 CD0F			drive2
-   520 CD0F AD 31 02			lda drivecommand
-   521 CD12 C9 21			cmp #$21	//Is it a format command?
-   522 CD14 D0 27			jne no_format	//No! It's a write or read
-   523
-   524 				//Let's format it! Will erase all sectors for D1:
-   525 CD16 A9 0A			lda #$0a
-   526 CD18 20 BE CE			jsr erasebk	//Erase bank $0a (Header info)
-   527 CD1B A9 0B			lda #$0b
-   528 CD1D 20 BE CE			jsr erasebk	//Erase bank $0b (save state 1)
-   529 CD20 A9 0C			lda #$0c
-   530 CD22 20 BE CE			jsr erasebk	//Erase bank $0c (save state 2)
-   531 CD25 A9 0D			lda #$0d
-   532 CD27 20 BE CE			jsr erasebk	//Erase bank $0d (save state 3)
-   533 CD2A A9 0E			lda #$0e
-   534 CD2C 20 BE CE			jsr erasebk	//Erase bank $0e (save state 4)
-   535 CD2F A9 FF			lda #$ff
-   536 CD31 8D FF D5			sta cart_apaga
-   537 CD34 A0 01			ldy #$01	// All done without errors
-   538 CD36 8C 3D 02			sty status1	// Save it to DSTATS!
-   539 CD39 8C 46 02			sty status2
-   540 CD3C 60				rts		//Formatting successful
-   541 CD3D			no_format
-   542
-   543
-   544 				//	rts		//NEED TO BE REMOVED!!!!
-   545
-   546
-   547 CD3D 48				pha		//Store command for a while
-   548 				//Now will check if it's the initial sector from the block of the disk.
-   549 				//In case it's the initial one, it erases the entire sector
-   550 CD3E A2 00			ldx #$00	//Counter
-   551 CD40 8E 7B CE			stx sector_selected
-   552 CD43 A0 01			ldy #$01	//Start with no detection!!
-   553 CD45			d2_loop1
-   554 CD45 AD 33 02			lda drivesechi		//Take MSB of the sector
-   555 CD48 DD 56 CE			cmp sec_table+1,x	//Is it from the table?
-   556 CD4B F0 04			beq d2_loop1_0 
-   557 CD4D 90 12			bcc d2_loop2		//NO! It's higher. Don't count this.
-   558 CD4F D0 0D			bne d2_loop1_2		//No! It's lower. Take x to the sector selected.
-   559
-   560 CD51			d2_loop1_0
-   561 CD51 AD 32 02			lda driveseclo		//It's equal. Now let's get LSB of the sector.
-   562 CD54 DD 55 CE			cmp sec_table,x		//Is it from the table?
-   563 CD57 F0 04			beq d2_loop1_1
-   564 CD59 90 06			bcc d2_loop2		//No, it's higher. next sector!
-   565 CD5B D0 01			bne d2_loop1_2		//No, it's lower. Take x to the sector selected.
-   566 CD5D			d2_loop1_1
-   567 CD5D 88				dey			//It's the same! Put Y = 0.
-   568 CD5E			d2_loop1_2
-   569 CD5E 8E 7B CE			stx sector_selected
-   570 CD61			d2_loop2
-   571 CD61 E8				inx
-   572 CD62 E8				inx
-   573 CD63 E0 0A			cpx #$0a	//All 5 sectors checked?
-   574 CD65 D0 DE			bne d2_loop1	//Not yet!
-   575 CD67 AE 7B CE			ldx sector_selected
-   576 CD6A BD 5F CE			lda offset_table,x	//Take the offset
-   577 CD6D 8D 69 CE			sta sec_offset		//Store it!
-   578 CD70 BD 60 CE			lda offset_table+1,x	//MSB offset
-   579 CD73 8D 6A CE			sta sec_offset+1	//Store it!
-   580 CD76 4E 7B CE			lsr sector_selected
-   581 CD79 AE 7B CE			ldx sector_selected
-   582 CD7C BD 75 CE			lda bank_table,x
-   583 CD7F 8D B5 CD			sta d2_parameter	//Change initial bank to take
-   584
-   585 CD82			drive2_put
-   586 CD82 78				sei		// No IRQs!
-   587 CD83 A9 00			lda #$00	
-   588 CD85 8D 0E D4			sta nmien	// No NMIs!
-   589
-   590 CD88 38				sec		// Let's substract 1
-   591 CD89 AD 32 02			lda driveseclo	// To the sector number!
-   592 CD8C ED 69 CE			sbc sec_offset
-   593 CD8F 8D E3 CD			sta d2_read_aux1	// Store it!
-   594 CD92 AD 33 02			lda drivesechi	// Take MSB of the sector to read
-   595 CD95 ED 6A CE			sbc sec_offset+1	// Make sure we store it
-   596 CD98 8D E4 CD			sta d2_read_aux2	// on page zero!
-   597 CD9B 18				clc		// Clear the carry.
-   598 CD9C AD E3 CD			lda d2_read_aux1	// Take new sector number
-   599 CD9F 48				pha		// save it!
-   600 CDA0 29 C0			and #$c0	// Take bits 6 and 7
-   601 CDA2 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
-   602 CDA8 8D E3 CD			sta d2_read_aux1	// Store it!
-   603 CDAB AD E4 CD			lda d2_read_aux2	// Take MSB of the sector.
-   604 CDAE 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
-   605 CDAF 0A				asl		// Done!
-   606 CDB0 0D E3 CD			ora d2_read_aux1	// Put bits 0 and 1 on from the previous calculation 
-   607 CDB3 18				clc		// Preparing to add 1
-   608 = CDB5			d2_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
-   609 CDB4 69 01			adc #$01	// Add it!
-   610 CDB6 8D DD CD			sta d2_read_c_bank	// Store cartridge bank!
-   611 CDB9 8D FA CD			sta d2_write_c_bank
-   612 CDBC 68				pla		// take previous LSB of the sector number.
-   613 CDBD 29 3F			and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
-   614 CDBF 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
-   615 CDC0 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
-   616 CDC2 8D E4 CD			sta d2_read_aux2	// Store it as MSB from the address to read from the cartridge
-   617 CDC5 8D 03 CE			sta d2_write_aux2
-   618 CDC8 A9 00			lda #$00	// Taking carry
-   619 CDCA 6A				ror		// To determine if LSB is $00 or $80
-   620 CDCB 8D E3 CD			sta d2_read_aux1	// Save it!
-   621 CDCE 8D 02 CE			sta d2_write_aux1
-   622
-   623 				//Now we start to copy the bytes (read/write)
-   624
-   625 CDD1 A2 7F			ldx #$7f
-   626 CDD3 68				pla		//Restore command
-   627 CDD4 C9 57			cmp #$57	//Write?
-   628 CDD6 F0 15			beq d2_write
-   629 CDD8 C9 50			cmp #$50
-   630 CDDA F0 11			beq d2_write
-   631 CDDC			d2_read_ldacbank
-   632 CDDC A9 FF			lda #$ff
-   633 = CDDD			d2_read_c_bank =d2_read_ldacbank+1
-   634 CDDE A8				tay
-   635 CDDF 99 00 D5			sta $d500,y
-   636 CDE2			d2_read_loop
-   637 CDE2 BD FF FF			lda $FFFF,x	// Read the byte from the cartridge
-   638 = CDE3			d2_read_aux1 = d2_read_loop+1
-   639 = CDE4			d2_read_aux2 = d2_read_aux1+1
-   640 CDE5 9D 00 01			sta buffer,x	// Store it to the final address
-   641 CDE8 CA				dex		// Are we done with the byte copying?
-   642 CDE9 10 F7			bpl d2_read_loop	// Not yet
-   643 CDEB 30 1A			bmi d2_end	//Let's finish
-   644
-   645 CDED			d2_write
-   646 CDED 98				tya		//Is is first sector?
-   647 CDEE D0 09			bne d2_write_cont	//Nope, let's continue
-   648 CDF0 AD 7B CE			lda sector_selected	
-   649 CDF3 18				clc
-   650 CDF4 69 0A			adc #$0a
-   651 CDF6 20 BE CE			jsr erasebk		//Erase the bank and start writing!
-   652 CDF9			d2_write_cont
+   259 				//TO DO: patch custom SIO command to $CC00
+   260 				//What to know:
+   261 				//	$230 = SIO drive ID ($31-$34)
+   262 				//	$231 = SIO command ($52 read, $53 status, $50 put, $22 format)
+   263 				//	$232 = SIO aux1 (sector number lo byte)
+   264 				//	$233 = SIO aux2 (sector number hi byte)
+   265
+   266 0519 A9 00 8D A1 24 A9 + 	mwa #loader2 $24a1
+   267 0523 A9 00 8D E1 80		mva #$00 $80e1		//Just detect D1: We won't use D2:,D3: or D4:
+   268 				//	lda #$4c		//NOPs to force detection on D1:
+   269 				//	sta $80e0
+   270 				//	mwa #$810d $80e1
+   271 0528 A9 EA			lda #$ea		//Store NOPs
+   272 052A 8D 93 28			sta $2893		//Forces no checksum
+   273 052D 8D 94 28			sta $2894		//Forces no checksum
+   274 0530 8D 8B 28			sta $288b		//Forces no checksum
+   275 0533 8D 8C 28			sta $288c		//Forces no checksum
+   276 0536 8D 0B 81			sta $810b
+   277 0539 8D 0C 81			sta $810c		//Don't check D1: a second time.
+   278 053C A2 00			ldx #$00
+   279 053E 8E 4F 02			stx $24f		//Virtual D2: enabled!	
+   280 0541 8E 51 02			stx $251		//Virtual D4: enabled!
+   281 0544 CA				dex
+   282 0545 8E 50 02			stx $250		//D3: disabled 
+   283 0548 A9 34 8D 0E 81		mva #$34 $810e		//Use D4: as main drive
+   284 054D 4C 7E 80			jmp $807e		//Go to the game!
+   285
+   286 0550			dl_patch
+   287 0550 70 42			.by $70,$42
+   288 0552 58 05			.word dl_text
+   289 0554 02				.by $02
+   290 0555 41				.by $41
+   291 0556 60 70			.word $7060
+   292 0558			dl_end
+   293 0558			dl_text
+   294 0558 00 00 00 00 00 00 + 	.sb "        Cartridge conversion 2020       "
+   295 0580 00 00 00 27 75 69 + 	.sb "   Guillermo Fuenzalida & Mark Keates  "
+   296 05A7			dl_text_mark
+   297 05A7 00				.sb " "
+   298 				.endp
+   299
+   300 A378			Copy_init3
+   301
+   302 				// Now, we put the loader
+   303 A378			Copy_Loader
+   304 A378			.proc	loader , start_loader
+   305 0400 78				sei		// No IRQs!
+   306 0401 A9 00			lda #$00	
+   307 0403 8D 0E D4			sta nmien	// No NMIs!
+   308 0406 AD 04 03			lda dbuflo	// Take LSB of the address to store
+   309 0409 85 32			sta bufrlo	// Store it on Page Zero!
+   310 040B AD 05 03			lda dbufhi	// Take MSB of the addres to store
+   311 040E 85 33			sta bufrhi	// Store it!
+   312 0410 38				sec		// Let's substract 1
+   313 0411 AD 0A 03			lda daux1	// To the sector number!
+   314 0414 E9 01			sbc #$01
+   315 0416 85 34			sta aux1	// Store it!
+   316 0418 AD 0B 03			lda daux2	// Take MSB of the sector to read
+   317 041B E9 00			sbc #$00	// Make sure we store it
+   318 041D 85 35			sta aux2	// on page zero!
+   319 041F 18				clc		// Clear the carry.
+   320 0420 A5 34			lda aux1	// Take new sector number
+   321 0422 48				pha		// save it!
+   322 					.if FLAG_16KB = 0
+   323 0423 29 C0				and #$c0	// Take bits 6 and 7
+   324 					.else
+   325 						and #$80	//In case of 16 kb banks just take bit 7
+   326
+   327 					.endif
+   328 0425 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
+   329 					.if FLAG_16KB = 1
+   330 						lsr	// Or bit 7 to 0 in case of 16kb banks
+   331 					.endif
+   332 042B 85 34			sta aux1	// Store it!
+   333 042D A5 35			lda aux2	// Take MSB of the sector.
+   334 042F 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+   335 					.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
+   336 0430 0A					asl		// Done!
+   337 					.endif
+   338 0431 05 34			ora aux1	// Put bits 0 and 1 on from the previous calculation 
+   339 0433 18				clc		// Preparing to add 1
+   340 = 0435			parameter=*+1		// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+   341 0434 69 01			adc #$01	// Add it!
+   342 0436 85 36			sta c_bank	// Store cartridge bank!
+   343 0438 68				pla		// take previous LSB of the sector number.
+   344 					.if FLAG_16KB = 0
+   345 0439 29 3F				and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+   346 					.else
+   347 						and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
+   348 					.endif
+   349 043B 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+   350 043C 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
+   351 043E 85 35			sta aux2	// Store it as MSB from the address to read from the cartridge
+   352 0440 A9 00			lda #$00	// Taking carry
+   353 0442 6A				ror		// To determine if LSB is $00 or $80
+   354 0443 85 34			sta aux1	// Save it!
+   355 0445 A0 7F			ldy #$7F	// Number of bytes to read from cartridge (128)
+   356 0447			loop
+   357 0447 A5 36			lda c_bank	// First, we take the cartridge bank calculated
+   358 0449 AA				tax		// Transfer to register X
+   359 044A 9D 00 D5			sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
+   360 044D B1 34			lda (aux1),y	// Read the byte from the cartridge
+   361 044F 48				pha		// Store it before turning off the cartridge
+   362 0450 A9 FF			lda #$FF	// Let's turn the cartridge off
+   363 = 0453			flag = *+1
+   364 0452 8D FF D5			sta cart_apaga	// Done!
+   365 0455 68				pla		// Recover byte reading
+   366 0456 91 32			sta (bufrlo),y	// Store it to the final address
+   367 0458 88				dey		// Are we done with the byte copying?
+   368 0459 10 EC			bpl loop	// Not yet
+   369 045B A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
+   370 045D 8D 0E D4			sta nmien	// Recover NMIs
+   371 0460 58				cli		// Recover IRQs
+   372 0461 A0 01			ldy #$01	// All done without errors
+   373 0463 8C 03 03			sty dstats	// Save it to DSTATS!
+   374 0466 60				rts		// BYE!!
+   375 0467			fin_loader
+   376 				.endp
+   377
+   378 A3DF			Copy_loader2
+   379 A3DF			.proc	loader2 , start_loader2
+   380
+   381 				;aux1 = $02
+   382 				;aux2 = aux1+1
+   383 = 0230			drivenum =$230
+   384 = 0231			drivecommand =$231
+   385 = 0232			driveseclo =$232
+   386 = 0233			drivesechi =$233
+   387 = 023D			status1 = $23d
+   388 = 0246			status2 = $246
+   389 = 0100			buffer = $100
+   390 = CFF0			backupbuffer =$cff0
+   391
+   392 				//	lda drivecommand
+   393 				//	cmp #$53 	//status command?
+   394 				//	beq go_drive1
+   395 CC00 AD 30 02			lda drivenum
+   396 CC03 C9 31			cmp #$31	//Is it drive 1?
+   397 CC05 D0 17			jne no_drive1	//No!
+   398 CC07 20 4E 20			jsr $204e
+   399 CC0A 10 11			bpl end_drive1
+   400 CC0C 08				php
+   401 CC0D AD 31 02			lda drivecommand
+   402 CC10 C9 53			cmp #$53
+   403 CC12 D0 02			bne no_status
+   404 CC14 28				plp
+   405 CC15 60				rts
+   406 CC16			no_status
+   407 CC16 EE 30 02			inc drivenum
+   408 CC19 28				plp
+   409 CC1A 4C 00 CC			jmp loader2
+   410 CC1D			end_drive1
+   411 CC1D 60				rts
+   412 CC1E			no_drive1
+   413 CC1E C9 34			cmp #$34	//Is virtual D4: drive?
+   414 CC20 F0 03 4C 0F CD		jne drive2	//No! It's the character disk.
+   415 				//	beq drive4
+   416 				//	jmp $204e	// Use the disk drive!!!
+   417 CC25			drive4	
+   418 CC25 78				sei		// No IRQs!
+   419 CC26 A9 00			lda #$00	
+   420 CC28 8D 0E D4			sta nmien	// No NMIs!
+   421
+   422 CC2B 38				sec		// Let's substract 1
+   423 CC2C AD 32 02			lda driveseclo	// To the sector number!
+   424 CC2F E9 01			sbc #$01
+   425 CC31 8D 72 CC			sta d4_aux1	// Store it!
+   426 CC34 AD 33 02			lda drivesechi	// Take MSB of the sector to read
+   427 CC37 E9 00			sbc #$00	// Make sure we store it
+   428 CC39 8D 73 CC			sta d4_aux2	// on page zero!
+   429 CC3C 18				clc		// Clear the carry.
+   430 CC3D AD 72 CC			lda d4_aux1	// Take new sector number
+   431 CC40 48				pha		// save it!
+   432 					.if FLAG_16KB = 0
+   433 CC41 29 C0				and #$c0	// Take bits 6 and 7
+   434 					.else
+   435 						and #$80	//In case of 16 kb banks just take bit 7
+   436
+   437 					.endif
+   438 CC43 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
+   439 					.if FLAG_16KB = 1
+   440 						lsr	// Or bit 7 to 0 in case of 16kb banks
+   441 					.endif
+   442 CC49 8D 72 CC			sta d4_aux1	// Store it!
+   443 CC4C AD 73 CC			lda d4_aux2	// Take MSB of the sector.
+   444 CC4F 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+   445 					.if FLAG_16KB = 0 //Or 1 bit if it's a Megacart
+   446 CC50 0A					asl		// Done!
+   447 					.endif
+   448 CC51 0D 72 CC			ora d4_aux1	// Put bits 0 and 1 on from the previous calculation 
+   449 CC54 18				clc		// Preparing to add 1
+   450 = CC56			d4_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+   451 CC55 69 01			adc #$01	// Add it!
+   452 CC57 8D 6C CC			sta d4_c_bank	// Store cartridge bank!
+   453 CC5A 68				pla		// take previous LSB of the sector number.
+   454 					.if FLAG_16KB = 0
+   455 CC5B 29 3F				and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+   456 					.else
+   457 						and #$7f	// Take bits from 0 to 6. Bit 7 was previously taken to calculate the cartridge bank
+   458 					.endif
+   459 CC5D 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+   460 CC5E 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
+   461 CC60 8D 73 CC			sta d4_aux2	// Store it as MSB from the address to read from the cartridge
+   462 CC63 A9 00			lda #$00	// Taking carry
+   463 CC65 6A				ror		// To determine if LSB is $00 or $80
+   464 CC66 8D 72 CC			sta d4_aux1	// Save it!
+   465 CC69 A0 7F			ldy #$7F	// Number of bytes to read from cartridge (128)
+   466 CC6B			d4_ldacbank
+   467 CC6B A9 FF			lda #$FF	// First, we take the cartridge bank calculated
+   468 = CC6C			d4_c_bank = d4_ldacbank+1
+   469 CC6D AA				tax		// Transfer to register X
+   470 CC6E 9D 00 D5			sta $d500,x	// And save to the cartridge control area. This way I can use Data bus or address bus bank-switching methods 
+   471 CC71			d4_loop
+   472 CC71 B9 FF FF			lda $FFFF,y	// Read the byte from the cartridge
+   473 = CC72			d4_aux1 = d4_loop+1
+   474 = CC73			d4_aux2 = d4_aux1+1
+   475 CC74 99 00 01			sta buffer,y	// Store it to the final address
+   476 CC77 88				dey		// Are we done with the byte copying?
+   477 CC78 10 F7			bpl d4_loop	// Not yet
+   478 CC7A A9 FF			lda #$ff
+   479 CC7C 8D FF D5			sta cart_apaga
+   480 CC7F A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
+   481 CC81 8D 0E D4			sta nmien	// Recover NMIs
+   482 CC84 58				cli		// Recover IRQs
+   483
+   484
+   485 				//Let's patch the SPACE BAR for character disk
+   486 CC85 AD BE 7E			lda $7ebe
+   487 CC88 C9 30			cmp #$30
+   488 CC8A D0 16			bne d4_2nd
+   489 CC8C AD BF 7E			lda $7ebf
+   490 CC8F C9 FB			cmp #$fb
+   491 CC91 D0 0F			bne d4_2nd
+   492 					
+   493 				//Let's patch the SPACE BAR from the first menu!	
+   494 CC93 A9 4C			lda #$4c
+   495 CC95 8D BE 7E			sta $7ebe
+   496 CC98 A9 CB			lda #$cb
+   497 CC9A 8D BF 7E			sta $7ebf
+   498 CC9D A9 7E			lda #$7e
+   499 CC9F 8D C0 7E			sta $7ec0
+   500 					
+   501 CCA2			d4_2nd
+   502 CCA2 AD 2F 76			lda $762f
+   503 CCA5 C9 30			cmp #$30
+   504 CCA7 D0 0F			bne d4_3rd
+   505 CCA9 AD 30 76			lda $7630
+   506 CCAC C9 FB			cmp #$fb
+   507 CCAE D0 08			bne d4_3rd
+   508 				//Let's patch the SPACE BAR from saving the character during the game
+   509 CCB0 A9 EA			lda #$ea
+   510 CCB2 8D 2F 76			sta $762f
+   511 CCB5 8D 30 76			sta $7630
+   512 CCB8			d4_3rd
+   513 CCB8 AD 08 76			lda $7608
+   514 CCBB C9 20			cmp #$20	//JSR?
+   515 CCBD D0 16			bne d4_4th	//No!
+   516 CCBF A9 18			lda #$18
+   517 CCC1 CD 09 76			cmp $7609
+   518 CCC4 D0 0F			bne d4_4th
+   519 CCC6 CD 0A 76			cmp $760a
+   520 CCC9 D0 0A			bne d4_4th
+   521 CCCB A9 1B 8D 09 76 A9 + 	mwa #put_31 $7609
+   522 CCD5			d4_4th
+   523 CCD5 AD 04 84			lda $8404
+   524 CCD8 C9 A9			cmp #$A9	//LDA?
+   525 CCDA D0 11			bne d4_5th
+   526 CCDC AD 05 84			lda $8405
+   527 CCDF C9 31			cmp #$31	//Drive 1?
+   528 CCE1 D0 0A			bne d4_5th	//Nope!
+   529 CCE3 A9 23 8D 02 84 A9 + 	mwa #char_format $8402
+   530 CCED			d4_5th
+   531 CCED AD BF 77			lda $77bf
+   532 CCF0 C9 A9			cmp #$a9
+   533 CCF2 D0 12			bne d4_end
+   534 CCF4 AD C0 77			lda $77c0
+   535 CCF7 C9 57			cmp #$57
+   536 CCF9 D0 0B			bne d4_end
+   537 CCFB A9 50			lda #$50
+   538 CCFD 8D 6C 77			sta $776c
+   539 CD00 8D A3 77			sta $77a3
+   540 CD03 8D C0 77			sta $77c0
+   541
+   542 CD06			d4_end
+   543 CD06 A0 01			ldy #$01	// All done without errors
+   544 CD08 8C 3D 02			sty status1	// Save it to DSTATS!
+   545 CD0B 8C 46 02			sty status2
+   546 CD0E 60				rts		// BYE!!
+   547
+   548 CD0F			drive2
+   549 CD0F AD 31 02			lda drivecommand
+   550 CD12 C9 21			cmp #$21	//Is it a format command?
+   551 CD14 D0 27			jne no_format	//No! It's a write or read
+   552
+   553 				//Let's format it! Will erase all sectors for D1:
+   554 CD16 A9 0A			lda #$0a
+   555 CD18 20 BE CE			jsr erasebk	//Erase bank $0a (Header info)
+   556 CD1B A9 0B			lda #$0b
+   557 CD1D 20 BE CE			jsr erasebk	//Erase bank $0b (save state 1)
+   558 CD20 A9 0C			lda #$0c
+   559 CD22 20 BE CE			jsr erasebk	//Erase bank $0c (save state 2)
+   560 CD25 A9 0D			lda #$0d
+   561 CD27 20 BE CE			jsr erasebk	//Erase bank $0d (save state 3)
+   562 CD2A A9 0E			lda #$0e
+   563 CD2C 20 BE CE			jsr erasebk	//Erase bank $0e (save state 4)
+   564 CD2F A9 FF			lda #$ff
+   565 CD31 8D FF D5			sta cart_apaga
+   566 CD34 A0 01			ldy #$01	// All done without errors
+   567 CD36 8C 3D 02			sty status1	// Save it to DSTATS!
+   568 CD39 8C 46 02			sty status2
+   569 CD3C 60				rts		//Formatting successful
+   570 CD3D			no_format
+   571
+   572
+   573 				//	rts		//NEED TO BE REMOVED!!!!
+   574
+   575
+   576 CD3D 48				pha		//Store command for a while
+   577 				//Now will check if it's the initial sector from the block of the disk.
+   578 				//In case it's the initial one, it erases the entire sector
+   579 CD3E A2 00			ldx #$00	//Counter
+   580 CD40 8E 7B CE			stx sector_selected
+   581 CD43 A0 01			ldy #$01	//Start with no detection!!
+   582 CD45			d2_loop1
+   583 CD45 AD 33 02			lda drivesechi		//Take MSB of the sector
+   584 CD48 DD 56 CE			cmp sec_table+1,x	//Is it from the table?
+   585 CD4B F0 04			beq d2_loop1_0 
+   586 CD4D 90 12			bcc d2_loop2		//NO! It's higher. Don't count this.
+   587 CD4F D0 0D			bne d2_loop1_2		//No! It's lower. Take x to the sector selected.
+   588
+   589 CD51			d2_loop1_0
+   590 CD51 AD 32 02			lda driveseclo		//It's equal. Now let's get LSB of the sector.
+   591 CD54 DD 55 CE			cmp sec_table,x		//Is it from the table?
+   592 CD57 F0 04			beq d2_loop1_1
+   593 CD59 90 06			bcc d2_loop2		//No, it's higher. next sector!
+   594 CD5B D0 01			bne d2_loop1_2		//No, it's lower. Take x to the sector selected.
+   595 CD5D			d2_loop1_1
+   596 CD5D 88				dey			//It's the same! Put Y = 0.
+   597 CD5E			d2_loop1_2
+   598 CD5E 8E 7B CE			stx sector_selected
+   599 CD61			d2_loop2
+   600 CD61 E8				inx
+   601 CD62 E8				inx
+   602 CD63 E0 0A			cpx #$0a	//All 5 sectors checked?
+   603 CD65 D0 DE			bne d2_loop1	//Not yet!
+   604 CD67 AE 7B CE			ldx sector_selected
+   605 CD6A BD 5F CE			lda offset_table,x	//Take the offset
+   606 CD6D 8D 69 CE			sta sec_offset		//Store it!
+   607 CD70 BD 60 CE			lda offset_table+1,x	//MSB offset
+   608 CD73 8D 6A CE			sta sec_offset+1	//Store it!
+   609 CD76 4E 7B CE			lsr sector_selected
+   610 CD79 AE 7B CE			ldx sector_selected
+   611 CD7C BD 75 CE			lda bank_table,x
+   612 CD7F 8D B5 CD			sta d2_parameter	//Change initial bank to take
+   613
+   614 CD82			drive2_put
+   615 CD82 78				sei		// No IRQs!
+   616 CD83 A9 00			lda #$00	
+   617 CD85 8D 0E D4			sta nmien	// No NMIs!
+   618
+   619 CD88 38				sec		// Let's substract the offset
+   620 CD89 AD 32 02			lda driveseclo	// To the sector number!
+   621 CD8C ED 69 CE			sbc sec_offset
+   622 CD8F 8D E3 CD			sta d2_read_aux1	// Store it!
+   623 CD92 AD 33 02			lda drivesechi	// Take MSB of the sector to read
+   624 CD95 ED 6A CE			sbc sec_offset+1	// Make sure we store it
+   625 CD98 8D E4 CD			sta d2_read_aux2	// on page zero!
+   626 CD9B 18				clc		// Clear the carry.
+   627 CD9C AD E3 CD			lda d2_read_aux1	// Take new sector number
+   628 CD9F 48				pha		// save it!
+   629 CDA0 29 C0			and #$c0	// Take bits 6 and 7
+   630 CDA2 4A 4A 4A 4A 4A 4A		:6 lsr		// Move it to bit 0 and 1!
+   631 CDA8 8D E3 CD			sta d2_read_aux1	// Store it!
+   632 CDAB AD E4 CD			lda d2_read_aux2	// Take MSB of the sector.
+   633 CDAE 0A				asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
+   634 CDAF 0A				asl		// Done!
+   635 CDB0 0D E3 CD			ora d2_read_aux1	// Put bits 0 and 1 on from the previous calculation 
+   636 CDB3 18				clc		// Preparing to add the bank parameter
+   637 = CDB5			d2_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
+   638 CDB4 69 01			adc #$01	// Add it!
+   639 CDB6 8D DD CD			sta d2_read_c_bank	// Store cartridge bank!
+   640 CDB9 8D FA CD			sta d2_write_c_bank
+   641 CDBC 68				pla		// take previous LSB of the sector number.
+   642 CDBD 29 3F			and #$3F	// Take bits from 0 to 5. Bits 6 and 7 were previously taken to calculate the cartridge bank.
+   643 CDBF 4A				lsr		// Shift bit 0 to carry flag. That way, we'll know if the LSB to read on the cartridge is $00 or $80
+   644 CDC0 09 A0			ora #>start_cartridge	// Establish the initial address from the cartridge
+   645 CDC2 8D E4 CD			sta d2_read_aux2	// Store it as MSB from the address to read from the cartridge
+   646 CDC5 8D 03 CE			sta d2_write_aux2
+   647 CDC8 A9 00			lda #$00	// Taking carry
+   648 CDCA 6A				ror		// To determine if LSB is $00 or $80
+   649 CDCB 8D E3 CD			sta d2_read_aux1	// Save it!
+   650 CDCE 8D 02 CE			sta d2_write_aux1
+   651
+   652 				//Now we start to copy the bytes (read/write)
    653
-   654 CDF9			d2_write_loop
-   655 CDF9			d2_write_ldacbank
-   656 CDF9 A9 FF			lda #$ff
-   657 = CDFA			d2_write_c_bank =d2_write_ldacbank+1
-   658 CDFB 20 9D CE			jsr enable_write
-   659 CDFE BD 00 01			lda buffer,x
-   660 CE01			d2_write_sta	
-   661 CE01 9D FF FF			sta $FFFF,x
-   662 = CE02			d2_write_aux1 = d2_write_sta+1
-   663 = CE03			d2_write_aux2 = d2_write_aux1+1
-   664 CE04 CA				dex
-   665 CE05 10 F2			bpl d2_write_loop
-   666
-   667 CE07			d2_end
-   668 CE07 A9 FF			lda #$ff
-   669 CE09 8D FF D5			sta cart_apaga
-   670 CE0C A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
-   671 CE0E 8D 0E D4			sta nmien	// Recover NMIs
-   672 CE11 58				cli		// Recover IRQs
-   673 CE12 A0 01			ldy #$01	// All done without errors
-   674 CE14 8C 3D 02			sty status1	// Save it to DSTATS!
-   675 CE17 8C 46 02			sty status2
-   676 CE1A 60				rts		// BYE!!
-   677
-   678 CE1B			put_31
-   679 CE1B A9 31			lda #$31	//Put D1: first
-   680 CE1D 8D 30 02			sta drivenum	
-   681 CE20 4C 18 18			jmp $1818	//Go!
+   654 CDD1 A2 7F			ldx #$7f
+   655 CDD3 68				pla		//Restore command
+   656 CDD4 C9 57			cmp #$57	//Write?
+   657 CDD6 F0 15			beq d2_write
+   658 CDD8 C9 50			cmp #$50
+   659 CDDA F0 11			beq d2_write
+   660 CDDC			d2_read_ldacbank
+   661 CDDC A9 FF			lda #$ff
+   662 = CDDD			d2_read_c_bank =d2_read_ldacbank+1
+   663 CDDE A8				tay
+   664 CDDF 99 00 D5			sta $d500,y
+   665 CDE2			d2_read_loop
+   666 CDE2 BD FF FF			lda $FFFF,x	// Read the byte from the cartridge
+   667 = CDE3			d2_read_aux1 = d2_read_loop+1
+   668 = CDE4			d2_read_aux2 = d2_read_aux1+1
+   669 CDE5 9D 00 01			sta buffer,x	// Store it to the final address
+   670 CDE8 CA				dex		// Are we done with the byte copying?
+   671 CDE9 10 F7			bpl d2_read_loop	// Not yet
+   672 CDEB 30 1A			bmi d2_end	//Let's finish
+   673
+   674 CDED			d2_write
+   675 CDED 98				tya		//Is is first sector?
+   676 CDEE D0 09			bne d2_write_cont	//Nope, let's continue
+   677 CDF0 AD 7B CE			lda sector_selected	
+   678 CDF3 18				clc
+   679 CDF4 69 0A			adc #$0a
+   680 CDF6 20 BE CE			jsr erasebk		//Erase the bank and start writing!
+   681 CDF9			d2_write_cont
    682
-   683 CE23			char_format
-   684 CE23 20 27 18			jsr $1827
-   685 CE26 A2 31			ldx #$31
-   686 CE28 AD 4E 02			lda $24e
-   687 CE2B 10 01			bpl char_format_si31
-   688 CE2D E8				inx
-   689 CE2E			char_format_si31
-   690 CE2E 8E 05 84			stx $8405	//Store drive number
-   691 CE31 A9 4C			lda #$4c
-   692 CE33 8D 21 84			sta $8421
-   693 CE36 A9 41 8D 22 84 A9 + 	mwa #char_format_error $8422	//Patch format error.
-   694 CE40 60				rts
+   683 CDF9			d2_write_loop
+   684 CDF9			d2_write_ldacbank
+   685 CDF9 A9 FF			lda #$ff
+   686 = CDFA			d2_write_c_bank =d2_write_ldacbank+1
+   687 CDFB 20 9D CE			jsr enable_write
+   688 CDFE BD 00 01			lda buffer,x
+   689 CE01			d2_write_sta	
+   690 CE01 9D FF FF			sta $FFFF,x
+   691 = CE02			d2_write_aux1 = d2_write_sta+1
+   692 = CE03			d2_write_aux2 = d2_write_aux1+1
+   693 CE04 CA				dex
+   694 CE05 10 F2			bpl d2_write_loop
    695
-   696 CE41			char_format_error
-   697 CE41 A9 FE			lda #$fe
-   698 CE43 85 16			sta $16
-   699 CE45 AD 30 02			lda $230
-   700 CE48 C9 31			cmp #$31
-   701 CE4A F0 03			beq char_format_error_31
-   702 CE4C 4C 25 84			jmp $8425
-   703 CE4F			char_format_error_31
-   704 CE4F EE 30 02			inc $230
-   705 CE52 4C 09 84			jmp $8409
+   696 CE07			d2_end
+   697 CE07 A9 FF			lda #$ff
+   698 CE09 8D FF D5			sta cart_apaga
+   699 CE0C A9 C0			lda #$c0	// Ending the cartridge reading process. Now we recover the computer status
+   700 CE0E 8D 0E D4			sta nmien	// Recover NMIs
+   701 CE11 58				cli		// Recover IRQs
+   702 CE12 A0 01			ldy #$01	// All done without errors
+   703 CE14 8C 3D 02			sty status1	// Save it to DSTATS!
+   704 CE17 8C 46 02			sty status2
+   705 CE1A 60				rts		// BYE!!
    706
-   707 CE55			sec_table		//List of initial sectors to write on 
-   708
-   709 				//This table marks the sectors we'll take into account to erase the entire sector.
-   710 				//That is, the initial disk sector from we'll erase.
-   711 CE55 02 00 03 00 BB 00 + 	.word $0002,$0003,$00bb,$0173,$022b
-   712 CE5F			offset_table
-   713 CE5F 01 00 03 00 BB 00 + 	.word $0001,$0003,$00bb,$0173,$022b
-   714 CE69			sec_offset
-   715 CE69 00 00			.word $0000	//Sector offset to substract from original cartridge sector.
-   716 				//bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
-   717 CE6B 00 00 00 00 00 00 + 	.by $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-   718 CE75			bank_table
-   719 CE75 50 58 60 68 70 78		.by $50,$58,$60,$68,$70,$78
-   720 CE7B			sector_selected
-   721 CE7B 00				.by $00		//By default, sector 0
-   722 CE7C			bank_selected
-   723 CE7C 00				.by $00		//By default, bank 0
+   707 CE1B			put_31
+   708 CE1B A9 31			lda #$31	//Put D1: first
+   709 CE1D 8D 30 02			sta drivenum	
+   710 CE20 4C 18 18			jmp $1818	//Go!
+   711
+   712 CE23			char_format
+   713 CE23 20 27 18			jsr $1827
+   714 CE26 A2 31			ldx #$31
+   715 CE28 AD 4E 02			lda $24e
+   716 CE2B 10 01			bpl char_format_si31
+   717 CE2D E8				inx
+   718 CE2E			char_format_si31
+   719 CE2E 8E 05 84			stx $8405	//Store drive number
+   720 CE31 A9 4C			lda #$4c
+   721 CE33 8D 21 84			sta $8421
+   722 CE36 A9 41 8D 22 84 A9 + 	mwa #char_format_error $8422	//Patch format error.
+   723 CE40 60				rts
    724
-   725 				//Code for managing the Atarimax flash cartridge. Please take note that this routine
-   726 				//is implemented just for the second chip.
-   727 				//To add functionality to the first chip, you must change the wr5555, wr2aaa and add a chip mask routine.
-   728
-   729
-   730 CE7D			fcode
-   731 CE7D			setsec
-   732 CE7D 29 0F			and #$0F	//Only $00-$0F allowed
-   733 CE7F 18				clc		//Just to not set bit 7 to 1 accidentally
-   734 CE80 2A				rol		//*2
-   735 CE81 2A				rol		//*4
-   736 CE82 2A				rol		//*8
-   737 CE83 AA				tax
-   738 CE84 9D 00 D5			sta $d500,x	//Change bank!
-   739 CE87 60				rts
-   740
-   741 CE88			wr5555
-   742 CE88 8D 42 D5			sta $d542	//Setting third bank from second chip.
-   743 CE8B 8D 55 B5			sta $b555	//Store on $5555!
-   744 CE8E 60				rts
-   745
-   746 CE8F			cmd_unlock
-   747 CE8F A9 AA			lda #$AA	//Store $aa on $5555
-   748 CE91 20 88 CE			jsr wr5555	//Do it!
-   749 CE94 A9 55			lda #$55	//Store $55 on $2aaa
-   750
-   751 CE96			wr2AAA
-   752 CE96 8D 41 D5			sta $d541	//Setting second bank from second chip.
-   753 CE99 8D AA AA			sta $aaaa	//Store on $2aaa
-   754 CE9C 60				rts
-   755
-   756
-   757 				//Enable_write:
-   758 				//enables the 29F040 chip to write one byte.
-   759 				//It only enables one byte. You have to call this routine for every byte you want to write.
-   760 CE9D			enable_write
-   761 CE9D 8E FC CE			stx temp_x
-   762 CEA0 48				pha
-   763 CEA1 20 8F CE			jsr cmd_unlock	//First and second cycle
-   764 CEA4 A9 A0			lda #$a0
-   765 CEA6 20 88 CE			jsr wr5555	//Third cycle
-   766 CEA9			enable_write_cont
-   767 CEA9 68				pla
-   768 CEAA AA				tax
-   769 CEAB 9D 00 D5			sta $d500,x
-   770 CEAE AE FC CE			ldx temp_x
-   771 CEB1 60				rts
-   772
-   773 				//Enable read: not needed for now. Just to have it.
-   774 CEB2			enable_read
-   775 CEB2 48				pha
-   776 CEB3 20 8F CE			jsr cmd_unlock
-   777 CEB6 A9 F0			lda #$f0
-   778 CEB8 20 88 CE			jsr wr5555
-   779 CEBB 4C A9 CE			jmp enable_write_cont
-   780 CEBE			erasebk
-   781 CEBE 8E FC CE			stx temp_x
-   782 CEC1 48				pha
-   783 CEC2 20 8F CE			jsr cmd_unlock		//First two cycles!
-   784 CEC5 A9 80			lda #$80
-   785 CEC7 20 88 CE			jsr wr5555		//Third cycle!
-   786 CECA 20 8F CE			jsr cmd_unlock		//Fourth and fifth cycles!
-   787 CECD 68				pla
-   788 CECE 20 7D CE			jsr setsec
-   789 CED1 A9 30			lda #$30		//Sixth and final cycle!
-   790 CED3 8D 00 A0			sta start_cartridge	//Erase!
-   791 					
-   792 				//Poll_write: wait until the erase is finished.
-   793 CED6			poll_write
-   794 CED6 A9 00			lda #$00
-   795 CED8 8D FB CE			sta pollsame
-   796 CEDB			@poll_again
-   797 CEDB AD 00 A0			lda start_cartridge
-   798 CEDE CD 00 A0			cmp start_cartridge
-   799 CEE1 D0 F3			bne poll_write
-   800 CEE3 CD 00 A0			cmp start_cartridge
-   801 CEE6 D0 EE			bne poll_write
-   802 CEE8 CD 00 A0			cmp start_cartridge
-   803 CEEB D0 E9			bne poll_write
-   804 CEED EE FB CE			inc pollsame
-   805 CEF0 D0 E9			bne @poll_again
-   806 CEF2 A9 FF			lda #$ff
-   807 CEF4 8D FF D5			sta cart_apaga
-   808 CEF7 AE FC CE			ldx temp_x
-   809 CEFA 60				rts
-   810 CEFB			pollsame
-   811 CEFB 00				.by $00
-   812 CEFC 00			temp_x	.by $00
-   813 					
-   814 				//	icl "fcode.s"	//Courtesy from Wrathchild at Atariage. Thanks!
-   815
-   816 CEFD			chipmask
-   817 CEFD 00				.byte $00
-   818 CEFE			final_greeting
-   819 CEFE 23 61 72 74 72 69 + 	.sb "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
-   820 CF51			fin_loader
-   821 				.endp
-   822
-   823 					opt f+		//start filling!
-   824 					
-   825 A6D9				org end_bank-6-3	//// Put it into the end
-   826 BFF7 4C 00 A0			jmp init
-   827 BFFA 23 A0			.word init1		// Second init address first.
-   828 BFFC 00 04			.byte $00,$04		// Parameters to not to call to Disk.
-   829 BFFE 00 A0			.word init		// First init address
-   830 					opt f-			// No more filling!
-   831
-   832 				// Bank 2
-   833 C000				org start_cartridge
-   834 01,A000				lmb #$01
-   835 01,A000			start_atr
-   836 01,A000 01 01 00 06 06 + 	ins "ARD_WIP_rel3.atr",16
-   837 01,09A000		end_atr
-   838
-   839 				//Now we fill till we got cartridge size
-   840
-   841 = 01,090000		total_bytes	= end_atr - start_atr		//Total bytes of ATR
-   842 = 01,2000		bank_size	= end_bank - start_cartridge
-   843
-   844 = 01,0049		banks_used = ((total_bytes+(bank_size-1))/bank_size)+1
-   845 = 01,0037		filler_banks = cart_banks - banks_used
-   846 = 01,0000		filler_bytes = bank_size*(banks_used-1)-total_bytes
-   847
-   848 				; Llenamos los bytes
-   849
-   850 				.if filler_banks > 0
-   851 01,09A000			.sav filler_bytes
-   852 				.else
-   853 					.sav filler_bytes - 6 -8
-   854 				.endif
-   855
-   856 01,09A000		end_file
-   857
-   858
-   859 				.if filler_banks > 0
-   860 					.if filler_banks > 1
-   861 						.rept filler_banks-1
-   862 							.SAV BANK_SIZE
-   863 						.ENDR
-   863 						.endr
-Source: REPT
-   862 01,09A000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,09C000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,09E000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0A0000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0A2000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0A4000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0A6000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0A8000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0AA000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0AC000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0AE000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0B0000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0B2000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0B4000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0B6000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0B8000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0BA000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0BC000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0BE000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0C0000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0C2000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0C4000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0C6000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0C8000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0CA000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0CC000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0CE000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0D0000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0D2000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0D4000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0D6000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0D8000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0DA000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0DC000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0DE000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0E0000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0E2000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0E4000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0E6000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0E8000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0EA000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0EC000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0EE000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0F0000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0F2000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0F4000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0F6000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0F8000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0FA000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0FC000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,0FE000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,100000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,102000 00 00 00 00 +  			.SAV BANK_SIZE
-   862 01,104000 00 00 00 00 +  			.SAV BANK_SIZE
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
-   864 					.endif
-   865 01,106000 00 00 00 00 +  	.sav bank_size-6-8
-   866 				.endif
+   725 CE41			char_format_error
+   726 CE41 A9 FE			lda #$fe
+   727 CE43 85 16			sta $16
+   728 CE45 AD 30 02			lda $230
+   729 CE48 C9 31			cmp #$31
+   730 CE4A F0 03			beq char_format_error_31
+   731 CE4C 4C 25 84			jmp $8425
+   732 CE4F			char_format_error_31
+   733 CE4F EE 30 02			inc $230
+   734 CE52 4C 09 84			jmp $8409
+   735
+   736 CE55			sec_table		//List of initial sectors to write on 
+   737
+   738 				//This table marks the sectors we'll take into account to erase the entire sector.
+   739 				//That is, the initial disk sector from we'll erase.
+   740 CE55 02 00 03 00 BB 00 + 	.word $0002,$0003,$00bb,$0173,$022b
+   741 CE5F			offset_table
+   742 CE5F 01 00 03 00 BB 00 + 	.word $0001,$0003,$00bb,$0173,$022b
+   743 CE69			sec_offset
+   744 CE69 00 00			.word $0000	//Sector offset to substract from original cartridge sector.
+   745 				//bank_table		//List of initial bank per sector. The first 10 sectors are for D4:. Banks $0a-$0f to D1:
+   746 CE6B 00 00 00 00 00 00 + 	.by $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   747 CE75			bank_table
+   748 CE75 50 58 60 68 70 78		.by $50,$58,$60,$68,$70,$78
+   749 CE7B			sector_selected
+   750 CE7B 00				.by $00		//By default, sector 0
+   751 CE7C			bank_selected
+   752 CE7C 00				.by $00		//By default, bank 0
+   753
+   754 				//Code for managing the Atarimax flash cartridge. Please take note that this routine
+   755 				//is implemented just for the second chip.
+   756 				//To add functionality to the first chip, you must change the wr5555, wr2aaa and add a chip mask routine.
+   757
+   758
+   759 CE7D			fcode
+   760 CE7D			setsec
+   761 CE7D 29 0F			and #$0F	//Only $00-$0F allowed
+   762 CE7F 18				clc		//Just to not set bit 7 to 1 accidentally
+   763 CE80 2A				rol		//*2
+   764 CE81 2A				rol		//*4
+   765 CE82 2A				rol		//*8
+   766 CE83 AA				tax
+   767 CE84 9D 00 D5			sta $d500,x	//Change bank!
+   768 CE87 60				rts
+   769
+   770 CE88			wr5555
+   771 CE88 8D 42 D5			sta $d542	//Setting third bank from second chip.
+   772 CE8B 8D 55 B5			sta $b555	//Store on $5555!
+   773 CE8E 60				rts
+   774
+   775 CE8F			cmd_unlock
+   776 CE8F A9 AA			lda #$AA	//Store $aa on $5555
+   777 CE91 20 88 CE			jsr wr5555	//Do it!
+   778 CE94 A9 55			lda #$55	//Store $55 on $2aaa
+   779
+   780 CE96			wr2AAA
+   781 CE96 8D 41 D5			sta $d541	//Setting second bank from second chip.
+   782 CE99 8D AA AA			sta $aaaa	//Store on $2aaa
+   783 CE9C 60				rts
+   784
+   785
+   786 				//Enable_write:
+   787 				//enables the 29F040 chip to write one byte.
+   788 				//It only enables one byte. You have to call this routine for every byte you want to write.
+   789 CE9D			enable_write
+   790 CE9D 8E FC CE			stx temp_x
+   791 CEA0 48				pha
+   792 CEA1 20 8F CE			jsr cmd_unlock	//First and second cycle
+   793 CEA4 A9 A0			lda #$a0
+   794 CEA6 20 88 CE			jsr wr5555	//Third cycle
+   795 CEA9			enable_write_cont
+   796 CEA9 68				pla
+   797 CEAA AA				tax
+   798 CEAB 9D 00 D5			sta $d500,x
+   799 CEAE AE FC CE			ldx temp_x
+   800 CEB1 60				rts
+   801
+   802 				//Enable read: not needed for now. Just to have it.
+   803 CEB2			enable_read
+   804 CEB2 48				pha
+   805 CEB3 20 8F CE			jsr cmd_unlock
+   806 CEB6 A9 F0			lda #$f0
+   807 CEB8 20 88 CE			jsr wr5555
+   808 CEBB 4C A9 CE			jmp enable_write_cont
+   809 CEBE			erasebk
+   810 CEBE 8E FC CE			stx temp_x
+   811 CEC1 48				pha
+   812 CEC2 20 8F CE			jsr cmd_unlock		//First two cycles!
+   813 CEC5 A9 80			lda #$80
+   814 CEC7 20 88 CE			jsr wr5555		//Third cycle!
+   815 CECA 20 8F CE			jsr cmd_unlock		//Fourth and fifth cycles!
+   816 CECD 68				pla
+   817 CECE 20 7D CE			jsr setsec
+   818 CED1 A9 30			lda #$30		//Sixth and final cycle!
+   819 CED3 8D 00 A0			sta start_cartridge	//Erase!
+   820 					
+   821 				//Poll_write: wait until the erase is finished.
+   822 CED6			poll_write
+   823 CED6 A9 00			lda #$00
+   824 CED8 8D FB CE			sta pollsame
+   825 CEDB			@poll_again
+   826 CEDB AD 00 A0			lda start_cartridge
+   827 CEDE CD 00 A0			cmp start_cartridge
+   828 CEE1 D0 F3			bne poll_write
+   829 CEE3 CD 00 A0			cmp start_cartridge
+   830 CEE6 D0 EE			bne poll_write
+   831 CEE8 CD 00 A0			cmp start_cartridge
+   832 CEEB D0 E9			bne poll_write
+   833 CEED EE FB CE			inc pollsame
+   834 CEF0 D0 E9			bne @poll_again
+   835 CEF2 A9 FF			lda #$ff
+   836 CEF4 8D FF D5			sta cart_apaga
+   837 CEF7 AE FC CE			ldx temp_x
+   838 CEFA 60				rts
+   839 CEFB			pollsame
+   840 CEFB 00				.by $00
+   841 CEFC 00			temp_x	.by $00
+   842 					
+   843 				//	icl "fcode.s"	//Courtesy from Wrathchild at Atariage. Thanks!
+   844
+   845 CEFD			chipmask
+   846 CEFD 00				.byte $00
+   847 CEFE			final_greeting
+   848 CEFE 23 61 72 74 72 69 + 	.sb "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
+   849 CF51			fin_loader
+   850 				.endp
+   851
+   852 					opt f+		//start filling!
+   853 					
+   854 A730				org end_bank-6-3	//// Put it into the end
+   855 BFF7 4C 00 A0			jmp init
+   856 BFFA 23 A0			.word init1		// Second init address first.
+   857 BFFC 00 04			.byte $00,$04		// Parameters to not to call to Disk.
+   858 BFFE 00 A0			.word init		// First init address
+   859 					opt f-			// No more filling!
+   860
+   861 				// Bank 2
+   862 C000				org start_cartridge
+   863 01,A000				lmb #$01
+   864 01,A000			start_atr
+   865 01,A000 01 01 00 06 06 + 	ins "ARD_WIP_rel3.atr",16
+   866 01,09A000		end_atr
    867
-   868
-   869 01,107FF2 A9 00			lda #$00
-   870 01,107FF4 8D 00 D5		sta $d500
-   871 01,107FF7 4C 00 A0		jmp init
-   872 01,107FFA 23 A0			.word init1
-   873 01,107FFC 00 04			.byte $00,$04
-   874 01,107FFE F2 BF			.word $bff2
+   868 				//Now we fill till we got cartridge size
+   869
+   870 = 01,090000		total_bytes	= end_atr - start_atr		//Total bytes of ATR
+   871 = 01,2000		bank_size	= end_bank - start_cartridge
+   872
+   873 = 01,0049		banks_used = ((total_bytes+(bank_size-1))/bank_size)+1
+   874 = 01,0037		filler_banks = cart_banks - banks_used
+   875 = 01,0000		filler_bytes = bank_size*(banks_used-1)-total_bytes
+   876
+   877 				; Llenamos los bytes
+   878
+   879 				.if filler_banks > 0
+   880 01,09A000			.sav filler_bytes
+   881 				.else
+   882 					.sav filler_bytes - 6 -8
+   883 				.endif
+   884
+   885 01,09A000		end_file
+   886
+   887
+   888 				.if filler_banks > 0
+   889 					.if filler_banks > 1
+   890 						.rept filler_banks-1
+   891 							.SAV BANK_SIZE
+   892 						.ENDR
+   892 						.endr
+Source: REPT
+   891 01,09A000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,09C000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,09E000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0A0000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0A2000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0A4000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0A6000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0A8000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0AA000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0AC000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0AE000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0B0000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0B2000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0B4000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0B6000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0B8000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0BA000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0BC000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0BE000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0C0000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0C2000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0C4000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0C6000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0C8000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0CA000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0CC000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0CE000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0D0000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0D2000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0D4000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0D6000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0D8000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0DA000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0DC000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0DE000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0E0000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0E2000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0E4000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0E6000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0E8000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0EA000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0EC000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0EE000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0F0000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0F2000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0F4000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0F6000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0F8000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0FA000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0FC000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,0FE000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,100000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,102000 00 00 00 00 +  			.SAV BANK_SIZE
+   891 01,104000 00 00 00 00 +  			.SAV BANK_SIZE
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\Ardungeon.asm
+   893 					.endif
+   894 01,106000 00 00 00 00 +  	.sav bank_size-6-8
+   895 				.endif
+   896
+   897
+   898 01,107FF2 A9 00			lda #$00
+   899 01,107FF4 8D 00 D5		sta $d500
+   900 01,107FF7 4C 00 A0		jmp init
+   901 01,107FFA 23 A0			.word init1
+   902 01,107FFC 00 04			.byte $00,$04
+   903 01,107FFE F2 BF			.word $bff2

@@ -10,6 +10,7 @@
 
 //History:
 
+//V9: added 3 seconds of waiting in the credit screen. You can skip it by pressing a key, consol key or joystick button.
 //V8: various bug fixes and optimized D1: access
 //V7: Added D1:functionality from physical drive.
 //V6: relocating initialization routines, now it boots faster! Changed title credits.
@@ -220,7 +221,33 @@ cont2
 	mwa #loader $1e43	//Patch SIO call 1
 	mwa #loader $1e7d	//Patch SIO call 2
 	mwa #cont3 $1e7a	//Patch final instruction
+	lda #$01			//Put exclamation mark
+	sta dl_text_mark	//on screen!
+	lda rtclock
+	clc
+	ldx palnts			//Is it PAL?
+	bne cont2_pal		//Yes, 150 frames to add
+	adc #30				//NTSC, 180 frames to add
+cont2_pal
+	adc #150
+cont2_loop
+	cmp rtclock			//Done the time?
+	beq cont2_intro		//Yes, go to intro!
+	sta save_a			//Save temporarily
+	lda consol			//Load consol keys
+	eor #$07			//Is anyone pressed?
+	bne cont2_intro		//Yes! Go to intro.
+	lda strig0			//Is joystick button pressed?
+	beq cont2_intro		//Yes! Go to intro.
+	lda ch				//Load keyboard.
+	cmp #$ff			//Any key pressed?
+	bne cont2_intro		//Yes! Go to intro.
+	lda save_a			//Recover A
+	jmp cont2_loop		//Continue the loop until 3 seconds
+cont2_intro	
 	jmp $2000		//Execute intro!!
+save_a
+	.by $00
 cont3
 	lda #$20		//NO "48K" display!!
 	sta $818f
@@ -265,7 +292,9 @@ dl_patch
 dl_end
 dl_text
 	.sb "        Cartridge conversion 2020       "
-	.sb "   Guillermo Fuenzalida & Mark Keates   "
+	.sb "   Guillermo Fuenzalida & Mark Keates  "
+dl_text_mark
+	.sb " "
 .endp
 
 Copy_init3
@@ -587,7 +616,7 @@ drive2_put
 	lda #$00	
 	sta nmien	// No NMIs!
 
-	sec		// Let's substract 1
+	sec		// Let's substract the offset
 	lda driveseclo	// To the sector number!
 	sbc sec_offset
 	sta d2_read_aux1	// Store it!
@@ -604,7 +633,7 @@ drive2_put
 	asl		// Move 2 bits to the left! Bits 0 and 1 are zero 
 	asl		// Done!
 	ora d2_read_aux1	// Put bits 0 and 1 on from the previous calculation 
-	clc		// Preparing to add 1
+	clc		// Preparing to add the bank parameter
 d2_parameter=*+1	// IMPORTANT: the parameter sets the initial side from the disk. Originally, 1
 	adc #$01	// Add it!
 	sta d2_read_c_bank	// Store cartridge bank!
