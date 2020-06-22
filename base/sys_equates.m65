@@ -215,6 +215,7 @@ GINTLK  = $3fa
 SDLSTL	= $230	; display list address
 VDSLST	= $200	; DLI address
 
+DDEVIC	= $300
 DUNIT	= $301
 DCOMND	= $302
 DSTATS	= $303
@@ -261,6 +262,7 @@ IRQH_VECTOR		= 65534
 ; I/O:
 ;----------------------------------------
 
+DSKINV			= $E453 ; (58451)
 CIOV			= $E456	; (58454)
 SIOV			= $E459	; (58457)
 
