@@ -1296,8 +1296,8 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
     23
     24 				//Partimos con seleccionar el banco
     25 				//Formato: banco x,y
-    26 				//x = banco del cartridge a invocar
-    27 				//y= 0 si es lectura, Y=1 si es lectura/escritura
+    26 				//x = Cartridge bank to activate
+    27 				//y= 0 if its for reading, Y=1 read/write
     28 				.macro banco
     29 				.if :0 <> 2 
     30 					.error "banco sin parámetros"
@@ -1350,7 +1350,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
     77
     78
     79 				//Cierra el canal solicitado.
-    80 				//Uso: close canal
+    80 				//Uso: close channel
     81 				.macro close
     82 				.if :0 <> 1
     83 					.error "close sin parámetros"
@@ -1365,8 +1365,8 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
     92 				.endif
     93 				.endm
     94
-    95 				//Open: Abre el canal según parámetros
-    96 				//Uso: open canal,operacion,aux,loc_handler
+    95 				//Open: open CIO channel, simmilar to BASIC.
+    96 				//Uso: open channel,operation,aux,loc_handler
     97
     98 				.macro open
     99 				.if :0 <> 4
@@ -1495,7 +1495,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    222 					org start_data
    223
    224 				boot_sector
-   225 FFFF> 2000-280E> 00		.by $00
+   225 FFFF> 2000-280B> 00		.by $00
    226 2001 01				.by $01		//1 sector to read
    227 2002 00 06			.word $600
    228 2004 06 06			.word $606
@@ -1506,11 +1506,11 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    233 2080			LOC_E
    234 2080 45 3A 9B			.by "E:",$9B	;Handler editor E:
    235 2083			LOC_K
-   236 2083 4B 3A 9B			.by "K:",$9B	;Handler teclado
+   236 2083 4B 3A 9B			.by "K:",$9B	;Handler keyboard
    237 2086			LOC_DISK
-   238 2086 44 31 3A 41 41 41 + 	.by "D1:AAAAAAAA.DMP",$9B	;Nombre de archivo a abrir lectura o escritura
+   238 2086 44 31 3A 41 41 41 + 	.by "D1:AAAAAAAA.DMP",$9B	;file name (not used now)
    239 2096			LOC_DIR
-   240 2096 44 31 3A 2A 2E 2A + 	.by "D1:*.*",$9B		;Buscar el directorio
+   240 2096 44 31 3A 2A 2E 2A + 	.by "D1:*.*",$9B		;search directory (not used)
    241 209D			LOC_INPUT
    242 209D 20 20 20 20 20 20 + 	.by "                    "
    243 20B1			dl
@@ -1587,7 +1587,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    314 2385 24 29 33 2B 00 34 + 	.sb "DISK TO CARTRIDGE  "
    315
    316 2398			text_check
-   317 2398 41 52 20 43 48 41 + 	.by "AR CHAR!"
+   317 2398 41 52 20 43 48 41 + 	.by "AR CHAR!"	//Header to check on disk or cartridge
    318 23A0			text_check_end
    319 = 0008			len_text_check = text_check_end - text_check
    320
@@ -1607,106 +1607,108 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    334
    335 23A5			key
    336 23A5 00				.by $00
-   337 23A6			.proc format_cartridge
-   338 23A6 A9 0A			lda #$0a
-   339 23A8 20 D2 23			jsr erasebk	//Erase bank $0a (Header info)
-   340 23AB A9 0B			lda #$0b
-   341 23AD 20 D2 23			jsr erasebk	//Erase bank $0b (save state 1)
-   342 23B0 A9 0C			lda #$0c
-   343 23B2 20 D2 23			jsr erasebk	//Erase bank $0c (save state 2)
-   344 23B5 A9 0D			lda #$0d
-   345 23B7 20 D2 23			jsr erasebk	//Erase bank $0d (save state 3)
-   346 23BA A9 0E			lda #$0e
-   347 23BC 20 D2 23			jsr erasebk	//Erase bank $0e (save state 4)
-   348 23BF A9 FF			lda #$ff
-   349 23C1 8D FF D5			sta cart_off
-   350 23C4 A0 01			ldy #$01	// All done without errors
-   351 23C6 60				rts		//Formatting successful
-   352 				.endp
-   353
-   354 23C7			.proc setsec
-   355 23C7 29 0F			and #$0F	//Only $00-$0F allowed
-   356 23C9 18				clc		//Just to not set bit 7 to 1 accidentally
-   357 23CA 2A				rol		//*2
-   358 23CB 2A				rol		//*4
-   359 23CC 2A				rol		//*8
-   360 23CD AA				tax
-   361 23CE 9D 00 D5			sta $d500,x	//Change bank!
-   362 23D1 60				rts
-   363 				.endp
-   364
-   365 23D2			.proc erasebk
-   366 23D2 8E 10 24			stx temp_x
-   367 23D5 48				pha
-   368 23D6 20 18 24			jsr cmd_unlock		//First two cycles!
-   369 23D9 A9 80			lda #$80
-   370 23DB 20 11 24			jsr wr5555		//Third cycle!
-   371 23DE 20 18 24			jsr cmd_unlock		//Fourth and fifth cycles!
-   372 23E1 68				pla
-   373 23E2 20 C7 23			jsr setsec
-   374 23E5 A9 30			lda #$30		//Sixth and final cycle!
-   375 23E7 8D 00 A0			sta start_cartridge	//Erase!
-   376 					
-   377 				//Poll_write: wait until the erase is finished.
-   378 23EA			poll_write
-   379 23EA A9 00			lda #$00
-   380 23EC 8D 0F 24			sta pollsame
-   381 23EF			@poll_again
-   382 23EF AD 00 A0			lda start_cartridge
-   383 23F2 CD 00 A0			cmp start_cartridge
-   384 23F5 D0 F3			bne poll_write
-   385 23F7 CD 00 A0			cmp start_cartridge
-   386 23FA D0 EE			bne poll_write
-   387 23FC CD 00 A0			cmp start_cartridge
-   388 23FF D0 E9			bne poll_write
-   389 2401 EE 0F 24			inc pollsame
-   390 2404 D0 E9			bne @poll_again
-   391 2406 A9 FF			lda #$ff
-   392 2408 8D FF D5			sta cart_off
-   393 240B AE 10 24			ldx temp_x
-   394 240E 60				rts
-   395 240F			pollsame
-   396 240F 00				.by $00
-   397 2410 00			temp_x	.by $00
-   398 				.endp
-   399
-   400 2411			.proc wr5555
-   401 2411 8D 42 D5			sta $d542	//Setting third bank from second chip.
-   402 2414 8D 55 B5			sta $b555	//Store on $5555!
-   403 2417 60				rts
-   404 				.endp
-   405
-   406 2418			.proc cmd_unlock
-   407 2418 A9 AA			lda #$AA	//Store $aa on $5555
-   408 241A 20 11 24			jsr wr5555	//Do it!
-   409 241D A9 55			lda #$55	//Store $55 on $2aaa
-   410 				.endp
-   411
-   412 241F			.proc wr2AAA
-   413 241F 8D 41 D5			sta $d541	//Setting second bank from second chip.
-   414 2422 8D AA AA			sta $aaaa	//Store on $2aaa
-   415 2425 60				rts
-   416
-   417 				.endp
+   337 					
+   338 				//Format cartridge routine for AR Dungeon.
+   339 23A6			.proc format_cartridge
+   340 23A6 A9 0A			lda #$0a
+   341 23A8 20 D2 23			jsr erasebk	//Erase bank $0a (Header info)
+   342 23AB A9 0B			lda #$0b
+   343 23AD 20 D2 23			jsr erasebk	//Erase bank $0b (save state 1)
+   344 23B0 A9 0C			lda #$0c
+   345 23B2 20 D2 23			jsr erasebk	//Erase bank $0c (save state 2)
+   346 23B5 A9 0D			lda #$0d
+   347 23B7 20 D2 23			jsr erasebk	//Erase bank $0d (save state 3)
+   348 23BA A9 0E			lda #$0e
+   349 23BC 20 D2 23			jsr erasebk	//Erase bank $0e (save state 4)
+   350 23BF A9 FF			lda #$ff
+   351 23C1 8D FF D5			sta cart_off
+   352 23C4 A0 01			ldy #$01	// All done without errors
+   353 23C6 60				rts		//Formatting successful
+   354 				.endp
+   355
+   356 23C7			.proc setsec
+   357 23C7 29 0F			and #$0F	//Only $00-$0F allowed
+   358 23C9 18				clc		//Just to not set bit 7 to 1 accidentally
+   359 23CA 2A				rol		//*2
+   360 23CB 2A				rol		//*4
+   361 23CC 2A				rol		//*8
+   362 23CD AA				tax
+   363 23CE 9D 00 D5			sta $d500,x	//Change bank!
+   364 23D1 60				rts
+   365 				.endp
+   366
+   367 23D2			.proc erasebk
+   368 23D2 8E 10 24			stx temp_x
+   369 23D5 48				pha
+   370 23D6 20 18 24			jsr cmd_unlock		//First two cycles!
+   371 23D9 A9 80			lda #$80
+   372 23DB 20 11 24			jsr wr5555		//Third cycle!
+   373 23DE 20 18 24			jsr cmd_unlock		//Fourth and fifth cycles!
+   374 23E1 68				pla
+   375 23E2 20 C7 23			jsr setsec
+   376 23E5 A9 30			lda #$30		//Sixth and final cycle!
+   377 23E7 8D 00 A0			sta start_cartridge	//Erase!
+   378 					
+   379 				//Poll_write: wait until the erase is finished.
+   380 23EA			poll_write
+   381 23EA A9 00			lda #$00
+   382 23EC 8D 0F 24			sta pollsame
+   383 23EF			@poll_again
+   384 23EF AD 00 A0			lda start_cartridge
+   385 23F2 CD 00 A0			cmp start_cartridge
+   386 23F5 D0 F3			bne poll_write
+   387 23F7 CD 00 A0			cmp start_cartridge
+   388 23FA D0 EE			bne poll_write
+   389 23FC CD 00 A0			cmp start_cartridge
+   390 23FF D0 E9			bne poll_write
+   391 2401 EE 0F 24			inc pollsame
+   392 2404 D0 E9			bne @poll_again
+   393 2406 A9 FF			lda #$ff
+   394 2408 8D FF D5			sta cart_off
+   395 240B AE 10 24			ldx temp_x
+   396 240E 60				rts
+   397 240F			pollsame
+   398 240F 00				.by $00
+   399 2410 00			temp_x	.by $00
+   400 				.endp
+   401
+   402 2411			.proc wr5555
+   403 2411 8D 42 D5			sta $d542	//Setting third bank from second chip.
+   404 2414 8D 55 B5			sta $b555	//Store on $5555!
+   405 2417 60				rts
+   406 				.endp
+   407
+   408 2418			.proc cmd_unlock
+   409 2418 A9 AA			lda #$AA	//Store $aa on $5555
+   410 241A 20 11 24			jsr wr5555	//Do it!
+   411 241D A9 55			lda #$55	//Store $55 on $2aaa
+   412 				.endp
+   413
+   414 241F			.proc wr2AAA
+   415 241F 8D 41 D5			sta $d541	//Setting second bank from second chip.
+   416 2422 8D AA AA			sta $aaaa	//Store on $2aaa
+   417 2425 60				rts
    418
-   419 2426			.proc enable_write
-   420 2426 8E 3B 24			stx temp_x
-   421 2429 48				pha
-   422 242A 20 18 24			jsr cmd_unlock	//First and second cycle
-   423 242D A9 A0			lda #$a0
-   424 242F 20 11 24			jsr wr5555	//Third cycle
-   425 2432			enable_write_cont
-   426 2432 68				pla
-   427 2433 AA				tax
-   428 2434 9D 00 D5			sta $d500,x
-   429 2437 AE 3B 24			ldx temp_x
-   430 243A 60				rts
-   431 243B			temp_x
-   432 243B 00				.by $00
-   433 				.endp
-   434
-   435 243C			.proc WriteM
-   436 243C				WriteMemory 1,start_cartridge,cart_length
+   419 				.endp
+   420
+   421 2426			.proc enable_write
+   422 2426 8E 3B 24			stx temp_x
+   423 2429 48				pha
+   424 242A 20 18 24			jsr cmd_unlock	//First and second cycle
+   425 242D A9 A0			lda #$a0
+   426 242F 20 11 24			jsr wr5555	//Third cycle
+   427 2432			enable_write_cont
+   428 2432 68				pla
+   429 2433 AA				tax
+   430 2434 9D 00 D5			sta $d500,x
+   431 2437 AE 3B 24			ldx temp_x
+   432 243A 60				rts
+   433 243B			temp_x
+   434 243B 00				.by $00
+   435 				.endp
+   436
+   437 243C			.proc WriteM
+   438 243C				WriteMemory 1,start_cartridge,cart_length
 Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 243C A2 10			ldx #(1*16)
      8 243E A9 00 9D 44 03 A9 + 	mwa #START_CARTRIDGE ICBAL,x
@@ -1714,11 +1716,11 @@ Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUD
     10 2452 A9 0B 9D 42 03		mva #11 ICCMD,X
     11 2457 20 56 E4			jsr ciov
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   437 245A 60				rts
-   438 				.endp
-   439
-   440 245B			.proc get_key
-   441 245B				get 1,key
+   439 245A 60				rts
+   440 				.endp
+   441
+   442 245B			.proc get_key
+   443 245B				get 1,key
 Macro: GET [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 245B A2 10			ldx #(1*16)
      8 245D A9 A5 9D 44 03 A9 + 	mwa #KEY ICBAL,X		;Dirección entregada
@@ -1726,259 +1728,264 @@ Macro: GET [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHu
     10 2471 A9 07 9D 42 03		mva #7 ICCMD,x		;Realizar una lectura
     11 2476 20 56 E4			jsr ciov		;Ejecute!
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   442 2479 60				rts
-   443 				.endp
-   444
-   445 247A			.proc wait_return
-   446 247A			start
-   447 247A AD FC 02			lda CH
-   448 247D C9 FF			cmp #$ff
-   449 247F D0 F9			bne start
-   450 2481 20 5B 24			jsr get_key
-   451 2484 A9 FF			lda #$ff
-   452 2486 8D FC 02			sta CH
-   453 2489 AD A5 23			lda key
-   454 248C C9 9B			cmp #$9b	//Return
-   455 248E D0 EA			bne start	
-   456 2490 60				rts
-   457 				.endp
-   458
-   459 2491			.proc format_disk
-   460 2491 A9 31 8D 00 03		mva #$31 DDEVIC
-   461 2496 A9 01 8D 01 03		mva #$01 DUNIT
-   462 249B A9 21 8D 02 03		mva #$21 DCOMND
-   463 24A0 A9 80 8D 0A 03		mva #$80 daux1
-   464 24A5 A9 00 8D 0B 03		mva #$00 daux2
-   465 24AA 20 59 E4			jsr siov
-   466 24AD 60				rts
-   467 					
-   468 				.endp
-   469
-   470 24AE			.proc write_disk
+   444 2479 60				rts
+   445 				.endp
+   446
+   447 247A			.proc wait_return
+   448 247A			start
+   449 247A AD FC 02			lda CH
+   450 247D C9 FF			cmp #$ff	//Key pressed?
+   451 247F D0 F9			bne start	//Nope, start over!
+   452 2481 20 5B 24			jsr get_key //Get key
+   453 2484 A9 FF			lda #$ff	//Erase last key pressed
+   454 2486 8D FC 02			sta CH		//Done!
+   455 2489 AD A5 23			lda key		//Read key
+   456 248C C9 9B			cmp #$9b	//Is it Return?
+   457 248E D0 EA			bne start	//No, let's do it again.
+   458 2490 60				rts			//Yes, return
+   459 				.endp
+   460
+   461 2491			.proc format_disk
+   462 2491 A9 31 8D 00 03		mva #$31 DDEVIC
+   463 2496 A9 01 8D 01 03		mva #$01 DUNIT
+   464 249B A9 21 8D 02 03		mva #$21 DCOMND
+   465 24A0 A9 80 8D 0A 03		mva #$80 daux1
+   466 24A5 A9 00 8D 0B 03		mva #$00 daux2
+   467 24AA 20 59 E4			jsr siov
+   468 24AD 60				rts
+   469 					
+   470 				.endp
    471
-   472 				//Character 1
-   473 24AE				banco $58,0
+   472 24AE			.proc write_disk
+   473
+   474 				//Character 1
+   475 24AE				banco $58,0
 Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      5 24AE A9 58				lda #$58
      9 24B0 AA					tax
     10 24B1 9D 00 D5				sta $d500,x
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   474 24B4 A2 03			ldx #$03
-   475 24B6 A0 00			ldy #$00
-   476 24B8 20 E3 24			jsr write_char
-   477 				//Character 2
-   478 24BB				banco $60,0
+   476 24B4 A2 03			ldx #$03
+   477 24B6 A0 00			ldy #$00
+   478 24B8 20 E3 24			jsr write_char
+   479 				//Character 2
+   480 24BB				banco $60,0
 Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      5 24BB A9 60				lda #$60
      9 24BD AA					tax
     10 24BE 9D 00 D5				sta $d500,x
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   479 24C1 A2 BB			ldx #$bb
-   480 24C3 A0 00			ldy #$00
-   481 24C5 20 E3 24			jsr write_char
-   482 				//Character 3
-   483 24C8				banco $68,0
+   481 24C1 A2 BB			ldx #$bb
+   482 24C3 A0 00			ldy #$00
+   483 24C5 20 E3 24			jsr write_char
+   484 				//Character 3
+   485 24C8				banco $68,0
 Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      5 24C8 A9 68				lda #$68
      9 24CA AA					tax
     10 24CB 9D 00 D5				sta $d500,x
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   484 24CE A2 73			ldx #$73
-   485 24D0 A0 01			ldy #$01
-   486 24D2 20 E3 24			jsr write_char
-   487 				//Character 4
-   488 24D5				banco $70,0
+   486 24CE A2 73			ldx #$73
+   487 24D0 A0 01			ldy #$01
+   488 24D2 20 E3 24			jsr write_char
+   489 				//Character 4
+   490 24D5				banco $70,0
 Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      5 24D5 A9 70				lda #$70
      9 24D7 AA					tax
     10 24D8 9D 00 D5				sta $d500,x
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   489 24DB A2 2B			ldx #$2b
-   490 24DD A0 02			ldy #$02
-   491 24DF 20 E3 24			jsr write_char
-   492 24E2 60				rts
-   493 				.endp
-   494
-   495 24E3			.proc write_char
-   496 24E3 8E 0A 03			stx daux1
-   497 24E6 8C 0B 03			sty daux2
-   498 24E9 A9 00 8D 04 03 A9 + 	mwa #$a000 dbuflo
-   499 24F3 A9 50 8D 02 03		mva #$50 dcomnd
-   500 24F8 A9 26 8D 1C 25		mva #$26 sec_count
-   501 24FD			loop
-   502 24FD 20 53 E4			jsr dskinv
-   503 2500 EE 0A 03			inc daux1
-   504 2503 D0 03			bne noincdaux2
-   505 2505 EE 0B 03			inc daux2
-   506 2508			noincdaux2
-   507 2508 18				clc
-   508 2509 AD 04 03			lda dbuflo
-   509 250C 69 80			adc #$80
-   510 250E 8D 04 03			sta dbuflo
-   511 2511 90 03			bcc noincdbufhi
-   512 2513 EE 05 03			inc dbufhi
-   513 2516			noincdbufhi
-   514 2516 CE 1C 25			dec sec_count
-   515 2519 D0 E2			bne loop
-   516 251B 60				rts
-   517
-   518 251C			sec_count
-   519 251C 00				.by $00
-   520 				.endp
-   521
-   522
-   523 251D			.proc write_cartridge
-   524 251D A2 01			ldx #$01
-   525 251F A0 00			ldy #$00
-   526 2521 A9 02			lda #$02
-   527 2523 20 6E 25			jsr read_char
-   528 2526 A9 50			lda #$50
-   529 2528 A2 01			ldx #$01
-   530 252A 20 A6 25			jsr write_char_cart
-   531 					
-   532 252D A2 03			ldx #$03
-   533 252F A0 00			ldy #$00
-   534 2531 A9 26			lda #$26
-   535 2533 20 6E 25			jsr read_char
-   536 2536 A9 58			lda #$58
-   537 2538 A2 13			ldx #$13
-   538 253A 20 A6 25			jsr write_char_cart
-   539
-   540 253D A2 BB			ldx #$bb
-   541 253F A0 00			ldy #$00
-   542 2541 A9 26			lda #$26
-   543 2543 20 6E 25			jsr read_char
-   544 2546 A9 60			lda #$60
-   545 2548 A2 13			ldx #$13
-   546 254A 20 A6 25			jsr write_char_cart
-   547 					
-   548 254D A2 73			ldx #$73
-   549 254F A0 01			ldy #$01
-   550 2551 A9 26			lda #$26
-   551 2553 20 6E 25			jsr read_char
-   552 2556 A9 68			lda #$68
-   553 2558 A2 13			ldx #$13
-   554 255A 20 A6 25			jsr write_char_cart
-   555 					
-   556 255D A2 2B			ldx #$2b
-   557 255F A0 02			ldy #$02
-   558 2561 A9 26			lda #$26
-   559 2563 20 6E 25			jsr read_char
-   560 2566 A9 70			lda #$70
-   561 2568 A2 13			ldx #$13
-   562 256A 20 A6 25			jsr write_char_cart
-   563 					
-   564 256D 60				rts
-   565 				.endp
-   566
-   567 256E			.proc read_char
-   568 256E 8E 0A 03			stx daux1
-   569 2571 8C 0B 03			sty daux2
-   570 2574 8D A5 25			sta sec_count
-   571 2577 A9 52 8D 02 03		mva #$52 dcomnd
-   572 257C A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
-   573 2586			loop
-   574 2586 20 53 E4			jsr dskinv
-   575 2589 EE 0A 03			inc daux1
-   576 258C D0 03			bne noincdaux2
-   577 258E EE 0B 03			inc daux2
-   578 2591			noincdaux2
-   579 2591 AD 04 03			lda dbuflo
-   580 2594 18				clc
-   581 2595 69 80			adc #$80
-   582 2597 8D 04 03			sta dbuflo
-   583 259A 90 03			bcc noincdbufhi
-   584 259C EE 05 03			inc dbufhi
-   585 259F			noincdbufhi
-   586 259F CE A5 25			dec sec_count
-   587 25A2 D0 E2			bne loop
-   588 25A4 60				rts
-   589 25A5			sec_count
-   590 25A5 00				.by $00
-   591 				.endp
-   592
-   593 25A6			.proc write_char_cart
-   594 25A6 86 D0			stx pt_3+1
-   595 25A8 8D E6 25			sta bank
-   596 25AB A9 00 85 CF			mva #$00 pt_3
-   597 25AF A9 00 85 CB A9 60 + 	mwa #buffer pt_1
-   598 25B7 A9 00 85 CD A9 A0 + 	mwa #$a000 pt_2
-   599 25BF			loop
-   600 25BF AD E6 25			lda bank
-   601 25C2 20 26 24			jsr enable_write
-   602 25C5 A0 00			ldy #$00
-   603 25C7 B1 CB			lda (pt_1),y
-   604 25C9 91 CD			sta (pt_2),y
-   605 25CB E6 CB			inc pt_1
-   606 25CD D0 02			bne noinc_pt1_1
-   607 25CF E6 CC			inc pt_1+1
-   608 25D1			noinc_pt1_1
-   609 25D1 E6 CD			inc pt_2
-   610 25D3 D0 02			bne noinc_pt2_1
-   611 25D5 E6 CE			inc pt_2+1
-   612 25D7			noinc_pt2_1
-   613 25D7 A5 CF			lda pt_3
-   614 25D9 D0 02			bne nodec_pt3_1
-   615 25DB C6 D0			dec pt_3+1
-   616 25DD			nodec_pt3_1
-   617 25DD C6 CF			dec pt_3
-   618 25DF A5 CF			lda pt_3
-   619 25E1 05 D0			ora pt_3+1
-   620 25E3 D0 DA			bne loop
-   621 25E5 60				rts
-   622 25E6			bank
-   623 25E6 00				.by $00
-   624 				.endp
-   625
-   626 25E7			.proc cart_check
-   627 25E7				banco $50,0
+   491 24DB A2 2B			ldx #$2b
+   492 24DD A0 02			ldy #$02
+   493 24DF 20 E3 24			jsr write_char
+   494 24E2 60				rts
+   495 				.endp
+   496
+   497 24E3			.proc write_char
+   498 24E3 8E 0A 03			stx daux1
+   499 24E6 8C 0B 03			sty daux2
+   500 24E9 A9 00 8D 04 03 A9 + 	mwa #$a000 dbuflo
+   501 24F3 A9 50 8D 02 03		mva #$50 dcomnd
+   502 24F8 A9 26 8D 1C 25		mva #$26 sec_count	//$26 sectors to write.
+   503 24FD			loop
+   504 24FD 20 53 E4			jsr dskinv
+   505 2500 EE 0A 03			inc daux1
+   506 2503 D0 03			bne noincdaux2
+   507 2505 EE 0B 03			inc daux2
+   508 2508			noincdaux2
+   509 2508 18				clc
+   510 2509 AD 04 03			lda dbuflo
+   511 250C 69 80			adc #$80
+   512 250E 8D 04 03			sta dbuflo
+   513 2511 90 03			bcc noincdbufhi
+   514 2513 EE 05 03			inc dbufhi
+   515 2516			noincdbufhi
+   516 2516 CE 1C 25			dec sec_count
+   517 2519 D0 E2			bne loop
+   518 251B 60				rts
+   519
+   520 251C			sec_count
+   521 251C 00				.by $00
+   522 				.endp
+   523
+   524
+   525 251D			.proc write_cartridge
+   526 251D A2 01			ldx #$01			//First sector LSB
+   527 251F A0 00			ldy #$00			//First sector MSB
+   528 2521 A9 02			lda #$02			//2 sectors to read
+   529 2523 20 6E 25			jsr read_char		//Do it!
+   530 2526 A9 50			lda #$50			//Bank $50 to write (Sector $A
+   531 2528 A2 01			ldx #$01			//$100 bytes to write
+   532 252A 20 A6 25			jsr write_char_cart	//Do it!
+   533
+   534
+   535 				//First character
+   536 252D A2 03			ldx #$03			//Sector 3 LSB
+   537 252F A0 00			ldy #$00			//Sector 3 MSB
+   538 2531 A9 26			lda #$26			//$26 sectors to read
+   539 2533 20 6E 25			jsr read_char		//Do it!
+   540 2536 A9 58			lda #$58			//Bank $58 (Sector $B)
+   541 2538 A2 13			ldx #$13			//$1300 bytes to write
+   542 253A 20 A6 25			jsr write_char_cart	//Do it!
+   543
+   544 				//Second character
+   545 253D A2 BB			ldx #$bb
+   546 253F A0 00			ldy #$00
+   547 2541 A9 26			lda #$26
+   548 2543 20 6E 25			jsr read_char
+   549 2546 A9 60			lda #$60
+   550 2548 A2 13			ldx #$13
+   551 254A 20 A6 25			jsr write_char_cart
+   552
+   553 				//Third character
+   554 254D A2 73			ldx #$73
+   555 254F A0 01			ldy #$01
+   556 2551 A9 26			lda #$26
+   557 2553 20 6E 25			jsr read_char
+   558 2556 A9 68			lda #$68
+   559 2558 A2 13			ldx #$13
+   560 255A 20 A6 25			jsr write_char_cart
+   561
+   562 				//Fourth character
+   563 255D A2 2B			ldx #$2b
+   564 255F A0 02			ldy #$02
+   565 2561 A9 26			lda #$26
+   566 2563 20 6E 25			jsr read_char
+   567 2566 A9 70			lda #$70
+   568 2568 A2 13			ldx #$13
+   569 256A 20 A6 25			jsr write_char_cart
+   570 					
+   571 256D 60				rts
+   572 				.endp
+   573
+   574 256E			.proc read_char
+   575 256E 8E 0A 03			stx daux1
+   576 2571 8C 0B 03			sty daux2
+   577 2574 8D A5 25			sta sec_count
+   578 2577 A9 52 8D 02 03		mva #$52 dcomnd
+   579 257C A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
+   580 2586			loop
+   581 2586 20 53 E4			jsr dskinv
+   582 2589 EE 0A 03			inc daux1
+   583 258C D0 03			bne noincdaux2
+   584 258E EE 0B 03			inc daux2
+   585 2591			noincdaux2
+   586 2591 AD 04 03			lda dbuflo
+   587 2594 18				clc
+   588 2595 69 80			adc #$80
+   589 2597 8D 04 03			sta dbuflo
+   590 259A 90 03			bcc noincdbufhi
+   591 259C EE 05 03			inc dbufhi
+   592 259F			noincdbufhi
+   593 259F CE A5 25			dec sec_count
+   594 25A2 D0 E2			bne loop
+   595 25A4 60				rts
+   596 25A5			sec_count
+   597 25A5 00				.by $00
+   598 				.endp
+   599
+   600 25A6			.proc write_char_cart
+   601 25A6 86 D0			stx pt_3+1
+   602 25A8 8D E6 25			sta bank
+   603 25AB A9 00 85 CF			mva #$00 pt_3
+   604 25AF A9 00 85 CB A9 60 + 	mwa #buffer pt_1
+   605 25B7 A9 00 85 CD A9 A0 + 	mwa #$a000 pt_2
+   606 25BF			loop
+   607 25BF AD E6 25			lda bank
+   608 25C2 20 26 24			jsr enable_write
+   609 25C5 A0 00			ldy #$00
+   610 25C7 B1 CB			lda (pt_1),y
+   611 25C9 91 CD			sta (pt_2),y
+   612 25CB E6 CB			inc pt_1
+   613 25CD D0 02			bne noinc_pt1_1
+   614 25CF E6 CC			inc pt_1+1
+   615 25D1			noinc_pt1_1
+   616 25D1 E6 CD			inc pt_2
+   617 25D3 D0 02			bne noinc_pt2_1
+   618 25D5 E6 CE			inc pt_2+1
+   619 25D7			noinc_pt2_1
+   620 25D7 A5 CF			lda pt_3
+   621 25D9 D0 02			bne nodec_pt3_1
+   622 25DB C6 D0			dec pt_3+1
+   623 25DD			nodec_pt3_1
+   624 25DD C6 CF			dec pt_3
+   625 25DF A5 CF			lda pt_3
+   626 25E1 05 D0			ora pt_3+1
+   627 25E3 D0 DA			bne loop
+   628 25E5 60				rts
+   629 25E6			bank
+   630 25E6 00				.by $00
+   631 				.endp
+   632
+   633 25E7			.proc cart_check
+   634 25E7				banco $50,0
 Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      5 25E7 A9 50				lda #$50
      9 25E9 AA					tax
     10 25EA 9D 00 D5				sta $d500,x
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   628 25ED A2 07			ldx #len_text_check-1
-   629 25EF			loop
-   630 25EF BD 80 A0			lda $a080,x
-   631 25F2 DD 98 23			cmp text_check,x
-   632 25F5 D0 05			bne no_check
-   633 25F7 CA				dex
-   634 25F8 10 F5			bpl loop
-   635 25FA 18				clc
-   636 25FB 60				rts
-   637 25FC			no_check
-   638 25FC 38				sec
-   639 25FD 60				rts
-   640 				.endp
-   641
-   642 25FE			.proc disk_check
-   643 25FE A9 31 8D 00 03		mva #$31 ddevic
-   644 2603 A9 01 8D 01 03		mva #$01 dunit
-   645 2608 A9 52 8D 02 03		mva #$52 dcomnd
-   646 260D A9 02 8D 0A 03 A9 + 	mwa #$0002 daux1
-   647 2617 A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
-   648 2621 20 53 E4			jsr dskinv
-   649 2624 A2 07			ldx #len_text_check-1
-   650 2626			loop
-   651 2626 BD 00 60			lda buffer,x
-   652 2629 DD 98 23			cmp text_check,x
-   653 262C D0 05			bne no_check
-   654 262E CA				dex
-   655 262F 10 F5			bpl loop
-   656 2631 18				clc
-   657 2632 60				rts
-   658 2633			no_check
-   659 2633 38				sec
-   660 2634 60				rts
-   661 				.endp
-   662 2635			.proc error_cart
-   663 2635 A2 77			ldx #len_sc_format-1
-   664 2637			loop
-   665 2637 BD 82 22			lda sc_cart_error,x
-   666 263A 9D 92 21			sta sc_screen_format,x
-   667 263D CA				dex
-   668 263E 10 F7			bpl loop
-   669 2640				writememory 0,beep,1
+   635 25ED A2 07			ldx #len_text_check-1
+   636 25EF			loop
+   637 25EF BD 80 A0			lda $a080,x
+   638 25F2 DD 98 23			cmp text_check,x
+   639 25F5 D0 05			bne no_check
+   640 25F7 CA				dex
+   641 25F8 10 F5			bpl loop
+   642 25FA 18				clc
+   643 25FB 60				rts
+   644 25FC			no_check
+   645 25FC 38				sec
+   646 25FD 60				rts
+   647 				.endp
+   648
+   649 25FE			.proc disk_check
+   650 25FE A9 31 8D 00 03		mva #$31 ddevic
+   651 2603 A9 01 8D 01 03		mva #$01 dunit
+   652 2608 A9 52 8D 02 03		mva #$52 dcomnd
+   653 260D A9 02 8D 0A 03 A9 + 	mwa #$0002 daux1
+   654 2617 A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
+   655 2621 20 53 E4			jsr dskinv
+   656 2624 A2 07			ldx #len_text_check-1
+   657 2626			loop
+   658 2626 BD 00 60			lda buffer,x
+   659 2629 DD 98 23			cmp text_check,x
+   660 262C D0 05			bne no_check
+   661 262E CA				dex
+   662 262F 10 F5			bpl loop
+   663 2631 18				clc
+   664 2632 60				rts
+   665 2633			no_check
+   666 2633 38				sec
+   667 2634 60				rts
+   668 				.endp
+   669 2635			.proc error_cart
+   670 2635 A2 77			ldx #len_sc_format-1
+   671 2637			loop
+   672 2637 BD 82 22			lda sc_cart_error,x
+   673 263A 9D 92 21			sta sc_screen_format,x
+   674 263D CA				dex
+   675 263E 10 F7			bpl loop
+   676 2640				writememory 0,beep,1
 Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 2640 A2 00			ldx #(0*16)
      8 2642 A9 A0 9D 44 03 A9 + 	mwa #BEEP ICBAL,x
@@ -1986,17 +1993,17 @@ Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUD
     10 2656 A9 0B 9D 42 03		mva #11 ICCMD,X
     11 265B 20 56 E4			jsr ciov
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   670 265E 60				rts
-   671 				.endp
-   672
-   673 265F			.proc error_disk
-   674 265F A2 77			ldx #len_sc_format-1
-   675 2661			loop
-   676 2661 BD FA 22			lda sc_disk_error,x
-   677 2664 9D 92 21			sta sc_screen_format,x
-   678 2667 CA				dex
-   679 2668 10 F7			bpl loop
-   680 266A				writememory 0,beep,1
+   677 265E 60				rts
+   678 				.endp
+   679
+   680 265F			.proc error_disk
+   681 265F A2 77			ldx #len_sc_format-1
+   682 2661			loop
+   683 2661 BD FA 22			lda sc_disk_error,x
+   684 2664 9D 92 21			sta sc_screen_format,x
+   685 2667 CA				dex
+   686 2668 10 F7			bpl loop
+   687 266A				writememory 0,beep,1
 Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 266A A2 00			ldx #(0*16)
      8 266C A9 A0 9D 44 03 A9 + 	mwa #BEEP ICBAL,x
@@ -2004,95 +2011,95 @@ Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUD
     10 2680 A9 0B 9D 42 03		mva #11 ICCMD,X
     11 2685 20 56 E4			jsr ciov
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   681 2688 60				rts
-   682 				.endp
-   683
-   684 2689			.proc vbi
-   685 2689 AD 13 D0			lda trig3
-   686 268C 8D FA 03			sta gintlk		//No cartridge lockup!
-   687 268F A5 4D			lda atract
-   688 2691 30 04			bmi vbi_end
-   689 2693 A9 00			lda #$00
-   690 2695 85 4D			sta atract
-   691 2697			vbi_end
-   692 2697 4C 5F E4			jmp sysvbv
-   693 				.endp
-   694
-   695 269A			.proc vbd
-   696 269A AD A1 23			lda flag_busy
-   697 269D D0 37			bne vbd_end
-   698 269F AD 1F D0			lda consol
-   699 26A2 CD A4 23			cmp consol_previous
-   700 26A5 F0 2F			jeq vbd_end
-   701 26A7 8D A4 23			sta consol_previous
-   702 26AA 4A				lsr		; START?
-   703 26AB B0 07			bcs vbd_2	; No!
-   704 26AD 48				pha
-   705
-   706 26AE A9 01			lda #$01
-   707 26B0 8D A3 23			sta flag_start
-   708
-   709 26B3 68				pla
-   710 26B4			vbd_2
-   711 26B4 4A				lsr 		; SELECT?
-   712 26B5 B0 1C			bcs vbd_3	; No!
-   713 26B7 48				pha
-   714 26B8 A2 25			ldx #37
-   715 26BA A0 12			ldy #18
-   716 26BC AD A2 23			lda flag_operation
-   717 26BF 49 01			eor #$01
-   718 26C1 8D A2 23			sta flag_operation
-   719 26C4 D0 02			bne vbd_2_write
-   720 26C6 A2 12			ldx #18
-   721 26C8			vbd_2_write
-   722 26C8 BD 72 23			lda sc_cart,x
-   723 26CB 99 56 21			sta screen_operation,y
-   724 26CE CA				dex
-   725 26CF 88				dey
-   726 26D0 10 F6			bpl vbd_2_write
-   727 26D2 68				pla
-   728 26D3			vbd_3
-   729 26D3 4A				lsr		;OPTION?
-   730 26D4 B0 00			bcs vbd_end	;NO!
-   731 				;	lda #$01
-   732 				;	sta flag_dir
-   733 26D6			vbd_end
-   734 26D6 4C 62 E4			jmp xitvbv
-   735 				.endp
-   736
-   737 26D9			.proc screen_erase
-   738 26D9 A9 00			lda #$00
-   739 26DB A2 77			ldx #len_sc_format-1
-   740 26DD			loop
-   741 26DD 9D 92 21			sta sc_screen_format,x
-   742 26E0 CA				dex
-   743 26E1 10 FA			bpl loop
-   744 26E3 60				rts
-   745 				.endp
-   746 					
-   747 26E4			start
-   748 26E4 20 D9 26			jsr screen_erase
-   749 26E7			start2
-   750 26E7 AD 01 D3			lda portb
-   751 26EA 09 FE			ora #$fe	//No BASIC, maintin SIO patch if there's any.
-   752 26EC 8D 01 D3			sta portb
-   753 26EF A9 01 8D F8 03		mva #$01 basicf
-   754 26F4				close 0
+   688 2688 60				rts
+   689 				.endp
+   690
+   691 2689			.proc vbi
+   692 2689 AD 13 D0			lda trig3
+   693 268C 8D FA 03			sta gintlk		//No cartridge lockup!
+   694 268F A5 4D			lda atract
+   695 2691 30 04			bmi vbi_end
+   696 2693 A9 00			lda #$00
+   697 2695 85 4D			sta atract
+   698 2697			vbi_end
+   699 2697 4C 5F E4			jmp sysvbv
+   700 				.endp
+   701
+   702 269A			.proc vbd
+   703 269A AD A1 23			lda flag_busy
+   704 269D D0 37			bne vbd_end
+   705 269F AD 1F D0			lda consol
+   706 26A2 CD A4 23			cmp consol_previous
+   707 26A5 F0 2F			jeq vbd_end
+   708 26A7 8D A4 23			sta consol_previous
+   709 26AA 4A				lsr		; START?
+   710 26AB B0 07			bcs vbd_2	; No!
+   711 26AD 48				pha
+   712
+   713 26AE A9 01			lda #$01
+   714 26B0 8D A3 23			sta flag_start
+   715
+   716 26B3 68				pla
+   717 26B4			vbd_2
+   718 26B4 4A				lsr 		; SELECT?
+   719 26B5 B0 1C			bcs vbd_3	; No!
+   720 26B7 48				pha
+   721 26B8 A2 25			ldx #37
+   722 26BA A0 12			ldy #18
+   723 26BC AD A2 23			lda flag_operation
+   724 26BF 49 01			eor #$01
+   725 26C1 8D A2 23			sta flag_operation
+   726 26C4 D0 02			bne vbd_2_write
+   727 26C6 A2 12			ldx #18
+   728 26C8			vbd_2_write
+   729 26C8 BD 72 23			lda sc_cart,x
+   730 26CB 99 56 21			sta screen_operation,y
+   731 26CE CA				dex
+   732 26CF 88				dey
+   733 26D0 10 F6			bpl vbd_2_write
+   734 26D2 68				pla
+   735 26D3			vbd_3
+   736 26D3 4A				lsr		;OPTION?
+   737 26D4 B0 00			bcs vbd_end	;NO!
+   738 				;	lda #$01
+   739 				;	sta flag_dir
+   740 26D6			vbd_end
+   741 26D6 4C 62 E4			jmp xitvbv
+   742 				.endp
+   743
+   744 26D9			.proc screen_erase
+   745 26D9 A9 00			lda #$00
+   746 26DB A2 77			ldx #len_sc_format-1
+   747 26DD			loop
+   748 26DD 9D 92 21			sta sc_screen_format,x
+   749 26E0 CA				dex
+   750 26E1 10 FA			bpl loop
+   751 26E3 60				rts
+   752 				.endp
+   753 					
+   754 26E4			start
+   755 26E4 20 D9 26			jsr screen_erase
+   756 26E7			start2
+   757 26E7 AD 01 D3			lda portb
+   758 26EA 09 FE			ora #$fe	//No BASIC, maintain SIO patch if there's any.
+   759 26EC 8D 01 D3			sta portb
+   760 26EF A9 01 8D F8 03		mva #$01 basicf
+   761 26F4				close 0
 Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 26F4 A2 00			ldx #(0*16)
      8 26F6 A9 0C			lda #$0C	//Close
      9 26F8 9D 42 03			sta ICCMD,x
     10 26FB 20 56 E4			jsr CIOV
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   755 26FE				close 1
+   762 26FE				close 1
 Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 26FE A2 10			ldx #(1*16)
      8 2700 A9 0C			lda #$0C	//Close
      9 2702 9D 42 03			sta ICCMD,x
     10 2705 20 56 E4			jsr CIOV
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   756 2708 A9 A0 85 6A			mva #$a0 RAMTOP
-   757 270C				open 0,12,0,LOC_E
+   763 2708 A9 A0 85 6A			mva #$a0 RAMTOP
+   764 270C				open 0,12,0,LOC_E
 Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 270C A2 00			ldx #(0*16)
      8 270E A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
@@ -2101,7 +2108,7 @@ Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitH
     11 2722 A9 00 9D 4B 03		mva #0 ICAX2,x
     12 2727 20 56 E4			jsr CIOV
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   758 272A				open 1,4,0,LOC_K
+   765 272A				open 1,4,0,LOC_K
 Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 272A A2 10			ldx #(1*16)
      8 272C A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
@@ -2110,43 +2117,43 @@ Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitH
     11 2740 A9 00 9D 4B 03		mva #0 ICAX2,x
     12 2745 20 56 E4			jsr CIOV
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   759 2748 A9 B1 8D 30 02 A9 + 	mwa #dl SDLSTL
-   760 2752 A9 00 8D A1 23		mva #$00 flag_busy	//just a flag
-   761 2757 A9 00 8D C6 02		mva #$00 color2
-   762 275C A9 0F 8D C5 02		mva #$0f color1
-   763 2761 A2 26			ldx #>vbi
-   764 2763 A0 89			ldy #<vbi
-   765 2765 A9 06			lda #VBI_I
-   766 2767 20 5C E4			jsr setvbv			//Set VBI to prevent cartridge lockup
-   767 276A A2 26			ldx #>vbd
-   768 276C A0 9A			ldy #<vbd
-   769 276E A9 07			lda #VBI_D
-   770 2770 20 5C E4			jsr setvbv			//VBD to look on consol keys.
-   771
-   772 2773			loop_start
-   773 2773 AD A3 23			lda flag_start
-   774 2776 F0 FB			beq loop_start
-   775
-   776 2778 20 D9 26			jsr screen_erase
-   777 277B 8D A1 23			sta flag_busy
-   778 277E CE A3 23			dec flag_start
-   779 2781 AD A2 23			lda flag_operation		//DISK to CART or CART to DISK?
-   780 2784 D0 72			jne no_to_disk
-   781 2786 20 E7 25			jsr cart_check
-   782 2789 90 06			bcc no_cart_error
-   783 278B 20 35 26			jsr error_cart
-   784 278E 4C E7 26			jmp start2
-   785
-   786 2791			no_cart_error
-   787 2791 A2 77			ldx #len_sc_format-1
-   788 2793			start_loop_sc_format
-   789 2793 BD 0A 22			lda sc_format,x
-   790 2796 9D 92 21			sta sc_screen_format,x
-   791 2799 CA				dex
-   792 279A 10 F7			bpl start_loop_sc_format
-   793 					
-   794 					
-   795 279C				writememory 0,beep,1	//Make a beep sound! That's the legal way
+   766 2748 A9 B1 8D 30 02 A9 + 	mwa #dl SDLSTL
+   767 2752 A9 00 8D A1 23		mva #$00 flag_busy	//just a flag
+   768 2757 A9 00 8D C6 02		mva #$00 color2
+   769 275C A9 0F 8D C5 02		mva #$0f color1
+   770 2761 A2 26			ldx #>vbi
+   771 2763 A0 89			ldy #<vbi
+   772 2765 A9 06			lda #VBI_I
+   773 2767 20 5C E4			jsr setvbv			//Set VBI to prevent cartridge lockup
+   774 276A A2 26			ldx #>vbd
+   775 276C A0 9A			ldy #<vbd
+   776 276E A9 07			lda #VBI_D
+   777 2770 20 5C E4			jsr setvbv			//VBD to look on consol keys.
+   778
+   779 2773			loop_start
+   780 2773 AD A3 23			lda flag_start
+   781 2776 F0 FB			beq loop_start
+   782
+   783 2778 20 D9 26			jsr screen_erase
+   784 277B 8D A1 23			sta flag_busy
+   785 277E CE A3 23			dec flag_start
+   786 2781 AD A2 23			lda flag_operation		//DISK to CART or CART to DISK?
+   787 2784 D0 72			jne no_to_disk
+   788 2786 20 E7 25			jsr cart_check
+   789 2789 90 06			bcc no_cart_error
+   790 278B 20 35 26			jsr error_cart
+   791 278E 4C E7 26			jmp start2
+   792
+   793 2791			no_cart_error
+   794 2791 A2 77			ldx #len_sc_format-1
+   795 2793			start_loop_sc_format
+   796 2793 BD 0A 22			lda sc_format,x
+   797 2796 9D 92 21			sta sc_screen_format,x
+   798 2799 CA				dex
+   799 279A 10 F7			bpl start_loop_sc_format
+   800 					
+   801 					
+   802 279C				writememory 0,beep,1	//Make a beep sound! That's the legal way
 Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      7 279C A2 00			ldx #(0*16)
      8 279E A9 A0 9D 44 03 A9 + 	mwa #BEEP ICBAL,x
@@ -2154,39 +2161,35 @@ Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUD
     10 27B2 A9 0B 9D 42 03		mva #11 ICCMD,X
     11 27B7 20 56 E4			jsr ciov
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   796 27BA 20 7A 24			jsr wait_return
-   797 27BD 20 91 24			jsr format_disk
-   798 27C0 A9 01 8D 0A 03 A9 + 	mwa #$0001 daux1
-   799 27CA A9 00 8D 04 03 A9 + 	mwa #boot_sector dbuflo
-   800 27D4 A9 50 8D 02 03		mva #$50 dcomnd
-   801 27D9 20 53 E4			jsr dskinv
-   802 27DC				banco $50,0
+   803 27BA 20 7A 24			jsr wait_return
+   804 27BD 20 91 24			jsr format_disk
+   805 27C0 A9 01 8D 0A 03 A9 + 	mwa #$0001 daux1
+   806 27CA A9 00 8D 04 03 A9 + 	mwa #boot_sector dbuflo
+   807 27D4 A9 50 8D 02 03		mva #$50 dcomnd
+   808 27D9 20 53 E4			jsr dskinv
+   809 27DC				banco $50,0
 Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm]
      5 27DC A9 50				lda #$50
      9 27DE AA					tax
     10 27DF 9D 00 D5				sta $d500,x
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransfer.asm
-   803 27E2 A9 80 8D 04 03 A9 + 	mwa #$a080 dbuflo
-   804 27EC EE 0A 03			inc daux1
-   805 27EF 20 53 E4			jsr dskinv
-   806 27F2 20 AE 24			jsr write_disk
-   807 27F5 4C E4 26			jmp start
-   808
-   809
-   810 27F8			no_to_disk
-   811 27F8 20 FE 25			jsr disk_check
-   812 27FB 90 06			bcc no_disk_error
-   813 27FD 20 5F 26			jsr error_disk
-   814 2800 4C E7 26			jmp start2
+   810 27E2 A9 80 8D 04 03 A9 + 	mwa #$a080 dbuflo
+   811 27EC EE 0A 03			inc daux1
+   812 27EF 20 53 E4			jsr dskinv
+   813 27F2 20 AE 24			jsr write_disk
+   814 27F5 4C E4 26			jmp start
    815
-   816 2803			no_disk_error	
-   817 2803 20 A6 23			jsr format_cartridge
-   818 2806 20 1D 25			jsr write_cartridge
-   819 2809 4C E4 26			jmp start
-   820 					
-   821 280C			eterno
-   822 280C 4C 0C 28			jmp eterno
-   823
-   824
-   825 02E0-02E1> E4 26			run start
-   826 					
+   816
+   817 27F8			no_to_disk
+   818 27F8 20 FE 25			jsr disk_check
+   819 27FB 90 06			bcc no_disk_error
+   820 27FD 20 5F 26			jsr error_disk
+   821 2800 4C E7 26			jmp start2
+   822
+   823 2803			no_disk_error	
+   824 2803 20 A6 23			jsr format_cartridge
+   825 2806 20 1D 25			jsr write_cartridge
+   826 2809 4C E4 26			jmp start
+   827 					
+   828 02E0-02E1> E4 26			run start
+   829 					

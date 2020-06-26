@@ -23,8 +23,8 @@ pt_3 = $cf
 
 //Partimos con seleccionar el banco
 //Formato: banco x,y
-//x = banco del cartridge a invocar
-//y= 0 si es lectura, Y=1 si es lectura/escritura
+//x = Cartridge bank to activate
+//y= 0 if its for reading, Y=1 read/write
 .macro banco
 .if :0 <> 2 
 	.error "banco sin parámetros"
@@ -77,7 +77,7 @@ pt_3 = $cf
 
 
 //Cierra el canal solicitado.
-//Uso: close canal
+//Uso: close channel
 .macro close
 .if :0 <> 1
 	.error "close sin parámetros"
@@ -92,8 +92,8 @@ pt_3 = $cf
 .endif
 .endm
 
-//Open: Abre el canal según parámetros
-//Uso: open canal,operacion,aux,loc_handler
+//Open: open CIO channel, simmilar to BASIC.
+//Uso: open channel,operation,aux,loc_handler
 
 .macro open
 .if :0 <> 4
@@ -233,11 +233,11 @@ boot_sector
 LOC_E
 	.by "E:",$9B	;Handler editor E:
 LOC_K
-	.by "K:",$9B	;Handler teclado
+	.by "K:",$9B	;Handler keyboard
 LOC_DISK
-	.by "D1:AAAAAAAA.DMP",$9B	;Nombre de archivo a abrir lectura o escritura
+	.by "D1:AAAAAAAA.DMP",$9B	;file name (not used now)
 LOC_DIR
-	.by "D1:*.*",$9B		;Buscar el directorio
+	.by "D1:*.*",$9B		;search directory (not used)
 LOC_INPUT
 	.by "                    "
 dl
@@ -314,7 +314,7 @@ sc_disk
 	.sb "DISK TO CARTRIDGE  "
 
 text_check
-	.by "AR CHAR!"
+	.by "AR CHAR!"	//Header to check on disk or cartridge
 text_check_end
 len_text_check = text_check_end - text_check
 
@@ -334,6 +334,8 @@ consol_previous
 
 key
 	.by $00
+	
+//Format cartridge routine for AR Dungeon.
 .proc format_cartridge
 	lda #$0a
 	jsr erasebk	//Erase bank $0a (Header info)
@@ -445,15 +447,15 @@ temp_x
 .proc wait_return
 start
 	lda CH
-	cmp #$ff
-	bne start
-	jsr get_key
-	lda #$ff
-	sta CH
-	lda key
-	cmp #$9b	//Return
-	bne start	
-	rts
+	cmp #$ff	//Key pressed?
+	bne start	//Nope, start over!
+	jsr get_key //Get key
+	lda #$ff	//Erase last key pressed
+	sta CH		//Done!
+	lda key		//Read key
+	cmp #$9b	//Is it Return?
+	bne start	//No, let's do it again.
+	rts			//Yes, return
 .endp
 
 .proc format_disk
@@ -497,7 +499,7 @@ start
 	sty daux2
 	mwa #$a000 dbuflo
 	mva #$50 dcomnd
-	mva #$26 sec_count
+	mva #$26 sec_count	//$26 sectors to write.
 loop
 	jsr dskinv
 	inc daux1
@@ -521,22 +523,25 @@ sec_count
 
 
 .proc write_cartridge
-	ldx #$01
-	ldy #$00
-	lda #$02
-	jsr read_char
-	lda #$50
-	ldx #$01
-	jsr write_char_cart
-	
-	ldx #$03
-	ldy #$00
-	lda #$26
-	jsr read_char
-	lda #$58
-	ldx #$13
-	jsr write_char_cart
+	ldx #$01			//First sector LSB
+	ldy #$00			//First sector MSB
+	lda #$02			//2 sectors to read
+	jsr read_char		//Do it!
+	lda #$50			//Bank $50 to write (Sector $A
+	ldx #$01			//$100 bytes to write
+	jsr write_char_cart	//Do it!
 
+
+//First character
+	ldx #$03			//Sector 3 LSB
+	ldy #$00			//Sector 3 MSB
+	lda #$26			//$26 sectors to read
+	jsr read_char		//Do it!
+	lda #$58			//Bank $58 (Sector $B)
+	ldx #$13			//$1300 bytes to write
+	jsr write_char_cart	//Do it!
+
+//Second character
 	ldx #$bb
 	ldy #$00
 	lda #$26
@@ -544,7 +549,8 @@ sec_count
 	lda #$60
 	ldx #$13
 	jsr write_char_cart
-	
+
+//Third character
 	ldx #$73
 	ldy #$01
 	lda #$26
@@ -552,7 +558,8 @@ sec_count
 	lda #$68
 	ldx #$13
 	jsr write_char_cart
-	
+
+//Fourth character
 	ldx #$2b
 	ldy #$02
 	lda #$26
@@ -748,7 +755,7 @@ start
 	jsr screen_erase
 start2
 	lda portb
-	ora #$fe	//No BASIC, maintin SIO patch if there's any.
+	ora #$fe	//No BASIC, maintain SIO patch if there's any.
 	sta portb
 	mva #$01 basicf
 	close 0
@@ -818,9 +825,5 @@ no_disk_error
 	jsr write_cartridge
 	jmp start
 	
-eterno
-	jmp eterno
-
-
 	run start
 	
