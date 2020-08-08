@@ -252,170 +252,172 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    215 = 0230			SDLSTL	= $230	; display list address
    216 = 0200			VDSLST	= $200	; DLI address
    217
-   218 = 0301			DUNIT	= $301
-   219 = 0302			DCOMND	= $302
-   220 = 0303			DSTATS	= $303
-   221 = 0304			DBUFLO	= $304
-   222 = 0305			DBUFHI	= $305
-   223
-   224 = 030A			DAUX1	= $30A
-   225 = 030B			DAUX2	= $30B
-   226
+   218 = 0300			DDEVIC	= $300
+   219 = 0301			DUNIT	= $301
+   220 = 0302			DCOMND	= $302
+   221 = 0303			DSTATS	= $303
+   222 = 0304			DBUFLO	= $304
+   223 = 0305			DBUFHI	= $305
+   224
+   225 = 030A			DAUX1	= $30A
+   226 = 030B			DAUX2	= $30B
    227
-   228 = 0270			PADDL0	= 624	; 0-228 , shadow of POT0
-   229 = 027C			PTRIG0	= 636	; 0 = PRESSED , shadow of PTRG0
-   230 = 0278			STICK0	= 632	; 0000 = RLDU , shadow of PORTA
-   231 = 0284			STRIG0	= 644	; 0 = PRESSED , shadow of TRIG0
-   232
-   233 = 0244			COLDST	= $244	; non zero --> do a cold start when pressing the reset key
-   234
-   235 				;----------------------------------------
-   236 				; VBI:
-   237 				;----------------------------------------
-   238
-   239 = E45C			SETVBV			= $E45C
-   240 = E45F			XITVB_I			= $E45F
-   241 = E45F			SYSVBV			= $E45F
-   242 = E462			XITVB_D			= $E462
-   243 = E462			XITVBV			= $E462
-   244 = 0006			VBI_I			= 6
-   245 = 0007			VBI_D			= 7
-   246 = C0E2			NORMAL_VBI_I	= 49378
-   247 = C28A			NORMAL_VBI_D	= 49802
-   248 = 0222			VVBLKI			= 546
-   249 = 0224			VVBLKD			= 548
-   250 = E462			XITVB			= XITVB_D
-   251
-   252 				;----------------------------------------
-   253 				; Handler vectors:
-   254 				;----------------------------------------
-   255
-   256 = FFFA			NMIH_VECTOR		= 65530
-   257 = FFFC			RESH_VECTOR		= 65532
-   258 = FFFE			IRQH_VECTOR		= 65534
-   259
-   260 				;----------------------------------------
-   261 				; I/O:
-   262 				;----------------------------------------
-   263
-   264 = E456			CIOV			= $E456	; (58454)
-   265 = E459			SIOV			= $E459	; (58457)
-   266
-   267 				;----------------------------------------
-   268 				; Restart routines
+   228
+   229 = 0270			PADDL0	= 624	; 0-228 , shadow of POT0
+   230 = 027C			PTRIG0	= 636	; 0 = PRESSED , shadow of PTRG0
+   231 = 0278			STICK0	= 632	; 0000 = RLDU , shadow of PORTA
+   232 = 0284			STRIG0	= 644	; 0 = PRESSED , shadow of TRIG0
+   233
+   234 = 0244			COLDST	= $244	; non zero --> do a cold start when pressing the reset key
+   235
+   236 				;----------------------------------------
+   237 				; VBI:
+   238 				;----------------------------------------
+   239
+   240 = E45C			SETVBV			= $E45C
+   241 = E45F			XITVB_I			= $E45F
+   242 = E45F			SYSVBV			= $E45F
+   243 = E462			XITVB_D			= $E462
+   244 = E462			XITVBV			= $E462
+   245 = 0006			VBI_I			= 6
+   246 = 0007			VBI_D			= 7
+   247 = C0E2			NORMAL_VBI_I	= 49378
+   248 = C28A			NORMAL_VBI_D	= 49802
+   249 = 0222			VVBLKI			= 546
+   250 = 0224			VVBLKD			= 548
+   251 = E462			XITVB			= XITVB_D
+   252
+   253 				;----------------------------------------
+   254 				; Handler vectors:
+   255 				;----------------------------------------
+   256
+   257 = FFFA			NMIH_VECTOR		= 65530
+   258 = FFFC			RESH_VECTOR		= 65532
+   259 = FFFE			IRQH_VECTOR		= 65534
+   260
+   261 				;----------------------------------------
+   262 				; I/O:
+   263 				;----------------------------------------
+   264
+   265 = E453			DSKINV			= $E453 ; (58451)
+   266 = E456			CIOV			= $E456	; (58454)
+   267 = E459			SIOV			= $E459	; (58457)
+   268
    269 				;----------------------------------------
-   270
-   271 = E474			WARMSV			= $E474
-   272 = E477			COLDSV			= $E477
-   273
-   274 				;----------------------------------------
-   275 				; Bit values:
+   270 				; Restart routines
+   271 				;----------------------------------------
+   272
+   273 = E474			WARMSV			= $E474
+   274 = E477			COLDSV			= $E477
+   275
    276 				;----------------------------------------
-   277
-   278 				; DMA values
-   279 = 0020			DV_DMA_ON			= %00100000
-   280 = 0010			DV_PM_ONE_LINE		= %00010000
-   281 = 0008			DV_PLAYERS_ON		= %00001000
-   282 = 0004			DV_MISSILES_ON		= %00000100
-   283 = 0003			DV_WIDE_PF			= %00000011
-   284 = 0002			DV_NORMAL_PF		= %00000010
-   285 = 0001			DV_NARROW_PF		= %00000001
-   286
-   287 				; Display list values
-   288 = 0080			DL_DLI_MASK		= %10000000
-   289 = 0040			DL_LMS_MASK		= %01000000
-   290 = 0020			DL_VSCROLL_MASK	= %00100000
-   291 = 0010			DL_HSCROLL_MASK	= %00010000
-   292
-   293 = 0001			DL_JMP		= 1
-   294 = 0041			DL_JVB		= 65
-   295
-   296 = 0000			DL_BLANK_1	= 0
-   297 = 0010			DL_BLANK_2	= 16
-   298 = 0020			DL_BLANK_3	= 32
-   299 = 0030			DL_BLANK_4	= 48
-   300 = 0040			DL_BLANK_5	= 64
-   301 = 0050			DL_BLANK_6	= 80
-   302 = 0060			DL_BLANK_7	= 96
-   303 = 0070			DL_BLANK_8	= 112
-   304
-   305 				; Antic graphic modes
-   306 = 0002			GM_CHAR_A2	= 2			; 2 colors, 40x24, 960b, 40xline, 8 scanlines
-   307 = 0006			GM_CHAR_A6	= 6			; 4 colors, 20x24, 480b, 40xline, 8 scanlines
-   308 = 0007			GM_CHAR_A7	= 7			; 4 colors, 20x12, 240b, 20xline, 16 scanlines
-   309 = 0004			GM_CHAR_A4	= 4			; 5 colors, 40x24, 960b, 40xline, 8 scanlines
-   310 = 0005			GM_CHAR_A5	= 5			; 5 colors, 40x12, 480b, 40xline, 16 scanlines
-   311 = 0003			GM_CHAR_A3	= 3			; 2 colors, 40x24, 760b, 40xline, 10 scanlines
-   312
-   313 				; Basic graphic modes
-   314 = 0002			GM_CHAR_G0	= 2			; 2 colors, 40x24, 960b, 40xline, 8 scanlines
-   315 = 0006			GM_CHAR_G1	= 6			; 4 colors, 20x24, 480b, 40xline, 8 scanlines
-   316 = 0007			GM_CHAR_G2	= 7			; 4 colors, 20x12, 240b, 20xline, 16 scanlines
-   317 = 0004			GM_CHAR_G12	= 4			; 5 colors, 40x24, 960b, 40xline, 8 scanlines
-   318 = 0005			GM_CHAR_G13	= 5			; 5 colors, 40x12, 480b, 40xline, 16 scanlines
-   319
-   320 = 0008			GM_PIXEL_G3	= 8			; 4 colors, 40x24, 240b, 10xline, 8 scanline
-   321 = 0009			GM_PIXEL_G4	= 9			; 2 colors, 80x48, 480b, 10xline, 4 scanline
-   322 = 000A			GM_PIXEL_G5	= 10		; 4 colors, 80x48, 960b, 20xline, 4 scanline
-   323 = 000B			GM_PIXEL_G6	= 11		; 2 colors, 160x96, 1920b, 20xline, 2 scanline
-   324 = 000D			GM_PIXEL_G7	= 13		; 4 colors, 160x96, 3840b, 40xline, 2 scanline
-   325 = 000F			GM_PIXEL_G8	= 15		; 2 colors, 320x192, 7680b, 40xline, 1 scanline
-   326 = 000C			GM_PIXEL_G14	= 12	; 2 colors, 160x192, 3840b, 20xline, 1 scanline
-   327 = 000E			GM_PIXEL_G15	= 14	; 4 colors, 160x192, 7680b, 40xline, 1 scanline
-   328
-   329 = 000F			GM_PIXEL_G9	= 15		; 1 color, 80x192, 7680b, 40xline, 1 scanline
-   330 = 000F			GM_PIXEL_G10	= 15	; 9 colors, 80x192, 7680b, 40xline, 1 scanline
-   331 = 000F			GM_PIXEL_G11	= 15	; 16 colors, 80x192, 7680b, 40xline, 1 scanline
-   332
-   333 				; Prior values
-   334 = 0001			PRV_PM_PRIORITY_1	= %00000001		; p0 p1 p2 p3 / pf0 pf1 pf2 pf3 (p5) / bk
-   335 = 0002			PRV_PM_PRIORITY_2	= %00000010		; p0 p1 / pf0 pf1 pf2 pf3 (p5) / p2 p3 / bk
-   336 = 0004			PRV_PM_PRIORITY_3	= %00000100		; pf0 pf1 pf2 pf3 (p5) /  p0 p1 p2 p3 / bk
-   337 = 0008			PRV_PM_PRIORITY_4	= %00001000		; pf1 pf2 /  p0 p1 p2 p3 / pf0 pf3 (p5) / bk
-   338 = 0010			PRV_FIFTH_PLAYER	= %00010000
-   339 = 0020			PRV_PM_OVERLAP		= %00100000
-   340 = 0040			PRV_GTIA_9			= %01000000
-   341 = 0080			PRV_GTIA_10			= %10000000
-   342 = 00C0			PRV_GTIA_11			= %11000000
-   343
-   344 				; Gractl values
-   345 = 0001			GCTL_MISSILES		= %001
-   346 = 0002			GCTL_PLAYERS		= %010
-   347 = 0004			GCTL_LATCH_TRIGGERS	= %100
-   348
-   349 				; Consol values:
-   350 = 0001			CNV_START_MASK		= %001
-   351 = 0002			CNV_OPTION_MASK		= %010
-   352 = 0004			CNV_SELECT_MASK		= %100
-   353
-   354 				; Stick values:
-   355 = 0008			STV_RIGHT_MASK		= %1000
-   356 = 0004			STV_LEFT_MASK		= %0100
-   357 = 0002			STV_DOWN_MASK		= %0010
-   358 = 0001			STV_UP_MASK			= %0001
-   359
-   360 = 0008			STICK_MASK_RIGHT	= %1000
-   361 = 0004			STICK_MASK_LEFT		= %0100
-   362 = 0002			STICK_MASK_DOWN		= %0010
-   363 = 0001			STICK_MASK_UP		= %0001
-   364
-   365 = 0007			STICK_VALUE_RIGHT	= %0111
-   366 = 000B			STICK_VALUE_LEFT	= %1011
-   367 = 000D			STICK_VALUE_DOWN	= %1101
-   368 = 000E			STICK_VALUE_UP		= %1110
-   369
-   370 				/*
-   371 				KBCode Hexadecimal Values
-   372 				 	$00	$01	$02	$03	$04	$05	$06	$07	$08	$09	$0A	$0B	$0C	$0D	$0E	$0F
-   373 				$00	L	J	;	F1	F2	K	+	*	O	 	P	U	CR	I	-	=
-   374 				$10	V	Hlp	C	F3	F4	B	X	Z	4	 	3	6	Esc	5	2	1
-   375 				$20	,	Spc	.	N	 	M	/	Inv	R	 	E	Y	Tab	T	W	Q
-   376 				$30	9	 	0	7	BS	8	<	>	F	H	D	 	Cap	G	S	A
-   377
-   378 				together with Shift Key: add +$40
-   379 				together with Control key: add +$80 
-   380 				*/
-   380
+   277 				; Bit values:
+   278 				;----------------------------------------
+   279
+   280 				; DMA values
+   281 = 0020			DV_DMA_ON			= %00100000
+   282 = 0010			DV_PM_ONE_LINE		= %00010000
+   283 = 0008			DV_PLAYERS_ON		= %00001000
+   284 = 0004			DV_MISSILES_ON		= %00000100
+   285 = 0003			DV_WIDE_PF			= %00000011
+   286 = 0002			DV_NORMAL_PF		= %00000010
+   287 = 0001			DV_NARROW_PF		= %00000001
+   288
+   289 				; Display list values
+   290 = 0080			DL_DLI_MASK		= %10000000
+   291 = 0040			DL_LMS_MASK		= %01000000
+   292 = 0020			DL_VSCROLL_MASK	= %00100000
+   293 = 0010			DL_HSCROLL_MASK	= %00010000
+   294
+   295 = 0001			DL_JMP		= 1
+   296 = 0041			DL_JVB		= 65
+   297
+   298 = 0000			DL_BLANK_1	= 0
+   299 = 0010			DL_BLANK_2	= 16
+   300 = 0020			DL_BLANK_3	= 32
+   301 = 0030			DL_BLANK_4	= 48
+   302 = 0040			DL_BLANK_5	= 64
+   303 = 0050			DL_BLANK_6	= 80
+   304 = 0060			DL_BLANK_7	= 96
+   305 = 0070			DL_BLANK_8	= 112
+   306
+   307 				; Antic graphic modes
+   308 = 0002			GM_CHAR_A2	= 2			; 2 colors, 40x24, 960b, 40xline, 8 scanlines
+   309 = 0006			GM_CHAR_A6	= 6			; 4 colors, 20x24, 480b, 40xline, 8 scanlines
+   310 = 0007			GM_CHAR_A7	= 7			; 4 colors, 20x12, 240b, 20xline, 16 scanlines
+   311 = 0004			GM_CHAR_A4	= 4			; 5 colors, 40x24, 960b, 40xline, 8 scanlines
+   312 = 0005			GM_CHAR_A5	= 5			; 5 colors, 40x12, 480b, 40xline, 16 scanlines
+   313 = 0003			GM_CHAR_A3	= 3			; 2 colors, 40x24, 760b, 40xline, 10 scanlines
+   314
+   315 				; Basic graphic modes
+   316 = 0002			GM_CHAR_G0	= 2			; 2 colors, 40x24, 960b, 40xline, 8 scanlines
+   317 = 0006			GM_CHAR_G1	= 6			; 4 colors, 20x24, 480b, 40xline, 8 scanlines
+   318 = 0007			GM_CHAR_G2	= 7			; 4 colors, 20x12, 240b, 20xline, 16 scanlines
+   319 = 0004			GM_CHAR_G12	= 4			; 5 colors, 40x24, 960b, 40xline, 8 scanlines
+   320 = 0005			GM_CHAR_G13	= 5			; 5 colors, 40x12, 480b, 40xline, 16 scanlines
+   321
+   322 = 0008			GM_PIXEL_G3	= 8			; 4 colors, 40x24, 240b, 10xline, 8 scanline
+   323 = 0009			GM_PIXEL_G4	= 9			; 2 colors, 80x48, 480b, 10xline, 4 scanline
+   324 = 000A			GM_PIXEL_G5	= 10		; 4 colors, 80x48, 960b, 20xline, 4 scanline
+   325 = 000B			GM_PIXEL_G6	= 11		; 2 colors, 160x96, 1920b, 20xline, 2 scanline
+   326 = 000D			GM_PIXEL_G7	= 13		; 4 colors, 160x96, 3840b, 40xline, 2 scanline
+   327 = 000F			GM_PIXEL_G8	= 15		; 2 colors, 320x192, 7680b, 40xline, 1 scanline
+   328 = 000C			GM_PIXEL_G14	= 12	; 2 colors, 160x192, 3840b, 20xline, 1 scanline
+   329 = 000E			GM_PIXEL_G15	= 14	; 4 colors, 160x192, 7680b, 40xline, 1 scanline
+   330
+   331 = 000F			GM_PIXEL_G9	= 15		; 1 color, 80x192, 7680b, 40xline, 1 scanline
+   332 = 000F			GM_PIXEL_G10	= 15	; 9 colors, 80x192, 7680b, 40xline, 1 scanline
+   333 = 000F			GM_PIXEL_G11	= 15	; 16 colors, 80x192, 7680b, 40xline, 1 scanline
+   334
+   335 				; Prior values
+   336 = 0001			PRV_PM_PRIORITY_1	= %00000001		; p0 p1 p2 p3 / pf0 pf1 pf2 pf3 (p5) / bk
+   337 = 0002			PRV_PM_PRIORITY_2	= %00000010		; p0 p1 / pf0 pf1 pf2 pf3 (p5) / p2 p3 / bk
+   338 = 0004			PRV_PM_PRIORITY_3	= %00000100		; pf0 pf1 pf2 pf3 (p5) /  p0 p1 p2 p3 / bk
+   339 = 0008			PRV_PM_PRIORITY_4	= %00001000		; pf1 pf2 /  p0 p1 p2 p3 / pf0 pf3 (p5) / bk
+   340 = 0010			PRV_FIFTH_PLAYER	= %00010000
+   341 = 0020			PRV_PM_OVERLAP		= %00100000
+   342 = 0040			PRV_GTIA_9			= %01000000
+   343 = 0080			PRV_GTIA_10			= %10000000
+   344 = 00C0			PRV_GTIA_11			= %11000000
+   345
+   346 				; Gractl values
+   347 = 0001			GCTL_MISSILES		= %001
+   348 = 0002			GCTL_PLAYERS		= %010
+   349 = 0004			GCTL_LATCH_TRIGGERS	= %100
+   350
+   351 				; Consol values:
+   352 = 0001			CNV_START_MASK		= %001
+   353 = 0002			CNV_OPTION_MASK		= %010
+   354 = 0004			CNV_SELECT_MASK		= %100
+   355
+   356 				; Stick values:
+   357 = 0008			STV_RIGHT_MASK		= %1000
+   358 = 0004			STV_LEFT_MASK		= %0100
+   359 = 0002			STV_DOWN_MASK		= %0010
+   360 = 0001			STV_UP_MASK			= %0001
+   361
+   362 = 0008			STICK_MASK_RIGHT	= %1000
+   363 = 0004			STICK_MASK_LEFT		= %0100
+   364 = 0002			STICK_MASK_DOWN		= %0010
+   365 = 0001			STICK_MASK_UP		= %0001
+   366
+   367 = 0007			STICK_VALUE_RIGHT	= %0111
+   368 = 000B			STICK_VALUE_LEFT	= %1011
+   369 = 000D			STICK_VALUE_DOWN	= %1101
+   370 = 000E			STICK_VALUE_UP		= %1110
+   371
+   372 				/*
+   373 				KBCode Hexadecimal Values
+   374 				 	$00	$01	$02	$03	$04	$05	$06	$07	$08	$09	$0A	$0B	$0C	$0D	$0E	$0F
+   375 				$00	L	J	;	F1	F2	K	+	*	O	 	P	U	CR	I	-	=
+   376 				$10	V	Hlp	C	F3	F4	B	X	Z	4	 	3	6	Esc	5	2	1
+   377 				$20	,	Spc	.	N	 	M	/	Inv	R	 	E	Y	Tab	T	W	Q
+   378 				$30	9	 	0	7	BS	8	<	>	F	H	D	 	Cap	G	S	A
+   379
+   380 				together with Shift Key: add +$40
+   381 				together with Control key: add +$80 
+   382 				*/
+   382
     35 					icl "../../base/sys_macros.m65"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonCartridge\BOOTCartridge\Alternate Reality - The dungeon\..\..\base\sys_macros.m65
      1 				;================================================================================
@@ -2354,9 +2356,9 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace\WUDSN\GitHub\ARDungeonC
    843 				//	icl "fcode.s"	//Courtesy from Wrathchild at Atariage. Thanks!
    844
    845 CEFD			chipmask
-   846 CEFD 00				.byte $00
+   846 CEFD 00				.by $00
    847 CEFE			final_greeting
-   848 CEFE 23 61 72 74 72 69 + 	.sb "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
+   848 CEFE 43 61 72 74 72 69 + 	.by "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
    849 CF51			fin_loader
    850 				.endp
    851

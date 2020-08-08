@@ -843,9 +843,9 @@ temp_x	.by $00
 //	icl "fcode.s"	//Courtesy from Wrathchild at Atariage. Thanks!
 
 chipmask
-	.byte $00
+	.by $00
 final_greeting
-	.sb "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
+	.by "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
 fin_loader
 .endp
 
