@@ -10,6 +10,7 @@
 
 //History:
 
+//V10: bugfix: game hangs when putting a wrong floppy or atr image, going to the cartridge and not returning to D1:
 //V9: added 3 seconds of waiting in the credit screen. You can skip it by pressing a key, consol key or joystick button.
 //V8: various bug fixes and optimized D1: access
 //V7: Added D1:functionality from physical drive.
@@ -395,18 +396,18 @@ backupbuffer =$cff0
 	lda drivenum
 	cmp #$31	//Is it drive 1?
 	jne no_drive1	//No!
-	jsr $204e
-	bpl end_drive1
-	php
+	jsr $204e		//Go to normal SIO routine
+	bpl end_drive1	//Is there an error?
+	php				//Yes! We have an error.
 	lda drivecommand
-	cmp #$53
-	bne no_status
+	cmp #$53		//Is it a status instruction?
+	bne no_status	//No, change drive to D2:
 	plp
 	rts
 no_status
-	inc drivenum
-	plp
-	jmp loader2
+	inc drivenum	//change drive to D2:
+	plp				//Restore Processor Status
+	jmp loader2		//Go again!
 end_drive1
 	rts
 no_drive1
@@ -530,14 +531,25 @@ d4_4th
 d4_5th
 	lda $77bf
 	cmp #$a9
-	bne d4_end
+	bne d4_6th
 	lda $77c0
 	cmp #$57
-	bne d4_end
+	bne d4_6th
 	lda #$50
 	sta $776c
 	sta $77a3
 	sta $77c0
+d4_6th
+	lda $782f
+	cmp #$4c
+	bne d4_end
+	lda $7830
+	cmp #$21
+	bne d4_end
+	lda $7831
+	cmp #$76
+	bne d4_end
+	mwa #patch_char $7830
 
 d4_end
 	ldy #$01	// All done without errors
@@ -732,6 +744,11 @@ char_format_error
 char_format_error_31
 	inc $230
 	jmp $8409
+
+patch_char
+	lda #$31
+	sta drivenum
+	jmp $7631
 
 sec_table		//List of initial sectors to write on 
 
