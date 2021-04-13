@@ -222,8 +222,17 @@ cont2
 	mwa #loader $1e43	//Patch SIO call 1
 	mwa #loader $1e7d	//Patch SIO call 2
 	mwa #cont3 $1e7a	//Patch final instruction
-	lda #$01			//Put exclamation mark
-	sta dl_text_mark	//on screen!
+//	lda #$01			//Put exclamation mark
+//	sta dl_text_mark	//on screen!
+
+	lda version
+	sta dl_text_version
+	lda version+1
+	sta dl_text_version+1
+	lda version+2
+	sta dl_text_version+2
+
+
 	lda rtclock
 	clc
 	ldx palnts			//Is it PAL?
@@ -292,10 +301,15 @@ dl_patch
 	.word $7060
 dl_end
 dl_text
-	.sb "        Cartridge conversion 2020       "
+	.sb "        Cartridge conversion 2020    "
+dl_text_version
+	.sb "   "
 	.sb "   Guillermo Fuenzalida & Mark Keates  "
 dl_text_mark
 	.sb " "
+
+version
+	.sb "V10"
 .endp
 
 Copy_init3
