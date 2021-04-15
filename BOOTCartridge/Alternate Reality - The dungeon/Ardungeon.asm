@@ -10,6 +10,11 @@
 
 //History:
 
+.macro PUT_VERSION
+	.sb "V11"
+.endm
+
+//V11: added new updater. No need to backup the characters!!
 //V10: bugfix: game hangs when putting a wrong floppy or atr image, going to the cartridge and not returning to D1:
 //V9: added 3 seconds of waiting in the credit screen. You can skip it by pressing a key, consol key or joystick button.
 //V8: various bug fixes and optimized D1: access
@@ -225,8 +230,8 @@ cont2
 //	lda #$01			//Put exclamation mark
 //	sta dl_text_mark	//on screen!
 
-	lda version
-	sta dl_text_version
+	lda version				//Put version number
+	sta dl_text_version		//on screen
 	lda version+1
 	sta dl_text_version+1
 	lda version+2
@@ -309,7 +314,7 @@ dl_text_mark
 	.sb " "
 
 version
-	.sb "V10"
+	PUT_VERSION
 .endp
 
 Copy_init3
@@ -908,9 +913,9 @@ filler_bytes = bank_size*(banks_used-1)-total_bytes
 ; Llenamos los bytes
 
 .if filler_banks > 0
-	.sav filler_bytes
+	:filler_bytes .by $ff
 .else
-	.sav filler_bytes - 6 -8
+	:(filler_bytes - 6 -8) .by $ff
 .endif
 
 end_file
@@ -919,10 +924,10 @@ end_file
 .if filler_banks > 0
 	.if filler_banks > 1
 		.rept filler_banks-1
-			.sav bank_size
+			:bank_size .by $ff
 		.endr
 	.endif
-	.sav bank_size-6-8
+	:(bank_size-6-8) .by $ff
 .endif
 
 
