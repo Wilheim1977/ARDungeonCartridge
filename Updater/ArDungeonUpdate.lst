@@ -1303,7 +1303,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
     30 = 0001			total_sectors	= (total_banks+7)/8
     31
     32 				.macro PUT_VERSION
-    33 					.sb "V11"
+    33 					.sb "V13"
     34 				.endm
     35
     36 					opt h-
@@ -1842,7 +1842,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
    308 223A 7C 21 32 00 24 75 + 	.sb     "|AR Dungeon Updater "
    309 224E				PUT_VERSION
 Macro: PUT_VERSION [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
-     1 224E 36 11 11			.sb "V11"
+     1 224E 36 11 13			.sb "V13"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
    310 2251 00 7C 12 10 12 11 + 	.sb " |2021 Willysoft|"
    311 2262 41 52 52 52 52 52 + 	.sb +32,"ARRRRRRRRRRRWRRRRRRRRRRRXRRRRRRRRRRRRRRD"

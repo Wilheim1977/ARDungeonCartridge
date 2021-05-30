@@ -30,7 +30,7 @@ starting_sector	= starting_bank/8
 total_sectors	= (total_banks+7)/8
 
 .macro PUT_VERSION
-	.sb "V11"
+	.sb "V13"
 .endm
 
 	opt h-
