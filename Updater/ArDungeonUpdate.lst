@@ -1,12 +1,12 @@
 mads 2.1.0 build 8 (23 Dec 19)
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
      1
      2 				;	@com.wudsn.ide.asm.outputfileextension=.atr
      3
      4
      5 				; include files, useful macros:
      6 					icl "../base/sys_equates.m65"
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\..\base\sys_equates.m65
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_equates.m65
      1 				;================================================================================
      2 				; System equates, Atari XL + mads [NRV 2009]
      3 				;================================================================================
@@ -391,7 +391,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeon
    382 				*/
    382
      7 					icl "../base/sys_macros.m65"
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65
      1 				;================================================================================
      2 				; System macros, Atari XL + mads [NRV 2009]
      3 				;================================================================================
@@ -1297,52 +1297,51 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeon
     24 = 00CF			pt_3 = $cf
     25
     26 = 0000			starting_bank 	= $00
-    27 = 007F			final_bank		= $7f
-    28 = 0080			total_banks		= final_bank-starting_bank+1
+    27 = 0007			final_bank		= $07
+    28 = 0008			total_banks		= final_bank-starting_bank+1
     29 = 0000			starting_sector	= starting_bank/8
-    30 = 0010			total_sectors	= (total_banks+7)/8
+    30 = 0001			total_sectors	= (total_banks+7)/8
     31
     32 				.macro PUT_VERSION
     33 					.sb "V11"
     34 				.endm
     35
-    36 				// Include Flash drivers
-    37
-    38
-    39 					opt h-
-    40 					
-    41 				//Let's do the ATR Header
-    42
-    43 = 100700			Total_Size		= (((end_atr - start_data)+127)/128)*128
-    44 = 0001			Total_Size_high	= (Total_Size/$100000)
-    45 = 0070			Total_Size_low	= (Total_Size-(Total_Size_high*$100000))/$10
-    46
-    47 = 000E			Sectors_boot	= (end_program-start_data+127)/128
+    36 					opt h-
+    37 					
+    38 				//Let's do the ATR Header
+    39
+    40 = 100700			Total_Size		= (((end_atr - start_data)+127)/128)*128
+    41 = 0001			Total_Size_high	= (Total_Size/$100000)
+    42 = 0070			Total_Size_low	= (Total_Size-(Total_Size_high*$100000))/$10
+    43
+    44 = 000E			Sectors_boot	= (end_program-start_data+127)/128
+    45
+    46 = 000F			init_sector = Sectors_boot + 1
+    47 = 000F			init_rom_sector	= (init_sector + (starting_bank*$40))
     48
-    49 = 000F			init_sector = Sectors_boot + 1
-    50 = 000F			init_rom_sector	= (init_sector + (starting_bank*$40))
-    51
-    52  96 02				.by $96,$02				//Checksum of "NICKATARI"
-    53  70 00				.word Total_Size_low	//Total bytes
-    54  80 00				.word $80				//Sector Size
-    55  01 00				.word Total_Size_high	//Total bytes
-    56  00				.by $00					//No Write Protect nor Bad sectors.
-    57  00 00				.word $00				//No bad sectors
-    58  00 00 00 00 00			.by $00,$00,$00,$00,$00
-    59
-    60
-    61 					org start_data
-    62 					
-    63 2000 00				.by $00
-    64 2001 0E				.by Sectors_boot
-    65 2002 00 20			.word start_data
-    66 2004 A6 25			.word start
-    67 2006			init_boot
-    68 2006 18				clc
-    69 2007 60				rts	
-    70 					
-    71 2008				icl "FlashCartDriver.asm"
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\FlashCartDriver.asm
+    49  96 02				.by $96,$02				//Checksum of "NICKATARI"
+    50  70 00				.word Total_Size_low	//Total bytes
+    51  80 00				.word $80				//Sector Size
+    52  01 00				.word Total_Size_high	//Total bytes
+    53  00				.by $00					//No Write Protect nor Bad sectors.
+    54  00 00				.word $00				//No bad sectors
+    55  00 00 00 00 00			.by $00,$00,$00,$00,$00
+    56
+    57
+    58 					org start_data
+    59 					
+    60 2000 00				.by $00
+    61 2001 0E				.by Sectors_boot
+    62 2002 00 20			.word start_data
+    63 2004 A6 25			.word start
+    64 2006			init_boot
+    65 2006 18				clc
+    66 2007 60				rts	
+    67
+    68
+    69 				// Include Flash drivers	
+    70 2008				icl "FlashCartDriver.asm"
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\FlashCartDriver.asm
      1
      2
      3
@@ -1603,381 +1602,381 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeon
    258 214B 60				rts
    259 					
    260 				.endp
+    71
     72
-    73
-    74 				//Determinamos macros
-    75
-    76 				//Partimos con seleccionar el banco
-    77 				//Formato: banco x,y
-    78 				//x = Cartridge bank to activate
-    79 				//y= 0 if its for reading, Y=1 read/write
-    80 				.macro banco
-    81 				.if :0 <> 2 
-    82 					.error "banco sin parámetros"
-    83 				.else
-    84 					.if :1 < 256
-    85 						lda #:1
-    86 						.if :2 = 1
-    87 							ora #write_enable
-    88 						.endif
-    89 						tax
-    90 						sta $d500,x
-    91 					.else
-    92 						lda :1
-    93 						.if :2 = 1
-    94 							;ora #write_enable
-    95 							ora value_write
-    96 						.endif
-    97 						tax
-    98 						sta $d500,x
-    99 					.endif
-   100 				.endif 
-   101 				.endm
-   102
-   103 				//Realiza un print en la pantalla hasta encontrar un RETURN ($9b).
-   104 				//Uso: print mem_addr
-   105 				.macro print
-   106 				.if :0 <> 1
-   107 					.error "print sin parámetros"
-   108 				.else
-   109 					ldx #<:1
-   110 					ldy #>:1
-   111 					jsr pr
-   112 				.endif
-   113 				.endm
-   114 					
-   115
-   116 				//print2: imprime una cantidad fija de caracteres según un largo definido.
-   117 				//Uso: print2 mem_addr, num_caracteres
-   118 				.macro print2
-   119 				.if :0 <> 2
-   120 					.error "print2 sin parámetros"
-   121 				.else
-   122 					ldx #<:1
-   123 					ldy #>:1
-   124 					lda #:2
-   125 					jsr pr2
-   126 				.endif
-   127 				.endm
+    73 				//Determinamos macros
+    74
+    75 				//Partimos con seleccionar el banco
+    76 				//Formato: banco x,y
+    77 				//x = Cartridge bank to activate
+    78 				//y= 0 if its for reading, Y=1 read/write
+    79 				.macro banco
+    80 				.if :0 <> 2 
+    81 					.error "banco sin parámetros"
+    82 				.else
+    83 					.if :1 < 256
+    84 						lda #:1
+    85 						.if :2 = 1
+    86 							ora #write_enable
+    87 						.endif
+    88 						tax
+    89 						sta $d500,x
+    90 					.else
+    91 						lda :1
+    92 						.if :2 = 1
+    93 							;ora #write_enable
+    94 							ora value_write
+    95 						.endif
+    96 						tax
+    97 						sta $d500,x
+    98 					.endif
+    99 				.endif 
+   100 				.endm
+   101
+   102 				//Realiza un print en la pantalla hasta encontrar un RETURN ($9b).
+   103 				//Uso: print mem_addr
+   104 				.macro print
+   105 				.if :0 <> 1
+   106 					.error "print sin parámetros"
+   107 				.else
+   108 					ldx #<:1
+   109 					ldy #>:1
+   110 					jsr pr
+   111 				.endif
+   112 				.endm
+   113 					
+   114
+   115 				//print2: imprime una cantidad fija de caracteres según un largo definido.
+   116 				//Uso: print2 mem_addr, num_caracteres
+   117 				.macro print2
+   118 				.if :0 <> 2
+   119 					.error "print2 sin parámetros"
+   120 				.else
+   121 					ldx #<:1
+   122 					ldy #>:1
+   123 					lda #:2
+   124 					jsr pr2
+   125 				.endif
+   126 				.endm
+   127
    128
    129
-   130
-   131 				//Cierra el canal solicitado.
-   132 				//Uso: close channel
-   133 				.macro close
-   134 				.if :0 <> 1
-   135 					.error "close sin parámetros"
-   136 				.else
-   137 				;	lda #:1
-   138 				;	:+4 asl
-   139 				;	tax
-   140 					ldx #(:1*16)
-   141 					lda #$0C	//Close
-   142 					sta ICCMD,x
-   143 					jsr CIOV
-   144 				.endif
-   145 				.endm
-   146
-   147 				//Open: open CIO channel, simmilar to BASIC.
-   148 				//Uso: open channel,operation,aux,loc_handler
-   149
-   150 				.macro open
-   151 				.if :0 <> 4
-   152 					.error "open sin parámetros"
-   153 				.else
-   154 				;	lda #:1
-   155 				;	:+4 asl
-   156 				;	tax
-   157 					ldx #(:1*16)
-   158 					mva #$03 ICCMD,x	//Open
-   159 					mwa #:4	ICBAL,x		//"E:","C:","D:"
-   160 					mva #:2	ICAX1,x		//Read and write
-   161 					mva #:3 ICAX2,x
-   162 					jsr CIOV
-   163 				.endif
-   164 				.endm
-   165
-   166 				//CopyM: Copy número de páginas de una dirección a otra.
-   167 				.macro CopyM
-   168 				//Restricción: sólo utiliza los bytes mayores. Para un movimiento más fino, utilizar CopyMemory
-   169 				
-   170 				.if :0 <> 3
-   171 					.error "CopyM sin parámetros correctos"
-   172 				.else
-   173 					ldx #>:1
-   174 					ldy #>:2
-   175 					lda #>:3
-   176 					jsr copy
-   177 				.endif
+   130 				//Cierra el canal solicitado.
+   131 				//Uso: close channel
+   132 				.macro close
+   133 				.if :0 <> 1
+   134 					.error "close sin parámetros"
+   135 				.else
+   136 				;	lda #:1
+   137 				;	:+4 asl
+   138 				;	tax
+   139 					ldx #(:1*16)
+   140 					lda #$0C	//Close
+   141 					sta ICCMD,x
+   142 					jsr CIOV
+   143 				.endif
+   144 				.endm
+   145
+   146 				//Open: open CIO channel, simmilar to BASIC.
+   147 				//Uso: open channel,operation,aux,loc_handler
+   148
+   149 				.macro open
+   150 				.if :0 <> 4
+   151 					.error "open sin parámetros"
+   152 				.else
+   153 				;	lda #:1
+   154 				;	:+4 asl
+   155 				;	tax
+   156 					ldx #(:1*16)
+   157 					mva #$03 ICCMD,x	//Open
+   158 					mwa #:4	ICBAL,x		//"E:","C:","D:"
+   159 					mva #:2	ICAX1,x		//Read and write
+   160 					mva #:3 ICAX2,x
+   161 					jsr CIOV
+   162 				.endif
+   163 				.endm
+   164
+   165 				//CopyM: Copy número de páginas de una dirección a otra.
+   166 				.macro CopyM
+   167 				//Restricción: sólo utiliza los bytes mayores. Para un movimiento más fino, utilizar CopyMemory
+   168 				
+   169 				.if :0 <> 3
+   170 					.error "CopyM sin parámetros correctos"
+   171 				.else
+   172 					ldx #>:1
+   173 					ldy #>:2
+   174 					lda #>:3
+   175 					jsr copy
+   176 				.endif
+   177 				
    178 				
-   179 				
-   180 				.endm
-   181
-   182 				//WriteMemory: Escribe en disco el contenido de memoria
-   183 				//Parámetros:
-   184 				//  1: Canal a escribir
-   185 				//  2: Zona de memoria inicial a escribir
-   186 				//  3: Cantidad de bytes
-   187 				.macro WriteMemory
-   188 				.if :0 <> 3
-   189 					.error "WriteMemory sin parámetros correctos"
-   190 				.else
-   191 				;	lda #:1
-   192 				;	:+4 asl
-   193 				;	tax
-   194 					ldx #(:1*16)
-   195 					mwa #:2 ICBAL,x
-   196 					mwa #:3 ICBLL,x
-   197 					mva #11 ICCMD,X
-   198 					jsr ciov
-   199 				.endif
-   200 				.endm
-   201
-   202 				//ReadDisk: lee del disco el contenido y guarda en memoria
-   203 				//Parámetros:
-   204 				//  1: Canal del cual leer
-   205 				//  2: Zona de memoria al cual grabar
-   206 				//  3: Cantidad de bytes
-   207 				.macro ReadDisk
-   208 				.if :0 <> 3
-   209 					.error "ReadDisk sin parámetros correctos"
-   210 				.else
-   211 				;	lda #:1
-   212 				;	:+4 asl
-   213 				;	tax
-   214 					ldx #(:1*16)
-   215 					mwa #:2 ICBAL,x
-   216 					mwa #:3 ICBLL,x
-   217 					mva #7 ICCMD,X
-   218 					jsr ciov
-   219 				.endif
-   220 				.endm
+   179 				.endm
+   180
+   181 				//WriteMemory: Escribe en disco el contenido de memoria
+   182 				//Parámetros:
+   183 				//  1: Canal a escribir
+   184 				//  2: Zona de memoria inicial a escribir
+   185 				//  3: Cantidad de bytes
+   186 				.macro WriteMemory
+   187 				.if :0 <> 3
+   188 					.error "WriteMemory sin parámetros correctos"
+   189 				.else
+   190 				;	lda #:1
+   191 				;	:+4 asl
+   192 				;	tax
+   193 					ldx #(:1*16)
+   194 					mwa #:2 ICBAL,x
+   195 					mwa #:3 ICBLL,x
+   196 					mva #11 ICCMD,X
+   197 					jsr ciov
+   198 				.endif
+   199 				.endm
+   200
+   201 				//ReadDisk: lee del disco el contenido y guarda en memoria
+   202 				//Parámetros:
+   203 				//  1: Canal del cual leer
+   204 				//  2: Zona de memoria al cual grabar
+   205 				//  3: Cantidad de bytes
+   206 				.macro ReadDisk
+   207 				.if :0 <> 3
+   208 					.error "ReadDisk sin parámetros correctos"
+   209 				.else
+   210 				;	lda #:1
+   211 				;	:+4 asl
+   212 				;	tax
+   213 					ldx #(:1*16)
+   214 					mwa #:2 ICBAL,x
+   215 					mwa #:3 ICBLL,x
+   216 					mva #7 ICCMD,X
+   217 					jsr ciov
+   218 				.endif
+   219 				.endm
+   220
    221
-   222
-   223 				//WriteCart: Escribe en cartridge el contenido de memoria
-   224 				//Parámetros:
-   225 				//  1: Canal a escribir
-   226 				//  2: Zona de memoria inicial a escribir
-   227 				//  3: Cantidad de bytes
-   228 				.macro WriteCart
-   229 				.if :0 <> 3
-   230 					.error "WriteCart sin parámetros correctos"
-   231 				.else
-   232 					ReadDisk :1,:2,:3
-   233 					CopyM :2,start_cartridge,:3
-   234 				.endif
-   235 				.endm
-   236
-   237 				//input: realiza un input por CIO
-   238 				//Uso: input canal,dirección a tomar
-   239 				.macro input
-   240 				.if :0 <> 2
-   241 					.error "Input sin parámetros correctos"
-   242 				.else
-   243 				;	lda #:1
-   244 				;	:+4 asl
-   245 				;	tax
-   246 					ldx #(:1*16)
-   247 					mwa #:2 ICBAL,X		;Dirección entregada
-   248 					mwa #20 ICBLL,x		;Máximo 20 bytes (Pueden ser más)
-   249 					mva #5 ICCMD,x		;Comando INPUT
-   250 					jsr ciov		;Ejecute"
-   251 				.endif
-   252 				
-   253 				.endm
-   254
-   255 				//get: realiza un input por CIO
-   256 				//Uso: input canal,dirección a tomar
-   257 				.macro get
-   258 				.if :0 <> 2
-   259 					.error "Get sin parámetros correctos"
-   260 				.else
-   261 				;	lda #:1
-   262 				;	:+4 asl
-   263 				;	tax
-   264 					ldx #(:1*16)
-   265 					mwa #:2 ICBAL,X		;Dirección entregada
-   266 					mwa #1 ICBLL,x		;Cantidad de bytes = 1
-   267 					mva #7 ICCMD,x		;Realizar una lectura
-   268 					jsr ciov		;Ejecute!
-   269 				.endif
-   270 				
-   271 				.endm
+   222 				//WriteCart: Escribe en cartridge el contenido de memoria
+   223 				//Parámetros:
+   224 				//  1: Canal a escribir
+   225 				//  2: Zona de memoria inicial a escribir
+   226 				//  3: Cantidad de bytes
+   227 				.macro WriteCart
+   228 				.if :0 <> 3
+   229 					.error "WriteCart sin parámetros correctos"
+   230 				.else
+   231 					ReadDisk :1,:2,:3
+   232 					CopyM :2,start_cartridge,:3
+   233 				.endif
+   234 				.endm
+   235
+   236 				//input: realiza un input por CIO
+   237 				//Uso: input canal,dirección a tomar
+   238 				.macro input
+   239 				.if :0 <> 2
+   240 					.error "Input sin parámetros correctos"
+   241 				.else
+   242 				;	lda #:1
+   243 				;	:+4 asl
+   244 				;	tax
+   245 					ldx #(:1*16)
+   246 					mwa #:2 ICBAL,X		;Dirección entregada
+   247 					mwa #20 ICBLL,x		;Máximo 20 bytes (Pueden ser más)
+   248 					mva #5 ICCMD,x		;Comando INPUT
+   249 					jsr ciov		;Ejecute"
+   250 				.endif
+   251 				
+   252 				.endm
+   253
+   254 				//get: realiza un input por CIO
+   255 				//Uso: input canal,dirección a tomar
+   256 				.macro get
+   257 				.if :0 <> 2
+   258 					.error "Get sin parámetros correctos"
+   259 				.else
+   260 				;	lda #:1
+   261 				;	:+4 asl
+   262 				;	tax
+   263 					ldx #(:1*16)
+   264 					mwa #:2 ICBAL,X		;Dirección entregada
+   265 					mwa #1 ICBLL,x		;Cantidad de bytes = 1
+   266 					mva #7 ICCMD,x		;Realizar una lectura
+   267 					jsr ciov		;Ejecute!
+   268 				.endif
+   269 				
+   270 				.endm
+   271
    272
    273
-   274
-   275 214C			boot_sector
-   276 214C 00				.by $00
-   277 214D 01				.by $01		//1 sector to read
-   278 214E 00 06			.word $600
-   279 2150 06 06			.word $606
-   280 2152 38				sec
-   281 2153 60				rts
-   282 2154 00 00 00 00 00 00 + 	:120 .by $00
-   283
-   284 21CC			LOC_E
-   285 21CC 45 3A 9B			.by "E:",$9B	;Handler editor E:
-   286 21CF			LOC_K
-   287 21CF 4B 3A 9B			.by "K:",$9B	;Handler keyboard
-   288 21D2			LOC_DISK
-   289 21D2 44 31 3A 41 41 41 + 	.by "D1:AAAAAAAA.DMP",$9B	;file name (not used now)
-   290 21E2			LOC_DIR
-   291 21E2 44 31 3A 2A 2E 2A + 	.by "D1:*.*",$9B		;search directory (not used)
-   292 21E9			LOC_INPUT
-   293 21E9 20 20 20 20 20 20 + 	.by "                    "
-   294 21FD			dl
-   295 21FD 70 70 70			.by $70,$70,$70
-   296 2200 70 70 70 70 70 70 + 	:7 .by $70
-   297 2207 30				.by $30
-   298 2208 42				.by $42				;Primera línea modo ANTIC 2
-   299 2209 12 22			.word screen
-   300 220B 02 02 02 02			:4 .by $02 			;4 líneas más
-   301 				//	.by $70
-   302 				//	.by $02,$02,$02
-   303 220F 41				.by $41				;Vuelva
-   304 2210 FD 21			.word dl			;al display list!
-   305 					
-   306
-   307 2212			screen
-   308 2212 51 52 52 52 52 52 + 	.sb +32,"QRRRRRRRRRRRRRRRRRRRRRRRWRRRRRRRRRRRRRRE"
-   309 223A 7C 21 32 00 24 75 + 	.sb     "|AR Dungeon Updater "
-   310 224E				PUT_VERSION
-Macro: PUT_VERSION [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
+   274 214C			boot_sector
+   275 214C 00				.by $00
+   276 214D 01				.by $01		//1 sector to read
+   277 214E 00 06			.word $600
+   278 2150 06 06			.word $606
+   279 2152 38				sec
+   280 2153 60				rts
+   281 2154 00 00 00 00 00 00 + 	:120 .by $00
+   282
+   283 21CC			LOC_E
+   284 21CC 45 3A 9B			.by "E:",$9B	;Handler editor E:
+   285 21CF			LOC_K
+   286 21CF 4B 3A 9B			.by "K:",$9B	;Handler keyboard
+   287 21D2			LOC_DISK
+   288 21D2 44 31 3A 41 41 41 + 	.by "D1:AAAAAAAA.DMP",$9B	;file name (not used now)
+   289 21E2			LOC_DIR
+   290 21E2 44 31 3A 2A 2E 2A + 	.by "D1:*.*",$9B		;search directory (not used)
+   291 21E9			LOC_INPUT
+   292 21E9 20 20 20 20 20 20 + 	.by "                    "
+   293 21FD			dl
+   294 21FD 70 70 70			.by $70,$70,$70
+   295 2200 70 70 70 70 70 70 + 	:7 .by $70
+   296 2207 30				.by $30
+   297 2208 42				.by $42				;Primera línea modo ANTIC 2
+   298 2209 12 22			.word screen
+   299 220B 02 02 02 02			:4 .by $02 			;4 líneas más
+   300 				//	.by $70
+   301 				//	.by $02,$02,$02
+   302 220F 41				.by $41				;Vuelva
+   303 2210 FD 21			.word dl			;al display list!
+   304 					
+   305
+   306 2212			screen
+   307 2212 51 52 52 52 52 52 + 	.sb +32,"QRRRRRRRRRRRRRRRRRRRRRRRWRRRRRRRRRRRRRRE"
+   308 223A 7C 21 32 00 24 75 + 	.sb     "|AR Dungeon Updater "
+   309 224E				PUT_VERSION
+Macro: PUT_VERSION [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
      1 224E 36 11 11			.sb "V11"
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   311 2251 00 7C 12 10 12 11 + 	.sb " |2021 Willysoft|"
-   312 2262 41 52 52 52 52 52 + 	.sb +32,"ARRRRRRRRRRRWRRRRRRRRRRRXRRRRRRRRRRRRRRD"
-   313 228A 7C				.sb     "|"
-   314 228B B3 B4 A1 B2 B4		.sb +128,"START"
-   315 2290 1A				.sb      ":"
-   316 2291			screen_start
-   317 2291 22 25 27 29 2E		.sb "BEGIN"
-   318 2296			screen_start_end
-   319
-   320 2296			screen_status
-   321 2296 7C 00 00 00 00 00 + 	.sb "|                          |"
-   322 22B2			screen_status_end
-   323 = 001C			len_screen_status = screen_status_end - screen_status
-   324
-   325 22B2 5A 52 52 52 52 52 + 	.sb +32,"ZRRRRRRRRRRRXRRRRRRRRRRRRRRRRRRRRRRRRRRC"
-   326
-   327 22DA			screen_erasing
-   328 22DA 7C 25 72 61 73 69 + 	.sb "|Erasing Cartridge...      |"
-   329 22F6			screen_erasing_end
-   330 = 001C			len_screen_erasing = screen_erasing_end - screen_erasing
-   331
-   332 22F6			screen_veryfing
-   333 22F6 7C 36 65 72 69 66 + 	.sb "|Verifying erase...        |"
-   334 2312			screen_veryfing_end
-   335 = 001C			len_screen_veryfing = screen_veryfing_end - screen_veryfing
-   336
-   337 2312			screen_reading
-   338 2312 7C 32 65 61 64 69 + 	.sb "|Reading Bank     "
-   339 2324			screen_reading_bank
-   340 2324 10 10 0F			.sb "00/"
-   341 2327			screen_reading_total_banks
-   342 2327 17 26 00 00 00 00 + 	.sb "7F    |"
-   343 232E			screen_reading_end
-   344 = 001C			len_screen_reading = screen_reading_end - screen_reading
-   345
-   346 232E			screen_writing
-   347 232E 7C 37 72 69 74 69 + 	.sb "|Writing Bank     "
-   348 2340			screen_writing_bank
-   349 2340 10 10 0F			.sb "00/"
-   350 2343			screen_writing_total_banks
-   351 2343 17 26 00 00 00 00 + 	.sb "7F    |"
-   352 234A			screen_writing_end
-   353 = 001C			len_screen_writing = screen_writing_end - screen_writing
-   354
-   355 234A			screen_verify_write
-   356 234A 7C 36 65 72 69 66 + 	.sb "|Verifying Bank   "
-   357 235C			screen_verify_write_bank
-   358 235C 10 10 0F			.sb "00/"
-   359 235F			screen_verify_total_banks
-   360 235F 17 26 00 00 00 00 + 	.sb "7F    |"
-   361 2366			screen_verify_write_end
-   362
-   363 = 001C			len_screen_verify_write = screen_writing_end - screen_writing
-   364
-   365 2366			screen_done
-   366 2366 7C 24 2F 2E 25 01 + 	.sb "|DONE!                     |"
-   367 2382			screen_done_end
-   368 = 001C			len_screen_done = screen_done_end - screen_done
-   369
-   370 2382			text_check
-   371 2382 41 52 20 43 48 41 + 	.by "AR CHAR!"	//Header to check on disk or cartridge
-   372 238A			text_check_end
-   373 = 0008			len_text_check = text_check_end - text_check
-   374
-   375 238A			BEEP
-   376 238A FD				.by $FD		//Beep sound
-   377
-   378 238B			flag_busy
-   379 238B 00				.by $00
-   380
-   381 238C			flag_operation
-   382 238C 00				.by $00
-   383 238D			flag_start
-   384 238D 00				.by $00
-   385
-   386 238E			consol_previous
-   387 238E 08				.by $08
-   388
-   389 238F			key
-   390 238F 00				.by $00
-   391 					
-   392 2390			banknum
-   393 2390 00				.by $00
-   394 					
-   395 2391			count
-   396 2391 00				.by $00
-   397 					
-   398 2392			sector
-   399 2392 00 00			.word $00
-   400 					
-   401 2394			tabla_hex
-   402 2394 10 11 12 13 14 15 + 	.sb "0123456789ABCDEF"
-   403 					
-   404 23A4			.proc put_banknum
-   405 23A4 AD 90 23			lda banknum
-   406 23A7 4A 4A 4A 4A			:4 lsr
-   407 23AB AA				tax
-   408 23AC BD 94 23			lda tabla_hex,x
-   409 23AF 8D 24 23			sta screen_reading_bank
-   410 23B2 8D 40 23			sta screen_writing_bank
-   411 23B5 8D 5C 23			sta screen_verify_write_bank
-   412 23B8 AD 90 23			lda banknum
-   413 23BB 29 0F			and #$0f
-   414 23BD AA				tax
-   415 23BE BD 94 23			lda tabla_hex,x
-   416 23C1 8D 25 23			sta screen_reading_bank+1
-   417 23C4 8D 41 23			sta screen_writing_bank+1
-   418 23C7 8D 5D 23			sta screen_verify_write_bank+1
-   419 23CA 60				rts
-   420 				.endp
-   421
-   422 23CB			.proc put_final_bank
-   423 23CB A9 7F			lda #final_bank
-   424 23CD 4A 4A 4A 4A			:4 lsr
-   425 23D1 AA				tax
-   426 23D2 BD 94 23			lda tabla_hex,x
-   427 23D5 8D 27 23			sta screen_reading_total_banks
-   428 23D8 8D 43 23			sta screen_writing_total_banks
-   429 23DB 8D 5F 23			sta screen_verify_total_banks
-   430 23DE A9 7F			lda #final_bank
-   431 23E0 29 0F			and #$0f
-   432 23E2 AA				tax
-   433 23E3 BD 94 23			lda tabla_hex,x
-   434 23E6 8D 28 23			sta screen_reading_total_banks+1
-   435 23E9 8D 44 23			sta screen_writing_total_banks+1
-   436 23EC 8D 60 23			sta screen_verify_total_banks+1
-   437 23EF 60				rts
-   438 				.endp
-   439
-   440 					
-   441 23F0			.proc put_erase
-   442 23F0				CopyMemory screen_erasing,screen_status,len_screen_erasing
-Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   310 2251 00 7C 12 10 12 11 + 	.sb " |2021 Willysoft|"
+   311 2262 41 52 52 52 52 52 + 	.sb +32,"ARRRRRRRRRRRWRRRRRRRRRRRXRRRRRRRRRRRRRRD"
+   312 228A 7C				.sb     "|"
+   313 228B B3 B4 A1 B2 B4		.sb +128,"START"
+   314 2290 1A				.sb      ":"
+   315 2291			screen_start
+   316 2291 22 25 27 29 2E		.sb "BEGIN"
+   317 2296			screen_start_end
+   318
+   319 2296			screen_status
+   320 2296 7C 00 00 00 00 00 + 	.sb "|                          |"
+   321 22B2			screen_status_end
+   322 = 001C			len_screen_status = screen_status_end - screen_status
+   323
+   324 22B2 5A 52 52 52 52 52 + 	.sb +32,"ZRRRRRRRRRRRXRRRRRRRRRRRRRRRRRRRRRRRRRRC"
+   325
+   326 22DA			screen_erasing
+   327 22DA 7C 25 72 61 73 69 + 	.sb "|Erasing Cartridge...      |"
+   328 22F6			screen_erasing_end
+   329 = 001C			len_screen_erasing = screen_erasing_end - screen_erasing
+   330
+   331 22F6			screen_veryfing
+   332 22F6 7C 36 65 72 69 66 + 	.sb "|Verifying erase...        |"
+   333 2312			screen_veryfing_end
+   334 = 001C			len_screen_veryfing = screen_veryfing_end - screen_veryfing
+   335
+   336 2312			screen_reading
+   337 2312 7C 32 65 61 64 69 + 	.sb "|Reading Bank     "
+   338 2324			screen_reading_bank
+   339 2324 10 10 0F			.sb "00/"
+   340 2327			screen_reading_total_banks
+   341 2327 17 26 00 00 00 00 + 	.sb "7F    |"
+   342 232E			screen_reading_end
+   343 = 001C			len_screen_reading = screen_reading_end - screen_reading
+   344
+   345 232E			screen_writing
+   346 232E 7C 37 72 69 74 69 + 	.sb "|Writing Bank     "
+   347 2340			screen_writing_bank
+   348 2340 10 10 0F			.sb "00/"
+   349 2343			screen_writing_total_banks
+   350 2343 17 26 00 00 00 00 + 	.sb "7F    |"
+   351 234A			screen_writing_end
+   352 = 001C			len_screen_writing = screen_writing_end - screen_writing
+   353
+   354 234A			screen_verify_write
+   355 234A 7C 36 65 72 69 66 + 	.sb "|Verifying Bank   "
+   356 235C			screen_verify_write_bank
+   357 235C 10 10 0F			.sb "00/"
+   358 235F			screen_verify_total_banks
+   359 235F 17 26 00 00 00 00 + 	.sb "7F    |"
+   360 2366			screen_verify_write_end
+   361
+   362 = 001C			len_screen_verify_write = screen_writing_end - screen_writing
+   363
+   364 2366			screen_done
+   365 2366 7C 24 2F 2E 25 01 + 	.sb "|DONE!                     |"
+   366 2382			screen_done_end
+   367 = 001C			len_screen_done = screen_done_end - screen_done
+   368
+   369 2382			text_check
+   370 2382 41 52 20 43 48 41 + 	.by "AR CHAR!"	//Header to check on disk or cartridge
+   371 238A			text_check_end
+   372 = 0008			len_text_check = text_check_end - text_check
+   373
+   374 238A			BEEP
+   375 238A FD				.by $FD		//Beep sound
+   376
+   377 238B			flag_busy
+   378 238B 00				.by $00
+   379
+   380 238C			flag_operation
+   381 238C 00				.by $00
+   382 238D			flag_start
+   383 238D 00				.by $00
+   384
+   385 238E			consol_previous
+   386 238E 08				.by $08
+   387
+   388 238F			key
+   389 238F 00				.by $00
+   390 					
+   391 2390			banknum
+   392 2390 00				.by $00
+   393 					
+   394 2391			count
+   395 2391 00				.by $00
+   396 					
+   397 2392			sector
+   398 2392 00 00			.word $00
+   399 					
+   400 2394			tabla_hex
+   401 2394 10 11 12 13 14 15 + 	.sb "0123456789ABCDEF"
+   402 					
+   403 23A4			.proc put_banknum
+   404 23A4 AD 90 23			lda banknum
+   405 23A7 4A 4A 4A 4A			:4 lsr
+   406 23AB AA				tax
+   407 23AC BD 94 23			lda tabla_hex,x
+   408 23AF 8D 24 23			sta screen_reading_bank
+   409 23B2 8D 40 23			sta screen_writing_bank
+   410 23B5 8D 5C 23			sta screen_verify_write_bank
+   411 23B8 AD 90 23			lda banknum
+   412 23BB 29 0F			and #$0f
+   413 23BD AA				tax
+   414 23BE BD 94 23			lda tabla_hex,x
+   415 23C1 8D 25 23			sta screen_reading_bank+1
+   416 23C4 8D 41 23			sta screen_writing_bank+1
+   417 23C7 8D 5D 23			sta screen_verify_write_bank+1
+   418 23CA 60				rts
+   419 				.endp
+   420
+   421 23CB			.proc put_final_bank
+   422 23CB A9 07			lda #final_bank
+   423 23CD 4A 4A 4A 4A			:4 lsr
+   424 23D1 AA				tax
+   425 23D2 BD 94 23			lda tabla_hex,x
+   426 23D5 8D 27 23			sta screen_reading_total_banks
+   427 23D8 8D 43 23			sta screen_writing_total_banks
+   428 23DB 8D 5F 23			sta screen_verify_total_banks
+   429 23DE A9 07			lda #final_bank
+   430 23E0 29 0F			and #$0f
+   431 23E2 AA				tax
+   432 23E3 BD 94 23			lda tabla_hex,x
+   433 23E6 8D 28 23			sta screen_reading_total_banks+1
+   434 23E9 8D 44 23			sta screen_writing_total_banks+1
+   435 23EC 8D 60 23			sta screen_verify_total_banks+1
+   436 23EF 60				rts
+   437 				.endp
+   438
+   439 					
+   440 23F0			.proc put_erase
+   441 23F0				CopyMemory screen_erasing,screen_status,len_screen_erasing
+Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
@@ -1988,13 +1987,13 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Ata
     16 23F8 C8					iny
     18 23F9 C0 1C					cpy #<LEN_SCREEN_ERASING
     20 23FB D0 F5				bne copyMemLoop1
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   443 23FD 60				rts
-   444 				.endp
-   445
-   446 23FE			.proc put_veryfing
-   447 23FE				CopyMemory screen_veryfing,screen_status,len_screen_veryfing
-Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   442 23FD 60				rts
+   443 				.endp
+   444
+   445 23FE			.proc put_veryfing
+   446 23FE				CopyMemory screen_veryfing,screen_status,len_screen_veryfing
+Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
@@ -2005,13 +2004,13 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Ata
     16 2406 C8					iny
     18 2407 C0 1C					cpy #<LEN_SCREEN_VERYFING
     20 2409 D0 F5				bne copyMemLoop1
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   448 240B 60				rts
-   449 				.endp
-   450
-   451 240C			.proc put_reading
-   452 240C				CopyMemory screen_reading,screen_status,len_screen_reading
-Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   447 240B 60				rts
+   448 				.endp
+   449
+   450 240C			.proc put_reading
+   451 240C				CopyMemory screen_reading,screen_status,len_screen_reading
+Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
@@ -2022,13 +2021,13 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Ata
     16 2414 C8					iny
     18 2415 C0 1C					cpy #<LEN_SCREEN_READING
     20 2417 D0 F5				bne copyMemLoop1
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   453 2419 60				rts
-   454 				.endp
-   455
-   456 241A			.proc put_writing
-   457 241A				CopyMemory screen_writing,screen_status,len_screen_writing
-Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   452 2419 60				rts
+   453 				.endp
+   454
+   455 241A			.proc put_writing
+   456 241A				CopyMemory screen_writing,screen_status,len_screen_writing
+Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
@@ -2039,13 +2038,13 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Ata
     16 2422 C8					iny
     18 2423 C0 1C					cpy #<LEN_SCREEN_WRITING
     20 2425 D0 F5				bne copyMemLoop1
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   458 2427 60				rts
-   459 				.endp
-   460
-   461 2428			.proc put_verify_write
-   462 2428				CopyMemory screen_verify_write,screen_status,len_screen_verify_write
-Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   457 2427 60				rts
+   458 				.endp
+   459
+   460 2428			.proc put_verify_write
+   461 2428				CopyMemory screen_verify_write,screen_status,len_screen_verify_write
+Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
@@ -2056,13 +2055,13 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Ata
     16 2430 C8					iny
     18 2431 C0 1C					cpy #<LEN_SCREEN_VERIFY_WRITE
     20 2433 D0 F5				bne copyMemLoop1
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   463 2435 60				rts
-   464 				.endp
-   465
-   466 2436			.proc put_done
-   467 2436				CopyMemory screen_done,screen_status,len_screen_done
-Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   462 2435 60				rts
+   463 				.endp
+   464
+   465 2436			.proc put_done
+   466 2436				CopyMemory screen_done,screen_status,len_screen_done
+Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
@@ -2073,331 +2072,331 @@ Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Ata
     16 243E C8					iny
     18 243F C0 1C					cpy #<LEN_SCREEN_DONE
     20 2441 D0 F5				bne copyMemLoop1
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   468 2443 60				rts
-   469 				.endp
-   470
-   471 2444			.proc WriteM
-   472 2444				WriteMemory 1,start_cartridge,cart_length
-Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   467 2443 60				rts
+   468 				.endp
+   469
+   470 2444			.proc WriteM
+   471 2444				WriteMemory 1,start_cartridge,cart_length
+Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
      7 2444 A2 10			ldx #(1*16)
      8 2446 A9 00 9D 44 03 A9 + 	mwa #START_CARTRIDGE ICBAL,x
      9 2450 A9 00 9D 48 03 A9 + 	mwa #CART_LENGTH ICBLL,x
     10 245A A9 0B 9D 42 03		mva #11 ICCMD,X
     11 245F 20 56 E4			jsr ciov
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   473 2462 60				rts
-   474 				.endp
-   475
-   476 2463			.proc get_key
-   477 2463				get 1,key
-Macro: GET [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   472 2462 60				rts
+   473 				.endp
+   474
+   475 2463			.proc get_key
+   476 2463				get 1,key
+Macro: GET [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
      7 2463 A2 10			ldx #(1*16)
      8 2465 A9 8F 9D 44 03 A9 + 	mwa #KEY ICBAL,X		;Dirección entregada
      9 246F A9 01 9D 48 03 A9 + 	mwa #1 ICBLL,x		;Cantidad de bytes = 1
     10 2479 A9 07 9D 42 03		mva #7 ICCMD,x		;Realizar una lectura
     11 247E 20 56 E4			jsr ciov		;Ejecute!
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   478 2481 60				rts
-   479 				.endp
-   480
-   481 2482			.proc Erase_patch
-   482 2482 A2 00			ldx #starting_sector
-   483 2484 A0 10			ldy #total_sectors
-   484 2486 20 25 21			jsr Erase_Sectors
-   485 2489 60				rts
-   486 				.endp
-   487
-   488 248A			.proc Verify_Erase
-   489 248A A2 00			ldx #starting_sector
-   490 248C A0 10			ldy #total_sectors
-   491 248E 20 3E 21			jsr VerifyBlankSectors
-   492 2491 60				rts
-   493 				.endp
-   494
-   495 2492			.proc Read_bank
-   496 2492 A9 31 8D 00 03		mva #$31 DDEVIC
-   497 2497 A9 01 8D 01 03		mva #$01 DUNIT
-   498 249C AD 92 23 8D 0A 03 + 	mwa sector $30A
-   499 24A8 A9 52 8D 02 03		mva #$52 dcomnd
-   500 24AD A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
-   501 24B7 A9 40 8D E9 24		mva #$40 count
-   502 24BC			loop
-   503 24BC 20 53 E4			jsr dskinv
-   504 24BF 30 FB			bmi loop
-   505 24C1 EE 0A 03			inc daux1
-   506 24C4 D0 03			bne loop2
-   507 24C6 EE 0B 03			inc daux2
-   508 24C9			loop2
-   509 24C9 AD 04 03			lda dbuflo
-   510 24CC 18				clc
-   511 24CD 69 80			adc #$80
-   512 24CF 8D 04 03			sta dbuflo
-   513 24D2 90 03			bcc loop3
-   514 24D4 EE 05 03			inc dbufhi
-   515 24D7			loop3
-   516 24D7 CE E9 24			dec count
-   517 24DA D0 E0			bne loop
-   518 24DC AD 0A 03 8D 92 23 + 	mwa daux1 sector
-   519 24E8 60				rts
-   520 24E9			count
-   521 24E9 00				.by $00
-   522 				.endp	
-   523
-   524 24EA			.proc Write_bank
-   525 24EA 48				pha
-   526 24EB 8A				txa
-   527 24EC 48				pha
-   528 24ED 98				tya
-   529 24EE 48				pha
-   530
-   531 24EF A9 00 85 CB A9 60 + 	mwa #buffer pt_1
-   532 24F7 A9 00 85 CD A9 A0 + 	mwa #start_cartridge pt_2
-   533 24FF A0 00			ldy #$00
-   534 2501 A2 20			ldx #$20
-   535 2503			loop
-   536 2503 AD 90 23			lda banknum
-   537 2506 20 03 21			jsr enable_write
-   538 2509 B1 CB			lda (pt_1),y
-   539 250B 91 CD			sta (pt_2),y
-   540 250D C8				iny
-   541 250E D0 F3			bne loop
-   542 2510 E6 CC			inc pt_1+1
-   543 2512 E6 CE			inc pt_2+1
-   544 2514 CA				dex
-   545 2515 D0 EC			bne loop
-   546
-   547 2517 68				pla
-   548 2518 A8				tay
-   549 2519 68				pla
-   550 251A AA				tax
-   551 251B 68				pla
-   552 251C 60				rts
-   553 				.endp
-   554
-   555 251D			.proc Verify_Bank
-   556 251D 48				pha
-   557 251E 8A				txa
-   558 251F 48				pha
-   559 2520 98				tya
-   560 2521 48				pha
-   561 2522 A9 00 85 CB A9 A0 + 	mwa #start_cartridge pt_1
-   562 252A A9 00 85 CD A9 60 + 	mwa #buffer pt_2
-   563 2532 A0 00			ldy #$00
-   564 2534 AD 90 23			lda banknum
-   565 2537 AA				tax
-   566 2538 9D 00 D5			sta $d500,x
-   567 253B A2 20			ldx #$20
-   568 253D			loop
-   569 253D B1 CB			lda (pt_1),y
-   570 253F D1 CD			cmp (pt_2),y
-   571 2541 D0 0D			bne error
-   572 2543 C8				iny
-   573 2544 D0 F7			bne loop
-   574 2546 E6 CC			inc pt_1+1
-   575 2548 E6 CE			inc pt_2+1
-   576 254A CA				dex
-   577 254B D0 F0			bne loop
-   578 254D 18				clc
-   579 254E 90 01			bcc end_verify
-   580 2550			error
-   581 2550 38				sec
-   582 2551			end_verify
-   583 2551 68				pla
-   584 2552 A8				tay
-   585 2553 68				pla
-   586 2554 AA				tax
-   587 2555 68				pla
-   588 2556 60				rts
-   589 				.endp
-   590
-   591 2557			.proc wait_return
-   592 2557			start
-   593 2557 AD FC 02			lda CH
-   594 255A C9 FF			cmp #$ff	//Key pressed?
-   595 255C D0 F9			bne start	//Nope, start over!
-   596 255E 20 63 24			jsr get_key //Get key
-   597 2561 A9 FF			lda #$ff	//Erase last key pressed
-   598 2563 8D FC 02			sta CH		//Done!
-   599 2566 AD 8F 23			lda key		//Read key
-   600 2569 C9 9B			cmp #$9b	//Is it Return?
-   601 256B D0 EA			bne start	//No, let's do it again.
-   602 256D 60				rts			//Yes, return
-   603 				.endp
-   604
-   605 256E			.proc Wait_sec
-   606 256E A5 14			lda rtclock
-   607 2570 18				clc
-   608 2571 69 3C			adc #60
-   609 2573			loop
-   610 2573 C5 14			cmp rtclock
-   611 2575 D0 FC			bne loop
-   612 2577 60				rts
-   613 				.endp
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   477 2481 60				rts
+   478 				.endp
+   479
+   480 2482			.proc Erase_patch
+   481 2482 A2 00			ldx #starting_sector
+   482 2484 A0 01			ldy #total_sectors
+   483 2486 20 25 21			jsr Erase_Sectors
+   484 2489 60				rts
+   485 				.endp
+   486
+   487 248A			.proc Verify_Erase
+   488 248A A2 00			ldx #starting_sector
+   489 248C A0 01			ldy #total_sectors
+   490 248E 20 3E 21			jsr VerifyBlankSectors
+   491 2491 60				rts
+   492 				.endp
+   493
+   494 2492			.proc Read_bank
+   495 2492 A9 31 8D 00 03		mva #$31 DDEVIC
+   496 2497 A9 01 8D 01 03		mva #$01 DUNIT
+   497 249C AD 92 23 8D 0A 03 + 	mwa sector $30A
+   498 24A8 A9 52 8D 02 03		mva #$52 dcomnd
+   499 24AD A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
+   500 24B7 A9 40 8D E9 24		mva #$40 count
+   501 24BC			loop
+   502 24BC 20 53 E4			jsr dskinv
+   503 24BF 30 FB			bmi loop
+   504 24C1 EE 0A 03			inc daux1
+   505 24C4 D0 03			bne loop2
+   506 24C6 EE 0B 03			inc daux2
+   507 24C9			loop2
+   508 24C9 AD 04 03			lda dbuflo
+   509 24CC 18				clc
+   510 24CD 69 80			adc #$80
+   511 24CF 8D 04 03			sta dbuflo
+   512 24D2 90 03			bcc loop3
+   513 24D4 EE 05 03			inc dbufhi
+   514 24D7			loop3
+   515 24D7 CE E9 24			dec count
+   516 24DA D0 E0			bne loop
+   517 24DC AD 0A 03 8D 92 23 + 	mwa daux1 sector
+   518 24E8 60				rts
+   519 24E9			count
+   520 24E9 00				.by $00
+   521 				.endp	
+   522
+   523 24EA			.proc Write_bank
+   524 24EA 48				pha
+   525 24EB 8A				txa
+   526 24EC 48				pha
+   527 24ED 98				tya
+   528 24EE 48				pha
+   529
+   530 24EF A9 00 85 CB A9 60 + 	mwa #buffer pt_1
+   531 24F7 A9 00 85 CD A9 A0 + 	mwa #start_cartridge pt_2
+   532 24FF A0 00			ldy #$00
+   533 2501 A2 20			ldx #$20
+   534 2503			loop
+   535 2503 AD 90 23			lda banknum
+   536 2506 20 03 21			jsr enable_write
+   537 2509 B1 CB			lda (pt_1),y
+   538 250B 91 CD			sta (pt_2),y
+   539 250D C8				iny
+   540 250E D0 F3			bne loop
+   541 2510 E6 CC			inc pt_1+1
+   542 2512 E6 CE			inc pt_2+1
+   543 2514 CA				dex
+   544 2515 D0 EC			bne loop
+   545
+   546 2517 68				pla
+   547 2518 A8				tay
+   548 2519 68				pla
+   549 251A AA				tax
+   550 251B 68				pla
+   551 251C 60				rts
+   552 				.endp
+   553
+   554 251D			.proc Verify_Bank
+   555 251D 48				pha
+   556 251E 8A				txa
+   557 251F 48				pha
+   558 2520 98				tya
+   559 2521 48				pha
+   560 2522 A9 00 85 CB A9 A0 + 	mwa #start_cartridge pt_1
+   561 252A A9 00 85 CD A9 60 + 	mwa #buffer pt_2
+   562 2532 A0 00			ldy #$00
+   563 2534 AD 90 23			lda banknum
+   564 2537 AA				tax
+   565 2538 9D 00 D5			sta $d500,x
+   566 253B A2 20			ldx #$20
+   567 253D			loop
+   568 253D B1 CB			lda (pt_1),y
+   569 253F D1 CD			cmp (pt_2),y
+   570 2541 D0 0D			bne error
+   571 2543 C8				iny
+   572 2544 D0 F7			bne loop
+   573 2546 E6 CC			inc pt_1+1
+   574 2548 E6 CE			inc pt_2+1
+   575 254A CA				dex
+   576 254B D0 F0			bne loop
+   577 254D 18				clc
+   578 254E 90 01			bcc end_verify
+   579 2550			error
+   580 2550 38				sec
+   581 2551			end_verify
+   582 2551 68				pla
+   583 2552 A8				tay
+   584 2553 68				pla
+   585 2554 AA				tax
+   586 2555 68				pla
+   587 2556 60				rts
+   588 				.endp
+   589
+   590 2557			.proc wait_return
+   591 2557			start
+   592 2557 AD FC 02			lda CH
+   593 255A C9 FF			cmp #$ff	//Key pressed?
+   594 255C D0 F9			bne start	//Nope, start over!
+   595 255E 20 63 24			jsr get_key //Get key
+   596 2561 A9 FF			lda #$ff	//Erase last key pressed
+   597 2563 8D FC 02			sta CH		//Done!
+   598 2566 AD 8F 23			lda key		//Read key
+   599 2569 C9 9B			cmp #$9b	//Is it Return?
+   600 256B D0 EA			bne start	//No, let's do it again.
+   601 256D 60				rts			//Yes, return
+   602 				.endp
+   603
+   604 256E			.proc Wait_sec
+   605 256E A5 14			lda rtclock
+   606 2570 18				clc
+   607 2571 69 3C			adc #60
+   608 2573			loop
+   609 2573 C5 14			cmp rtclock
+   610 2575 D0 FC			bne loop
+   611 2577 60				rts
+   612 				.endp
+   613
    614
-   615
-   616 2578			.proc vbi
-   617 2578 AD 13 D0			lda trig3
-   618 257B 8D FA 03			sta gintlk		//No cartridge lockup!
-   619 257E A5 4D			lda atract
-   620 2580 30 04			bmi vbi_end
-   621 2582 A9 00			lda #$00
-   622 2584 85 4D			sta atract
-   623 2586			vbi_end
-   624 2586 4C 5F E4			jmp sysvbv
-   625 				.endp
-   626
-   627 2589			.proc vbd
-   628 2589 AD 8B 23			lda flag_busy
-   629 258C D0 15			bne vbd_end
-   630 258E AD 1F D0			lda consol
-   631 2591 CD 8E 23			cmp consol_previous
-   632 2594 F0 0D			jeq vbd_end
-   633 2596 8D 8E 23			sta consol_previous
-   634 2599 4A				lsr		; START?
-   635 259A B0 07			bcs vbd_2	; No!
-   636 259C 48				pha
-   637
-   638 259D A9 01			lda #$01
-   639 259F 8D 8D 23			sta flag_start
-   640
-   641 25A2 68				pla
-   642 25A3			vbd_2
-   643 25A3			vbd_end
-   644 25A3 4C 62 E4			jmp xitvbv
-   645 				.endp
-   646
-   647 					
-   648 25A6			start
-   649 				//	jsr screen_erase
-   650 25A6			start2
-   651 25A6 AD 01 D3			lda portb
-   652 25A9 09 FE			ora #$fe	//No BASIC, maintain SIO patch if there's any.
-   653 25AB 8D 01 D3			sta portb
-   654 25AE A9 01 8D F8 03		mva #$01 basicf
-   655 25B3				close 0
-Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
+   615 2578			.proc vbi
+   616 2578 AD 13 D0			lda trig3
+   617 257B 8D FA 03			sta gintlk		//No cartridge lockup!
+   618 257E A5 4D			lda atract
+   619 2580 30 04			bmi vbi_end
+   620 2582 A9 00			lda #$00
+   621 2584 85 4D			sta atract
+   622 2586			vbi_end
+   623 2586 4C 5F E4			jmp sysvbv
+   624 				.endp
+   625
+   626 2589			.proc vbd
+   627 2589 AD 8B 23			lda flag_busy
+   628 258C D0 15			bne vbd_end
+   629 258E AD 1F D0			lda consol
+   630 2591 CD 8E 23			cmp consol_previous
+   631 2594 F0 0D			jeq vbd_end
+   632 2596 8D 8E 23			sta consol_previous
+   633 2599 4A				lsr		; START?
+   634 259A B0 07			bcs vbd_2	; No!
+   635 259C 48				pha
+   636
+   637 259D A9 01			lda #$01
+   638 259F 8D 8D 23			sta flag_start
+   639
+   640 25A2 68				pla
+   641 25A3			vbd_2
+   642 25A3			vbd_end
+   643 25A3 4C 62 E4			jmp xitvbv
+   644 				.endp
+   645
+   646 					
+   647 25A6			start
+   648 				//	jsr screen_erase
+   649 25A6			start2
+   650 25A6 AD 01 D3			lda portb
+   651 25A9 09 FE			ora #$fe	//No BASIC, maintain SIO patch if there's any.
+   652 25AB 8D 01 D3			sta portb
+   653 25AE A9 01 8D F8 03		mva #$01 basicf
+   654 25B3				close 0
+Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
      7 25B3 A2 00			ldx #(0*16)
      8 25B5 A9 0C			lda #$0C	//Close
      9 25B7 9D 42 03			sta ICCMD,x
     10 25BA 20 56 E4			jsr CIOV
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   656 25BD				close 1
-Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   655 25BD				close 1
+Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
      7 25BD A2 10			ldx #(1*16)
      8 25BF A9 0C			lda #$0C	//Close
      9 25C1 9D 42 03			sta ICCMD,x
     10 25C4 20 56 E4			jsr CIOV
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   657 25C7 A9 A0 85 6A			mva #$a0 RAMTOP
-   658 25CB				open 0,12,0,LOC_E
-Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   656 25C7 A9 A0 85 6A			mva #$a0 RAMTOP
+   657 25CB				open 0,12,0,LOC_E
+Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
      7 25CB A2 00			ldx #(0*16)
      8 25CD A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
      9 25D2 A9 CC 9D 44 03 A9 + 	mwa #LOC_E	ICBAL,x		//"E:","C:","D:"
     10 25DC A9 0C 9D 4A 03		mva #12	ICAX1,x		//Read and write
     11 25E1 A9 00 9D 4B 03		mva #0 ICAX2,x
     12 25E6 20 56 E4			jsr CIOV
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   659 25E9				open 1,4,0,LOC_K
-Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   658 25E9				open 1,4,0,LOC_K
+Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm]
      7 25E9 A2 10			ldx #(1*16)
      8 25EB A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
      9 25F0 A9 CF 9D 44 03 A9 + 	mwa #LOC_K	ICBAL,x		//"E:","C:","D:"
     10 25FA A9 04 9D 4A 03		mva #4	ICAX1,x		//Read and write
     11 25FF A9 00 9D 4B 03		mva #0 ICAX2,x
     12 2604 20 56 E4			jsr CIOV
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\Atari\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
-   660 2607 A9 FD 8D 30 02 A9 + 	mwa #dl SDLSTL
-   661 2611 A9 00 8D 8B 23		mva #$00 flag_busy	//just a flag
-   662 2616 A9 00 8D C6 02		mva #$00 color2
-   663 261B A9 0F 8D C5 02		mva #$0f color1
-   664 2620 A2 25			ldx #>vbi
-   665 2622 A0 78			ldy #<vbi
-   666 2624 A9 06			lda #VBI_I
-   667 2626 20 5C E4			jsr setvbv			//Set VBI to prevent cartridge lockup
-   668 2629 A2 25			ldx #>vbd
-   669 262B A0 89			ldy #<vbd
-   670 262D A9 07			lda #VBI_D
-   671 262F 20 5C E4			jsr setvbv			//VBD to look on consol keys.
-   672
-   673 2632			loop_start
-   674 2632 AD 8D 23			lda flag_start
-   675 2635 F0 FB			beq loop_start
-   676 					
-   677 				//Start main process
-   678 2637 A9 01 8D 8B 23		mva #$01 flag_busy	//Put it as busy
-   679 263C A9 00 8D 90 23		mva #starting_bank banknum
-   680 2641 A9 0F 8D 92 23 A9 + 	mwa #init_rom_sector sector
-   681 264B CE 8D 23			dec flag_start	
-   682 264E 20 CB 23			jsr put_final_bank
-   683
-   684 				// 1st step: Erase cartridge
-   685 2651			First_step
-   686 2651 20 F0 23			jsr put_erase
-   687 					
-   688 				.if starting_bank =$00
-   689 					.if final_bank =$7f
-   690 2654 20 63 20				jsr Erase_Cartridge
-   691 					.else
-   692 						jsr Erase_patch
-   693 					.endif
-   694 				.else
-   695 					jsr Erase_patch
-   696 				.endif
-   697
-   698 				// 2nd step: Verify erase
-   699 2657 20 FE 23			jsr put_veryfing
-   700 265A 20 8A 24			jsr Verify_Erase
-   701 265D B0 F2			bcs First_step
-   702 					
-   703
-   704 265F A9 80 8D 91 23		mva #total_banks count
-   705 2664			loop
-   706 2664 20 A4 23			jsr put_banknum
-   707
-   708 2667 20 0C 24			jsr put_reading
-   709 266A 20 92 24			jsr Read_bank
-   710
-   711 266D			error_write	
-   712 266D 20 1A 24			jsr put_writing
-   713 2670 20 EA 24			jsr Write_bank
-   714 					
-   715 2673 20 28 24			jsr put_verify_write
-   716 2676 20 1D 25			jsr Verify_bank
-   717 2679 B0 F2			bcs error_write
-   718 					
-   719 267B EE 90 23			inc banknum
-   720 267E CE 91 23			dec count
-   721 2681 D0 E1			bne loop	
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdate.asm
+   659 2607 A9 FD 8D 30 02 A9 + 	mwa #dl SDLSTL
+   660 2611 A9 00 8D 8B 23		mva #$00 flag_busy	//just a flag
+   661 2616 A9 00 8D C6 02		mva #$00 color2
+   662 261B A9 0F 8D C5 02		mva #$0f color1
+   663 2620 A2 25			ldx #>vbi
+   664 2622 A0 78			ldy #<vbi
+   665 2624 A9 06			lda #VBI_I
+   666 2626 20 5C E4			jsr setvbv			//Set VBI to prevent cartridge lockup
+   667 2629 A2 25			ldx #>vbd
+   668 262B A0 89			ldy #<vbd
+   669 262D A9 07			lda #VBI_D
+   670 262F 20 5C E4			jsr setvbv			//VBD to look on consol keys.
+   671
+   672 2632			loop_start
+   673 2632 AD 8D 23			lda flag_start
+   674 2635 F0 FB			beq loop_start
+   675 					
+   676 				//Start main process
+   677 2637 A9 01 8D 8B 23		mva #$01 flag_busy	//Put it as busy
+   678 263C A9 00 8D 90 23		mva #starting_bank banknum
+   679 2641 A9 0F 8D 92 23 A9 + 	mwa #init_rom_sector sector
+   680 264B CE 8D 23			dec flag_start	
+   681 264E 20 CB 23			jsr put_final_bank
+   682
+   683 				// 1st step: Erase cartridge
+   684 2651			First_step
+   685 2651 20 F0 23			jsr put_erase
+   686 					
+   687 				.if starting_bank =$00
+   688 					.if final_bank =$7f
+   689 						jsr Erase_Cartridge
+   690 					.else
+   691 2654 20 82 24				jsr Erase_patch
+   692 					.endif
+   693 				.else
+   694 					jsr Erase_patch
+   695 				.endif
+   696
+   697 				// 2nd step: Verify erase
+   698 2657 20 FE 23			jsr put_veryfing
+   699 265A 20 8A 24			jsr Verify_Erase
+   700 265D B0 F2			bcs First_step
+   701 					
+   702
+   703 265F A9 08 8D 91 23		mva #total_banks count
+   704 2664			loop
+   705 2664 20 A4 23			jsr put_banknum
+   706
+   707 2667 20 0C 24			jsr put_reading
+   708 266A 20 92 24			jsr Read_bank
+   709
+   710 266D			error_write	
+   711 266D 20 1A 24			jsr put_writing
+   712 2670 20 EA 24			jsr Write_bank
+   713 					
+   714 2673 20 28 24			jsr put_verify_write
+   715 2676 20 1D 25			jsr Verify_bank
+   716 2679 B0 F2			bcs error_write
+   717 					
+   718 267B EE 90 23			inc banknum
+   719 267E CE 91 23			dec count
+   720 2681 D0 E1			bne loop	
+   721 					
    722 					
-   723 					
-   724 2683 20 36 24			jsr put_done
-   725 2686 A9 00			lda #$00
-   726 2688 8D 8B 23			sta flag_busy
-   727 268B 4C 32 26			jmp loop_start
-   728 					
-   729 268E			end_program	
-   730 					
-   731 = 068F			total_program	= end_program-start_data+1
-   732 = 070E			total_temp		= total_program + 127
-   733 = 000E			total sectors	= total_temp/128
-   734 = 0700			total_bytes		= ((Total_Program+127)/128)*128
-   735 = 0072			filler			= total_bytes - total_program +1
-   736
-   737 				.if filler > 0
-   738 268E 00 00 00 00 00 00 + 	.sav filler
-   739 				.endif
-   740
-   741 					
-   742 2700			start_rom
-   743
-   744 2700 A9 FF 8D 01 D3 A9 + 	ins "../BOOTCartridge/Alternate Reality - The dungeon/Ardungeon.rom"
-   745
-   746 102700			end_rom
-   747
-   748 102700			end_atr
+   723 2683 20 36 24			jsr put_done
+   724 2686 A9 00			lda #$00
+   725 2688 8D 8B 23			sta flag_busy
+   726 268B 4C 32 26			jmp loop_start
+   727 					
+   728 268E			end_program	
+   729 					
+   730 = 068F			total_program	= end_program-start_data+1
+   731 = 070E			total_temp		= total_program + 127
+   732 = 000E			total sectors	= total_temp/128
+   733 = 0700			total_bytes		= ((Total_Program+127)/128)*128
+   734 = 0072			filler			= total_bytes - total_program +1
+   735
+   736 				.if filler > 0
+   737 268E 00 00 00 00 00 00 + 	.sav filler
+   738 				.endif
+   739
+   740 					
+   741 2700			start_rom
+   742
+   743 2700 A9 FF 8D 01 D3 A9 + 	ins "../BOOTCartridge/Alternate Reality - The dungeon/Ardungeon.rom"
+   744
+   745 102700			end_rom
+   746
+   747 102700			end_atr
+   748 					
    749 					
-   750 					
-   751 				//	run start
-   752 						
+   750 				//	run start
+   751 						
