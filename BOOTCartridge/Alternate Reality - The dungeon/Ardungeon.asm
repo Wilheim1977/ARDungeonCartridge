@@ -11,9 +11,10 @@
 //History:
 
 .macro PUT_VERSION
-	.sb "V11"
+	.sb "V12"
 .endm
 
+//V12: added 39F040 flash support. updater size optimizations.
 //V11: added new updater. No need to backup the characters!!
 //V10: bugfix: game hangs when putting a wrong floppy or atr image, going to the cartridge and not returning to D1:
 //V9: added 3 seconds of waiting in the credit screen. You can skip it by pressing a key, consol key or joystick button.
@@ -835,6 +836,27 @@ enable_write_cont
 	ldx temp_x
 	rts
 
+CheckID
+	stx CheckID_save_x+1
+	jsr cmd_unlock
+	lda #$90
+	jsr Wr5555
+	sta $d540
+	lda $a000
+	ora $a001
+	pha
+	jsr cmd_unlock
+	lda #$f0
+	jsr Wr5555
+	ldx #$00
+CheckID_loop
+	inx
+	bne CheckID_loop
+
+CheckID_save_x
+	ldx #$00
+	pla
+	rts
 //Enable read: not needed for now. Just to have it.
 enable_read
 	pha
@@ -843,16 +865,39 @@ enable_read
 	jsr wr5555
 	jmp enable_write_cont
 erasebk
-	stx temp_x
 	pha
+	stx temp_x
+	
 	jsr cmd_unlock		//First two cycles!
 	lda #$80
 	jsr wr5555		//Third cycle!
 	jsr cmd_unlock		//Fourth and fifth cycles!
 	pla
+	pha
 	jsr setsec
 	lda #$30		//Sixth and final cycle!
 	sta start_cartridge	//Erase!
+	jsr poll_write
+
+	jsr CheckID
+	cmp #$bf			//Is 39F?
+	bne erasebk_exit
+
+	jsr cmd_unlock		//First two cycles!
+	lda #$80
+	jsr wr5555		//Third cycle!
+	jsr cmd_unlock		//Fourth and fifth cycles!
+	pla
+	pha
+	jsr setsec
+	lda #$30		//Sixth and final cycle!
+	sta start_cartridge+$1000	//Erase!
+	jsr poll_write2
+		
+erasebk_exit
+	ldx temp_x
+	pla
+	rts
 	
 //Poll_write: wait until the erase is finished.
 poll_write
@@ -870,7 +915,23 @@ poll_write
 	bne @poll_again
 	lda #$ff
 	sta cart_apaga
-	ldx temp_x
+	rts
+	
+poll_write2
+	lda #$00
+	sta pollsame
+@poll_again2
+	lda start_cartridge+$1000
+	cmp start_cartridge+$1000
+	bne poll_write
+	cmp start_cartridge+$1000
+	bne poll_write
+	cmp start_cartridge+$1000
+	bne poll_write
+	inc pollsame
+	bne @poll_again2
+	lda #$ff
+	sta cart_apaga
 	rts
 pollsame
 	.by $00
@@ -881,7 +942,7 @@ temp_x	.by $00
 chipmask
 	.by $00
 final_greeting
-	.by "Cartridge version 2020 by Guillermo Fuenzalida, based on the works from Mark Keates"
+	.by "Cartridge version 2021 by Guillermo Fuenzalida, based on the works from Mark Keates"
 fin_loader
 .endp
 
