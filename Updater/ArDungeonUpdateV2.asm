@@ -33,6 +33,8 @@ total_sectors	= (total_banks+7)/8
 	.sb "V12"
 .endm
 
+
+
 	opt h-
 	
 //Let's do the ATR Header
@@ -43,8 +45,9 @@ Total_Size_low	= (Total_Size-(Total_Size_high*$100000))/$10
 
 Sectors_boot	= (end_program-start_data+127)/128
 
-init_sector = Sectors_boot + 1
-init_rom_sector	= (init_sector + (starting_bank*$40))
+init_sector		= Sectors_boot + 1
+;init_rom_sector	= (init_sector + (starting_bank*$40))
+init_rom_sector	= init_sector
 
 	.by $96,$02				//Checksum of "NICKATARI"
 	.word Total_Size_low	//Total bytes
@@ -694,6 +697,7 @@ First_step
 	jsr Erase_patch
 .endif
 
+
 // 2nd step: Verify erase
 	jsr put_veryfing
 	jsr Verify_Erase
@@ -710,7 +714,7 @@ loop
 error_write	
 	jsr put_writing
 	jsr Write_bank
-	
+
 	jsr put_verify_write
 	jsr Verify_bank
 	bcs error_write
@@ -740,7 +744,7 @@ filler			= total_bytes - total_program +1
 	
 start_rom
 
-	ins "../BOOTCartridge/Alternate Reality - The dungeon/Ardungeon.rom"
+	ins "../BOOTCartridge/Alternate Reality - The dungeon/Ardungeon.rom",starting_bank*$2000,total_banks*$2000
 
 end_rom
 
