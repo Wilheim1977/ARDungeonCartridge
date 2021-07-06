@@ -1,0 +1,2234 @@
+mads 2.1.0 build 8 (23 Dec 19)
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+     1
+     2 				;	@com.wudsn.ide.asm.outputfileextension=.atr
+     3
+     4 				; include files, useful macros:
+     5 					icl "../base/sys_equates.m65"
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\..\base\sys_equates.m65
+     1 				;================================================================================
+     2 				; System equates, Atari XL + mads [NRV 2009]
+     3 				;================================================================================
+     4
+     5 				;----------------------------------------
+     6 				; GTIA:
+     7 				;----------------------------------------
+     8
+     9 = D000			M0PF	= $D000  ; read only
+    10 = D001			M1PF	= $D001  ; read only
+    11 = D002			M2PF	= $D002  ; read only
+    12 = D003			M3PF	= $D003  ; read only
+    13
+    14 = D004			P0PF	= $D004  ; read only
+    15 = D005			P1PF	= $D005  ; read only
+    16 = D006			P2PF	= $D006  ; read only
+    17 = D007			P3PF	= $D007  ; read only
+    18
+    19 = D008			M0PL	= $D008  ; read only
+    20 = D009			M1PL	= $D009  ; read only
+    21 = D00A			M2PL	= $D00A  ; read only
+    22 = D00B			M3PL	= $D00B  ; read only
+    23
+    24 = D00C			P0PL	= $D00C  ; read only
+    25 = D00D			P1PL	= $D00D  ; read only
+    26 = D00E			P2PL	= $D00E  ; read only
+    27 = D00F			P3PL	= $D00F  ; read only
+    28
+    29 = D010			TRIG0	= $D010  ; read only
+    30 = D011			TRIG1	= $D011  ; read only
+    31 = D012			TRIG2	= $D012  ; read only
+    32 = D013			TRIG3	= $D013  ; read only
+    33
+    34 = D014			PAL		= $D014  ; read only
+    35
+    36 				; positions for normal screen: 48 left (+160)--> 208 right (or 32-->224 for wide playfield)
+    37 				; 32 top (+192)--> 224 bottom (or 16-->112 for double line resolution)
+    38 = D000			HPOSP0	= $D000  ; write only
+    39 = D001			HPOSP1	= $D001  ; write only
+    40 = D002			HPOSP2	= $D002  ; write only
+    41 = D003			HPOSP3	= $D003  ; write only
+    42
+    43 = D004			HPOSM0	= $D004  ; write only
+    44 = D005			HPOSM1	= $D005  ; write only
+    45 = D006			HPOSM2	= $D006  ; write only
+    46 = D007			HPOSM3	= $D007  ; write only
+    47
+    48 				; 0 (or 2) normal width, 1 double width, 4 quadruple width
+    49 = D008			SIZEP0	= $D008  ; write only
+    50 = D009			SIZEP1	= $D009  ; write only
+    51 = D00A			SIZEP2	= $D00A  ; write only
+    52 = D00B			SIZEP3	= $D00B  ; write only
+    53
+    54 = D00C			SIZEM	= $D00C  ; write only		// the same 2 bits as the players, but in one byte, in this order: m3m2m1m0
+    55
+    56 = D00D			GRAFP0	= $D00D  ; write only
+    57 = D00E			GRAFP1	= $D00E  ; write only
+    58 = D00F			GRAFP2	= $D00F  ; write only
+    59 = D010			GRAFP3	= $D010  ; write only
+    60
+    61 = D011			GRAFM	= $D011  ; write only		// 4 missiles in this order: m3m2m1m0
+    62
+    63 = D012			COLPM0	= $D012  ; write only
+    64 = D013			COLPM1	= $D013  ; write only
+    65 = D014			COLPM2	= $D014  ; write only
+    66 = D015			COLPM3	= $D015  ; write only
+    67
+    68 = D016			COLPF0	= $D016  ; write only
+    69 = D017			COLPF1	= $D017  ; write only
+    70 = D018			COLPF2	= $D018  ; write only
+    71 = D019			COLPF3	= $D019  ; write only
+    72
+    73 = D01A			COLBK	= $D01A  ; write only
+    74
+    75 = D01B			PRIOR	= $D01B  ; write only
+    76 = D01C			VDELAY	= $D01C  ; write only
+    77 = D01D			GRACTL	= $D01D  ; write only
+    78 = D01E			HITCLR	= $D01E  ; write only
+    79
+    80 = D01F			CONSOL	= $D01F  ; read and write
+    81
+    82 				;----------------------------------------
+    83 				; POKEY:
+    84 				;----------------------------------------
+    85
+    86 = D200			POT0	= $D200  ; read only
+    87 = D201			POT1	= $D201  ; read only
+    88 = D202			POT2	= $D202  ; read only
+    89 = D203			POT3	= $D203  ; read only
+    90 = D204			POT4	= $D204  ; read only
+    91 = D205			POT5	= $D205  ; read only
+    92 = D206			POT6	= $D206  ; read only
+    93 = D207			POT7	= $D207  ; read only
+    94
+    95 = D208			ALLPOT	= $D208  ; read only
+    96
+    97 = D209			KBCODE	= $D209  ; read only
+    98 = D20A			RANDOM	= $D20A  ; read only
+    99
+   100 = D20D			SERIN	= $D20D  ; read only
+   101 = D20E			IRQST	= $D20E  ; read only
+   102 = D20F			SKSTAT	= $D20F  ; read only
+   103
+   104
+   105 = D200			AUDF1	= $D200  ; write only
+   106 = D201			AUDC1	= $D201  ; write only
+   107 = D202			AUDF2	= $D202  ; write only
+   108 = D203			AUDC2	= $D203  ; write only
+   109 = D204			AUDF3	= $D204  ; write only
+   110 = D205			AUDC3	= $D205  ; write only
+   111 = D206			AUDF4	= $D206  ; write only
+   112 = D207			AUDC4	= $D207  ; write only
+   113
+   114 = D208			AUDCTL	= $D208  ; write only
+   115
+   116 = D209			STIMER	= $D209  ; write only
+   117 = D20A			SKREST	= $D20A  ; write only
+   118 = D20B			POTGO	= $D20B  ; write only
+   119
+   120 = D20D			SEROUT	= $D20D  ; write only
+   121 = D20E			IRQEN	= $D20E  ; write only
+   122 = D20F			SKCTL	= $D20F  ; write only
+   123
+   124 				;----------------------------------------
+   125 				; PIA:
+   126 				;----------------------------------------
+   127
+   128 = D300			PORTA	= $D300  ; read and write
+   129 = D301			PORTB	= $D301  ; read and write
+   130 = D302			PACTL	= $D302  ; read and write
+   131 = D303			PBCTL	= $D303  ; read and write
+   132
+   133 				;----------------------------------------
+   134 				; ANTIC:
+   135 				;----------------------------------------
+   136
+   137 = D40B			VCOUNT	= $D40B  ; read only
+   138
+   139 = D40C			PENH	= $D40C  ; read only
+   140 = D40D			PENV	= $D40D  ; read only
+   141
+   142 = D40F			NMIST	= $D40F  ; read only
+   143
+   144
+   145 = D400			DMACTL	= $D400  ; write only
+   146 = D401			CHACTL	= $D401  ; write only
+   147 = D402			DLISTL	= $D402  ; write only
+   148 = D403			DLISTH	= $D403  ; write only
+   149 = D404			HSCROL	= $D404  ; write only
+   150 = D405			VSCROL	= $D405  ; write only
+   151 = D407			PMBASE	= $D407  ; write only
+   152 = D409			CHBASE	= $D409  ; write only
+   153 = D40A			WSYNC	= $D40A  ; write only
+   154 = D40E			NMIEN	= $D40E  ; write only
+   155 = D40F			NMIRES	= $D40F  ; write only
+   156
+   157 				;----------------------------------------
+   158 				; Shadow registers:
+   159 				;----------------------------------------
+   160
+   161 = 0218			CDTMV1	= $218
+   162 = 021A			CDTMV2	= $21a
+   163 = 021C			CDTMV3	= $21c
+   164 = 021E			CDTMV4	= $21e
+   165 = 0220			CDTMV5	= $220
+   166
+   167
+   168 = 022F			SDMCTL	= $22f	; shadow of DMACTL
+   169 = 026F			GPRIOR	= $26f	; shadow of PRIOR
+   170
+   171 = 02C0			PCOLR0	= $2c0	; shadow of COLPM0
+   172 = 02C1			PCOLR1  = $2c1
+   173 = 02C2			PCOLR2  = $2c2
+   174 = 02C3			PCOLR3  = $2c3
+   175 = 02C4			COLOR0	= $2c4	; shadow of COLPF0
+   176 = 02C5			COLOR1  = $2c5
+   177 = 02C6			COLOR2  = $2c6
+   178 = 02C7			COLOR3  = $2c7
+   179 = 02C8			COLOR4  = $2c8
+   180
+   181 = 02E0			RUNAD	= $2e0
+   182 = 02E2			INITAD	= $2e2
+   183
+   184 = 0014			RTCLOCK	= $14
+   185 = 0041			SOUNDR	= $41
+   186 = 0042			CRITIC	= $42
+   187 = 004D			ATRACT	= 77
+   188
+   189 = 0052			LMARGN = $52
+   190 = 0053			RMARGN = $53
+   191 = 0062			PALNTS = $62
+   192 = 006A			RAMTOP = $6A
+   193
+   194 = 02F4			CHBAS	= $2F4	; shadow of CHBASE
+   195 = 02FC			CH	= $2FC
+   196 = 02F3			CHACT	= $2F3  ; 
+   197
+   198 = 0340			ICHID = $340
+   199 = 0341			ICDNO = $341
+   200 = 0342			ICCMD = $342
+   201 = 0343			ICSTA = $343
+   202 = 0344			ICBAL = $344
+   203 = 0345			ICBAH = $345
+   204 = 0346			ICPTL = $346
+   205 = 0347			ICPTH = $347
+   206 = 0348			ICBLL = $348
+   207 = 0349			ICBLH = $349
+   208 = 034A			ICAX1 = $34A
+   209 = 034B			ICAX2 = $34B
+   210
+   211 = 03F8			BASICF  = $3f8
+   212 = 03FA			GINTLK  = $3fa
+   213
+   214
+   215 = 0230			SDLSTL	= $230	; display list address
+   216 = 0200			VDSLST	= $200	; DLI address
+   217
+   218 = 0300			DDEVIC	= $300
+   219 = 0301			DUNIT	= $301
+   220 = 0302			DCOMND	= $302
+   221 = 0303			DSTATS	= $303
+   222 = 0304			DBUFLO	= $304
+   223 = 0305			DBUFHI	= $305
+   224
+   225 = 030A			DAUX1	= $30A
+   226 = 030B			DAUX2	= $30B
+   227
+   228
+   229 = 0270			PADDL0	= 624	; 0-228 , shadow of POT0
+   230 = 027C			PTRIG0	= 636	; 0 = PRESSED , shadow of PTRG0
+   231 = 0278			STICK0	= 632	; 0000 = RLDU , shadow of PORTA
+   232 = 0284			STRIG0	= 644	; 0 = PRESSED , shadow of TRIG0
+   233
+   234 = 0244			COLDST	= $244	; non zero --> do a cold start when pressing the reset key
+   235
+   236 				;----------------------------------------
+   237 				; VBI:
+   238 				;----------------------------------------
+   239
+   240 = E45C			SETVBV			= $E45C
+   241 = E45F			XITVB_I			= $E45F
+   242 = E45F			SYSVBV			= $E45F
+   243 = E462			XITVB_D			= $E462
+   244 = E462			XITVBV			= $E462
+   245 = 0006			VBI_I			= 6
+   246 = 0007			VBI_D			= 7
+   247 = C0E2			NORMAL_VBI_I	= 49378
+   248 = C28A			NORMAL_VBI_D	= 49802
+   249 = 0222			VVBLKI			= 546
+   250 = 0224			VVBLKD			= 548
+   251 = E462			XITVB			= XITVB_D
+   252
+   253 				;----------------------------------------
+   254 				; Handler vectors:
+   255 				;----------------------------------------
+   256
+   257 = FFFA			NMIH_VECTOR		= 65530
+   258 = FFFC			RESH_VECTOR		= 65532
+   259 = FFFE			IRQH_VECTOR		= 65534
+   260
+   261 				;----------------------------------------
+   262 				; I/O:
+   263 				;----------------------------------------
+   264
+   265 = E453			DSKINV			= $E453 ; (58451)
+   266 = E456			CIOV			= $E456	; (58454)
+   267 = E459			SIOV			= $E459	; (58457)
+   268
+   269 				;----------------------------------------
+   270 				; Restart routines
+   271 				;----------------------------------------
+   272
+   273 = E474			WARMSV			= $E474
+   274 = E477			COLDSV			= $E477
+   275
+   276 				;----------------------------------------
+   277 				; Bit values:
+   278 				;----------------------------------------
+   279
+   280 				; DMA values
+   281 = 0020			DV_DMA_ON			= %00100000
+   282 = 0010			DV_PM_ONE_LINE		= %00010000
+   283 = 0008			DV_PLAYERS_ON		= %00001000
+   284 = 0004			DV_MISSILES_ON		= %00000100
+   285 = 0003			DV_WIDE_PF			= %00000011
+   286 = 0002			DV_NORMAL_PF		= %00000010
+   287 = 0001			DV_NARROW_PF		= %00000001
+   288
+   289 				; Display list values
+   290 = 0080			DL_DLI_MASK		= %10000000
+   291 = 0040			DL_LMS_MASK		= %01000000
+   292 = 0020			DL_VSCROLL_MASK	= %00100000
+   293 = 0010			DL_HSCROLL_MASK	= %00010000
+   294
+   295 = 0001			DL_JMP		= 1
+   296 = 0041			DL_JVB		= 65
+   297
+   298 = 0000			DL_BLANK_1	= 0
+   299 = 0010			DL_BLANK_2	= 16
+   300 = 0020			DL_BLANK_3	= 32
+   301 = 0030			DL_BLANK_4	= 48
+   302 = 0040			DL_BLANK_5	= 64
+   303 = 0050			DL_BLANK_6	= 80
+   304 = 0060			DL_BLANK_7	= 96
+   305 = 0070			DL_BLANK_8	= 112
+   306
+   307 				; Antic graphic modes
+   308 = 0002			GM_CHAR_A2	= 2			; 2 colors, 40x24, 960b, 40xline, 8 scanlines
+   309 = 0006			GM_CHAR_A6	= 6			; 4 colors, 20x24, 480b, 40xline, 8 scanlines
+   310 = 0007			GM_CHAR_A7	= 7			; 4 colors, 20x12, 240b, 20xline, 16 scanlines
+   311 = 0004			GM_CHAR_A4	= 4			; 5 colors, 40x24, 960b, 40xline, 8 scanlines
+   312 = 0005			GM_CHAR_A5	= 5			; 5 colors, 40x12, 480b, 40xline, 16 scanlines
+   313 = 0003			GM_CHAR_A3	= 3			; 2 colors, 40x24, 760b, 40xline, 10 scanlines
+   314
+   315 				; Basic graphic modes
+   316 = 0002			GM_CHAR_G0	= 2			; 2 colors, 40x24, 960b, 40xline, 8 scanlines
+   317 = 0006			GM_CHAR_G1	= 6			; 4 colors, 20x24, 480b, 40xline, 8 scanlines
+   318 = 0007			GM_CHAR_G2	= 7			; 4 colors, 20x12, 240b, 20xline, 16 scanlines
+   319 = 0004			GM_CHAR_G12	= 4			; 5 colors, 40x24, 960b, 40xline, 8 scanlines
+   320 = 0005			GM_CHAR_G13	= 5			; 5 colors, 40x12, 480b, 40xline, 16 scanlines
+   321
+   322 = 0008			GM_PIXEL_G3	= 8			; 4 colors, 40x24, 240b, 10xline, 8 scanline
+   323 = 0009			GM_PIXEL_G4	= 9			; 2 colors, 80x48, 480b, 10xline, 4 scanline
+   324 = 000A			GM_PIXEL_G5	= 10		; 4 colors, 80x48, 960b, 20xline, 4 scanline
+   325 = 000B			GM_PIXEL_G6	= 11		; 2 colors, 160x96, 1920b, 20xline, 2 scanline
+   326 = 000D			GM_PIXEL_G7	= 13		; 4 colors, 160x96, 3840b, 40xline, 2 scanline
+   327 = 000F			GM_PIXEL_G8	= 15		; 2 colors, 320x192, 7680b, 40xline, 1 scanline
+   328 = 000C			GM_PIXEL_G14	= 12	; 2 colors, 160x192, 3840b, 20xline, 1 scanline
+   329 = 000E			GM_PIXEL_G15	= 14	; 4 colors, 160x192, 7680b, 40xline, 1 scanline
+   330
+   331 = 000F			GM_PIXEL_G9	= 15		; 1 color, 80x192, 7680b, 40xline, 1 scanline
+   332 = 000F			GM_PIXEL_G10	= 15	; 9 colors, 80x192, 7680b, 40xline, 1 scanline
+   333 = 000F			GM_PIXEL_G11	= 15	; 16 colors, 80x192, 7680b, 40xline, 1 scanline
+   334
+   335 				; Prior values
+   336 = 0001			PRV_PM_PRIORITY_1	= %00000001		; p0 p1 p2 p3 / pf0 pf1 pf2 pf3 (p5) / bk
+   337 = 0002			PRV_PM_PRIORITY_2	= %00000010		; p0 p1 / pf0 pf1 pf2 pf3 (p5) / p2 p3 / bk
+   338 = 0004			PRV_PM_PRIORITY_3	= %00000100		; pf0 pf1 pf2 pf3 (p5) /  p0 p1 p2 p3 / bk
+   339 = 0008			PRV_PM_PRIORITY_4	= %00001000		; pf1 pf2 /  p0 p1 p2 p3 / pf0 pf3 (p5) / bk
+   340 = 0010			PRV_FIFTH_PLAYER	= %00010000
+   341 = 0020			PRV_PM_OVERLAP		= %00100000
+   342 = 0040			PRV_GTIA_9			= %01000000
+   343 = 0080			PRV_GTIA_10			= %10000000
+   344 = 00C0			PRV_GTIA_11			= %11000000
+   345
+   346 				; Gractl values
+   347 = 0001			GCTL_MISSILES		= %001
+   348 = 0002			GCTL_PLAYERS		= %010
+   349 = 0004			GCTL_LATCH_TRIGGERS	= %100
+   350
+   351 				; Consol values:
+   352 = 0001			CNV_START_MASK		= %001
+   353 = 0002			CNV_OPTION_MASK		= %010
+   354 = 0004			CNV_SELECT_MASK		= %100
+   355
+   356 				; Stick values:
+   357 = 0008			STV_RIGHT_MASK		= %1000
+   358 = 0004			STV_LEFT_MASK		= %0100
+   359 = 0002			STV_DOWN_MASK		= %0010
+   360 = 0001			STV_UP_MASK			= %0001
+   361
+   362 = 0008			STICK_MASK_RIGHT	= %1000
+   363 = 0004			STICK_MASK_LEFT		= %0100
+   364 = 0002			STICK_MASK_DOWN		= %0010
+   365 = 0001			STICK_MASK_UP		= %0001
+   366
+   367 = 0007			STICK_VALUE_RIGHT	= %0111
+   368 = 000B			STICK_VALUE_LEFT	= %1011
+   369 = 000D			STICK_VALUE_DOWN	= %1101
+   370 = 000E			STICK_VALUE_UP		= %1110
+   371
+   372 				/*
+   373 				KBCode Hexadecimal Values
+   374 				 	$00	$01	$02	$03	$04	$05	$06	$07	$08	$09	$0A	$0B	$0C	$0D	$0E	$0F
+   375 				$00	L	J	;	F1	F2	K	+	*	O	 	P	U	CR	I	-	=
+   376 				$10	V	Hlp	C	F3	F4	B	X	Z	4	 	3	6	Esc	5	2	1
+   377 				$20	,	Spc	.	N	 	M	/	Inv	R	 	E	Y	Tab	T	W	Q
+   378 				$30	9	 	0	7	BS	8	<	>	F	H	D	 	Cap	G	S	A
+   379
+   380 				together with Shift Key: add +$40
+   381 				together with Control key: add +$80 
+   382 				*/
+   382
+     6 					icl "../base/sys_macros.m65"
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\..\base\sys_macros.m65
+     1 				;================================================================================
+     2 				; System macros, Atari XL + mads [NRV 2009]
+     3 				;================================================================================
+     4
+     5 				;--------------------------------------------------------------------------------
+     6 				; SetVector [address] [word]
+     7 				;--------------------------------------------------------------------------------
+     8
+     9 					.macro SetVector
+    10 					   .if :0 <> 2
+    11 					      .error "SetVector error"
+    12 				
+    13 					   .else
+    14 					      lda #<:2
+    15 					      sta :1
+    16 					      lda #>:2
+    17 					      sta :1+1
+    18 					   .endif
+    19 				
+    20 					.endm
+    21
+    22
+    23 				;--------------------------------------------------------------------------------
+    24 				; SetColor [0..4] [0..255]
+    25 				; SetColor [0..4] [0..15] [0..15]
+    26 				;--------------------------------------------------------------------------------
+    27
+    28 					.macro SetColor
+    29 					   .if :0 < 2 .or :0 > 3
+    30 					      .error "SetColor error"
+    31 				
+    32 					   .else
+    33 					      .if :0 = 2
+    34 					          lda #:2
+    35 					          sta COLPF0+:1
+    36 					      .else
+    37 					          lda #[:2 * 16 + :3]
+    38 					          sta COLPF0+:1
+    39 					      .endif
+    40 					   .endif
+    41 				
+    42 					.endm
+    43
+    44
+    45 				;--------------------------------------------------------------------------------
+    46 				; SetPMColor [0..3] [0..255]
+    47 				; SetPMColor [0..3] [0..15] [0..15]
+    48 				;--------------------------------------------------------------------------------
+    49
+    50 					.macro SetPMColor
+    51 					   .if :0 < 2 .or :0 > 3
+    52 					      .error "SetPMColor error"
+    53 				
+    54 					   .else
+    55 					      .if :0 = 2
+    56 					          lda #:2
+    57 					          sta COLPM0+:1
+    58 					      .else
+    59 					          lda #[:2 * 16 + :3]
+    60 					          sta COLPM0+:1
+    61 					      .endif
+    62 					   .endif
+    63 				
+    64 					.endm
+    65
+    66
+    67 				;--------------------------------------------------------------------------------
+    68 				; VcountSync [0..130]
+    69 				; (maximum limit is different on PAL: 155)
+    70 				; (could wait forever if there are interrupts activated!)
+    71 				; (or if some other "thread" uses "wsync")
+    72 				;--------------------------------------------------------------------------------
+    73
+    74 					.macro VcountSync
+    75 					   .if :0 <> 1
+    76 					      .error "VcountSync error"
+    77 				
+    78 					   .else
+    79 					      sta WSYNC
+    80 				
+    81 					      lda #:1
+    82 				VSync1	 cmp VCOUNT
+    83 					      bne VSync1
+    84 				
+    85 					      lda #:1+1
+    86 				VSync2	 cmp VCOUNT
+    87 					      bne VSync2
+    88 				
+    89 					      sta WSYNC
+    90 					   .endif
+    91 				
+    92 					.endm
+    93
+    94
+    95 				;--------------------------------------------------------------------------------
+    96 				; VcountWait [0..130]
+    97 				; (maximum limit is different on PAL: 155)
+    98 				;--------------------------------------------------------------------------------
+    99
+   100 					.macro VcountWait
+   101 					   .if :0 <> 1
+   102 					      .error "VcountWait error"
+   103 				
+   104 					   .else
+   105 					      lda #:1
+   106 				VWait1	 cmp VCOUNT
+   107 					      bne VWait1
+   108 					   .endif
+   109 				
+   110 					.endm
+   111
+   112
+   113 				;--------------------------------------------------------------------------------
+   114 				; VcountWaitUntilEnter [0..129] [(p1+1)..130]
+   115 				; (maximum limit is different on PAL: 155)
+   116 				;--------------------------------------------------------------------------------
+   117
+   118 					.macro VcountWaitUntilEnter
+   119 					   .if :0 <> 2 .or :1 >= :2
+   120 					      .error "VcountWaitUntilEnter error"
+   121 				
+   122 					   .else
+   123 				VWait1     lda VCOUNT
+   124 						 cmp #:1
+   125 						 beq VExit
+   126 					      bcc VWait1	; VCOUNT < :1
+   127 						 cmp #:2
+   128 						 beq VExit
+   129 					      bcs VWait1	; VCOUNT >= :2
+   130 				VExit
+   131 					   .endif
+   132 				
+   133 					.endm
+   134
+   135
+   136 				;--------------------------------------------------------------------------------
+   137 				; VcountWaitUntilExit [0..129] [(p1+1)..130]
+   138 				; (maximum limit is different on PAL: 155)
+   139 				;--------------------------------------------------------------------------------
+   140
+   141 					.macro VcountWaitUntilExit
+   142 					   .if :0 <> 2 .or :1 >= :2
+   143 					      .error "VcountWaitUntilExit error"
+   144 				
+   145 					   .else
+   146 				VWait1     lda VCOUNT
+   147 						 cmp #:1
+   148 						 beq VWait1
+   149 					      bcc VExit	; VCOUNT < :1
+   150 						 cmp #:2
+   151 					      bcc VWait1	; VCOUNT < :2
+   152 						 beq VWait1
+   153 				VExit
+   154 					   .endif
+   155 				
+   156 					.endm
+   157
+   158
+   159 				;--------------------------------------------------------------------------------
+   160 				; MarkScanLine [0..255] [0..255]
+   161 				; (mark the current scan line with a color)
+   162 				;--------------------------------------------------------------------------------
+   163
+   164 					.macro MarkScanLine
+   165 					   .if :0 <> 0 .and :0 <> 2
+   166 					      .error "MarkScanLine error"
+   167 				
+   168 					   .else
+   169 					  	   .if :0 = 0
+   170 				  		      sta WSYNC
+   171 				  	     	 lda #255		; mark color
+   172 					  	      sta COLBK
+   173 				
+   174 				  		      sta WSYNC
+   175 				  	     	 lda #0		; restore color
+   176 					  	      sta COLBK
+   177 				
+   178 				  		   .else
+   179 					     	 sta WSYNC
+   180 						      lda #:1		; mark color
+   181 						      sta COLBK
+   182 				
+   183 						      sta WSYNC
+   184 						      lda #:2		; restore color
+   185 					     	 sta COLBK
+   186 						   .endif
+   187 					   .endif
+   188 				
+   189 					.endm
+   190
+   191
+   192 				;--------------------------------------------------------------------------------
+   193 				; MarkScanLineIfConsol [0..255] [0..255]
+   194 				; (mark the current scan line with a color, if a consol key is pressed)
+   195 				;--------------------------------------------------------------------------------
+   196
+   197 					.macro MarkScanLineIfConsol
+   198 					   .if :0 <> 0 .and :0 <> 2
+   199 					      .error "MarkScanLineIfConsol error"
+   200 				
+   201 					   .else
+   202 						 .if :0 = 0
+   203 						      lda CONSOL
+   204 						      and #%111
+   205 					     	 cmp #%111
+   206 						      beq ExitMarkScanLineIfConsol
+   207 				
+   208 						      sta WSYNC
+   209 						      lda #255		; mark color
+   210 						      sta COLBK
+   211 				
+   212 						      sta WSYNC
+   213 						      lda #0		; restore color
+   214 					     	 sta COLBK
+   215 				
+   216 					   	 .else
+   217 						      lda CONSOL
+   218 						      and #%111
+   219 					     	 cmp #%111
+   220 						      beq ExitMarkScanLineIfConsol
+   221 				
+   222 						      sta WSYNC
+   223 					     	 lda #:1		; mark color
+   224 						      sta COLBK
+   225 				
+   226 						      sta WSYNC
+   227 					     	 lda #:2		; restore color
+   228 						      sta COLBK
+   229 				
+   230 					   	 .endif
+   231 					   .endif
+   232 				
+   233 				ExitMarkScanLineIfConsol
+   234 				
+   235 					.endm
+   236
+   237
+   238 				;--------------------------------------------------------------------------------
+   239 				; MarkCyclesIfConsol [0..255] [0..255]
+   240 				; (mark the current scan position with a color, for some cycles)
+   241 				;--------------------------------------------------------------------------------
+   242
+   243 					.macro MarkCyclesIfConsol
+   244 					   .if :0 = 0
+   245 					      lda CONSOL
+   246 					      and #%111
+   247 					      cmp #%111
+   248 					      beq ExitMarkCyclesIfConsol
+   249 				
+   250 					      lda #255		; mark color
+   251 					      sta COLBK
+   252 				
+   253 					      lda ($00),y	; dummy 5 cycles
+   254 					      lda ($00),y	; dummy 5 cycles
+   255 					      lda ($00),y	; dummy 5 cycles
+   256 					      lda ($00),y	; dummy 5 cycles
+   257 					      lda ($00),y	; dummy 5 cycles
+   258 					      lda ($00),y	; dummy 5 cycles
+   259 				
+   260 					      lda #0		; restore color
+   261 					      sta COLBK
+   262 				
+   263 					   .elseif :0 = 2
+   264 					      lda CONSOL
+   265 					      and #%111
+   266 					      cmp #%111
+   267 					      beq ExitMarkCyclesIfConsol
+   268 				
+   269 					      lda #:1		; mark color
+   270 					      sta COLBK
+   271 				
+   272 					      lda ($00),y	; dummy 5 cycles
+   273 					      lda ($00),y	; dummy 5 cycles
+   274 					      lda ($00),y	; dummy 5 cycles
+   275 					      lda ($00),y	; dummy 5 cycles
+   276 					      lda ($00),y	; dummy 5 cycles
+   277 					      lda ($00),y	; dummy 5 cycles
+   278 				
+   279 					      lda #:2		; restore color
+   280 					      sta COLBK
+   281 				
+   282 					   .else
+   283 					      .error "MarkCyclesIfConsol error"
+   284 				
+   285 					   .endif
+   286 				
+   287 				ExitMarkCyclesIfConsol
+   288 				
+   289 					.endm
+   290
+   291
+   292 				;--------------------------------------------------------------------------------
+   293 				; SetBasic [0,1]
+   294 				;--------------------------------------------------------------------------------
+   295
+   296 					.macro SetBasic
+   297 					   .if :0 <> 1
+   298 					      .error "SetBasic error"
+   299 				
+   300 					   .else
+   301 					      .if :1 = 0
+   302 					         lda PORTB	; deactivate Basic
+   303 					         ora #%00000010
+   304 					         sta PORTB
+   305 					      .else
+   306 					         lda PORTB	; activate Basic
+   307 					         and #%11111101
+   308 					         sta PORTB
+   309 					      .endif
+   310 					   .endif
+   311 				
+   312 					.endm
+   313
+   314
+   315 				;--------------------------------------------------------------------------------
+   316 				; SetOperativeSystem [0,1]
+   317 				;--------------------------------------------------------------------------------
+   318
+   319 					.macro SetOperativeSystem
+   320 					   .if :0 <> 1
+   321 					      .error "SetOperativeSystem error"
+   322 				
+   323 					   .else
+   324 					      .if :1 = 0
+   325 					         lda PORTB	; deactivate Operative System
+   326 					         and #%11111110
+   327 					         sta PORTB
+   328 					      .else
+   329 					         lda PORTB	; activate Operative System
+   330 					         ora #%00000001
+   331 					         sta PORTB
+   332 					      .endif
+   333 					   .endif
+   334 				
+   335 					.endm
+   336
+   337
+   338 				;--------------------------------------------------------------------------------
+   339 				; EnableBasic
+   340 				;--------------------------------------------------------------------------------
+   341
+   342 					.macro EnableBasic
+   343 					   .if :0 <> 0
+   344 					      .error "EnableBasic error"
+   345 				
+   346 					   .else
+   347 					      SetBasic 1
+   348 					   .endif
+   349 				
+   350 					.endm
+   351
+   352
+   353 				;--------------------------------------------------------------------------------
+   354 				; DisableBasic
+   355 				;--------------------------------------------------------------------------------
+   356
+   357 					.macro DisableBasic
+   358 					   .if :0 <> 0
+   359 					      .error "DisableBasic error"
+   360 				
+   361 					   .else
+   362 					      SetBasic 0
+   363 					   .endif
+   364 				
+   365 					.endm
+   366
+   367
+   368 				;--------------------------------------------------------------------------------
+   369 				; EnableOperativeSystem
+   370 				;--------------------------------------------------------------------------------
+   371
+   372 					.macro EnableOperativeSystem
+   373 					   .if :0 <> 0
+   374 					      .error "EnableOperativeSystem error"
+   375 				
+   376 					   .else
+   377 					      SetOperativeSystem 1
+   378 					   .endif
+   379 				
+   380 					.endm
+   381
+   382
+   383 				;--------------------------------------------------------------------------------
+   384 				; DisableOperativeSystem
+   385 				;--------------------------------------------------------------------------------
+   386
+   387 					.macro DisableOperativeSystem
+   388 					   .if :0 <> 0
+   389 					      .error "DisableOperativeSystem error"
+   390 				
+   391 					   .else
+   392 					      SetOperativeSystem 0
+   393 					   .endif
+   394 				
+   395 					.endm
+   396
+   397
+   398 				;--------------------------------------------------------------------------------
+   399 				; EnableNormalInterrupts
+   400 				;--------------------------------------------------------------------------------
+   401
+   402 					.macro EnableNormalInterrupts
+   403 					   .if :0 <> 0
+   404 					      .error "EnableNormalInterrupts error"
+   405 				
+   406 					   .else
+   407 					      cli
+   408 				;	      lda #[8+16+32]	; serial I/O interrupts
+   409 				;	      lda #[64+128]		; keyboard and break interrupts (only ones enabled on powerup)
+   410 				;	      sta IRQEN
+   411 					      lda #64			; VBI interrupt
+   412 					      sta NMIEN
+   413 					   .endif
+   414 				
+   415 					.endm
+   416
+   417
+   418 				;--------------------------------------------------------------------------------
+   419 				; DisableNormalInterrupts
+   420 				;--------------------------------------------------------------------------------
+   421
+   422 					.macro DisableNormalInterrupts
+   423 					   .if :0 <> 0
+   424 					      .error "DisableNormalInterrupts error"
+   425 				
+   426 					   .else
+   427 					      sei
+   428 					      lda #0
+   429 					      sta IRQEN
+   430 					      sta NMIEN
+   431 					   .endif
+   432 				
+   433 					.endm
+   434
+   435
+   436 				;--------------------------------------------------------------------------------
+   437 				; ClearSystem
+   438 				;--------------------------------------------------------------------------------
+   439
+   440 					.macro ClearSystem
+   441 					   .if :0 <> 0
+   442 					      .error "ClearSystem error"
+   443 				
+   444 					   .else
+   445 					      clc
+   446 					      cld
+   447 				
+   448 					      sei
+   449 				
+   450 					      lda #0
+   451 					      sta IRQEN	; clear interrupts and screen
+   452 					      sta NMIEN
+   453 				
+   454 					      sta DMACTL
+   455 					      sta COLBK
+   456 				
+   457 					      sta GRACTL	; clear P/M
+   458 					      sta GRAFP0
+   459 					      sta GRAFP1
+   460 					      sta GRAFP2
+   461 					      sta GRAFP3
+   462 					      sta GRAFM
+   463 				
+   464 					      sta HPOSP0
+   465 					      sta HPOSP1
+   466 					      sta HPOSP2
+   467 					      sta HPOSP3
+   468 					      sta HPOSM0
+   469 					      sta HPOSM1
+   470 					      sta HPOSM2
+   471 					      sta HPOSM3
+   472 				
+   473 					      sta PRIOR	; clear GTIA also
+   474 				
+   475 					      sta AUDCTL	; clear sound
+   476 					      sta AUDC1
+   477 					      sta AUDC2
+   478 					      sta AUDC3
+   479 					      sta AUDC4
+   480 				
+   481 					      lda #3
+   482 					      sta SKCTL
+   483 					   .endif
+   484 				
+   485 					.endm
+   486
+   487
+   488 				;--------------------------------------------------------------------------------
+   489 				; SetDisplayListAddress [word]
+   490 				; (use when the screen is not being displayed!)
+   491 				; (remember to not cross the 1K limit..)
+   492 				;--------------------------------------------------------------------------------
+   493
+   494 					.macro SetDisplayListAddress
+   495 					   .if :0 <> 1
+   496 					      .error "SetDisplayListAddress error"
+   497 				
+   498 					   .else
+   499 					      SetVector DLISTL, :1
+   500 				
+   501 				;	      lda #<:1
+   502 				;	      sta DLISTL
+   503 				;	      lda #>:1
+   504 				;	      sta DLISTH
+   505 					   .endif
+   506 				
+   507 					.endm
+   508
+   509
+   510 				;--------------------------------------------------------------------------------
+   511 				; SetFontAddress [word]
+   512 				; (remember that this transform to a page a number)
+   513 				;--------------------------------------------------------------------------------
+   514
+   515 					.macro SetFontAddress
+   516 					   .if :0 <> 1
+   517 					      .error "SetFontAddress error"
+   518 				
+   519 					   .else
+   520 					      lda #>:1
+   521 					      sta CHBASE
+   522 					   .endif
+   523 				
+   524 					.endm
+   525
+   526
+   527 				;--------------------------------------------------------------------------------
+   528 				; SetPMBaseAddress [word]
+   529 				; (remember that this transform to a page a number)
+   530 				;--------------------------------------------------------------------------------
+   531
+   532 					.macro SetPMBaseAddress
+   533 					   .if :0 <> 1
+   534 					      .error "SetPMBaseAddress error"
+   535 				
+   536 					   .else
+   537 					      lda #>:1
+   538 					      sta PMBASE
+   539 					   .endif
+   540 				
+   541 					.endm
+   542
+   543
+   544 				;--------------------------------------------------------------------------------
+   545 				; SetMemory [address] [bytes] [value]
+   546 				;--------------------------------------------------------------------------------
+   547
+   548 				; warning, using some page zero memory
+   549
+   550 					.macro SetMemory
+   551 				
+   552 				setMemPtr	= 254
+   553 				setMemCounter	= 252
+   554 				
+   555 					   .if :0 <> 3
+   556 					      .error "SetMemory error"
+   557 				
+   558 					   .else
+   559 					      ldy #0
+   560 				
+   561 					      lda #<:1
+   562 					      sta setMemPtr
+   563 					      lda #>:1
+   564 					      sta setMemPtr+1
+   565 				
+   566 					      .if :2 < 256
+   567 					         lda #:3
+   568 				setMemLoop1
+   569 					         sta (setMemPtr),y
+   570 					         iny
+   571 					         cpy #:2
+   572 					         bne setMemLoop1
+   573 				
+   574 					      .else
+   575 					         lda #<:2
+   576 					         sta setMemCounter
+   577 					         lda #>:2
+   578 					         sta setMemCounter+1
+   579 				
+   580 				setMemLoop2
+   581 					         lda #:3
+   582 					         sta (setMemPtr),y
+   583 					         iny
+   584 					         bne setMemB1
+   585 					         inc setMemPtr+1
+   586 				setMemB1
+   587 					         lda setMemCounter
+   588 					         bne setMemB2
+   589 					         dec setMemCounter+1
+   590 				setMemB2
+   591 					         dec setMemCounter
+   592 				
+   593 					         lda setMemCounter
+   594 					         ora setMemCounter+1
+   595 					         bne setMemLoop2
+   596 					      .endif
+   597 					   .endif
+   598 				
+   599 					.endm
+   600
+   601
+   602 				;--------------------------------------------------------------------------------
+   603 				; SetMemoryRandom [address] [bytes]
+   604 				;--------------------------------------------------------------------------------
+   605
+   606 				; warning, using some page zero memory
+   607
+   608 					.macro SetMemoryRandom
+   609 				
+   610 				setMemRPtr	= 254
+   611 				setMemRCounter	= 252
+   612 				
+   613 					   .if :0 <> 2
+   614 					      .error "SetMemoryRandom error"
+   615 				
+   616 					   .else
+   617 					      ldy #0
+   618 				
+   619 					      lda #<:1
+   620 					      sta setMemRPtr
+   621 					      lda #>:1
+   622 					      sta setMemRPtr+1
+   623 				
+   624 					      .if :2 < 256
+   625 				setMemRLoop1
+   626 					         lda RANDOM
+   627 					         sta (setMemRPtr),y
+   628 					         iny
+   629 					         cpy #:2
+   630 					         bne setMemRLoop1
+   631 				
+   632 					      .else
+   633 					         lda #<:2
+   634 					         sta setMemRCounter
+   635 					         lda #>:2
+   636 					         sta setMemRCounter+1
+   637 				
+   638 				setMemRLoop2
+   639 					         lda RANDOM
+   640 					         sta (setMemRPtr),y
+   641 					         iny
+   642 					         bne setMemRB1
+   643 					         inc setMemRPtr+1
+   644 				setMemRB1
+   645 					         lda setMemRCounter
+   646 					         bne setMemRB2
+   647 					         dec setMemRCounter+1
+   648 				setMemRB2
+   649 					         dec setMemRCounter
+   650 				
+   651 					         lda setMemRCounter
+   652 					         ora setMemRCounter+1
+   653 					         bne setMemRLoop2
+   654 					      .endif
+   655 					   .endif
+   656 				
+   657 					.endm
+   658
+   659
+   660 				;--------------------------------------------------------------------------------
+   661 				; ClampMemory [address] [bytes] [min value] [max value]
+   662 				;--------------------------------------------------------------------------------
+   663
+   664 				; warning, using some page zero memory
+   665
+   666 					.macro ClampMemory
+   667 				
+   668 				clampMemPtr	= 254
+   669 				clampMemCounter	= 252
+   670 				
+   671 					   .if :0 <> 4
+   672 					      .error "ClampMemory error"
+   673 				
+   674 					   .else
+   675 					      ldy #0
+   676 				
+   677 					      lda #<:1
+   678 					      sta clampMemPtr
+   679 					      lda #>:1
+   680 					      sta clampMemPtr+1
+   681 				
+   682 					      .if :2 < 256
+   683 				clampMemLoop1
+   684 					         lda (clampMemPtr),y
+   685 					         cmp #:3
+   686 					         bcs clampMemB3		; if >= min then continue
+   687 					         lda #:3
+   688 					         jmp clampMemB4
+   689 				clampMemB3
+   690 					         cmp #:4
+   691 					         bcc clampMemB4		; if < max then continue
+   692 				;	         beq clampMemB4		; if = max then continue
+   693 					         lda #:4
+   694 				clampMemB4
+   695 					         sta (clampMemPtr),y
+   696 				
+   697 					         iny
+   698 					         cpy #:2
+   699 					         bne clampMemLoop1
+   700 				
+   701 					      .else
+   702 					         lda #<:2
+   703 					         sta clampMemCounter
+   704 					         lda #>:2
+   705 					         sta clampMemCounter+1
+   706 				
+   707 				clampMemLoop2
+   708 					         lda (clampMemPtr),y
+   709 					         cmp #:3
+   710 					         bcs clampMemB5		; if >= min then continue
+   711 					         lda #:3
+   712 					         jmp clampMemB6
+   713 				clampMemB5
+   714 					         cmp #:4
+   715 					         bcc clampMemB6		; if < max then continue
+   716 				;	         beq clampMemB6		; if = max then continue
+   717 					         lda #:4
+   718 				clampMemB6
+   719 					         sta (clampMemPtr),y
+   720 				
+   721 					         iny
+   722 					         bne clampMemB1
+   723 					         inc clampMemPtr+1
+   724 				clampMemB1
+   725 					         lda clampMemCounter
+   726 					         bne clampMemB2
+   727 					         dec clampMemCounter+1
+   728 				clampMemB2
+   729 					         dec clampMemCounter
+   730 				
+   731 					         lda clampMemCounter
+   732 					         ora clampMemCounter+1
+   733 					         bne clampMemLoop2
+   734 					      .endif
+   735 					   .endif
+   736 				
+   737 					.endm
+   738
+   739
+   740 				;--------------------------------------------------------------------------------
+   741 				; AndMemory [address] [bytes] [value]
+   742 				;--------------------------------------------------------------------------------
+   743
+   744 				; warning, using some page zero memory
+   745
+   746 					.macro AndMemory
+   747 				
+   748 				andMemPtr	= 254
+   749 				andMemCounter	= 252
+   750 				
+   751 					   .if :0 <> 3
+   752 					      .error "AndMemory error"
+   753 				
+   754 					   .else
+   755 					      ldy #0
+   756 				
+   757 					      lda #<:1
+   758 					      sta andMemPtr
+   759 					      lda #>:1
+   760 					      sta andMemPtr+1
+   761 				
+   762 					      .if :2 < 256
+   763 				andMemLoop1
+   764 					         lda (andMemPtr),y
+   765 					         and #:3
+   766 					         sta (andMemPtr),y
+   767 					         iny
+   768 					         cpy #:2
+   769 					         bne andMemLoop1
+   770 				
+   771 					      .else
+   772 					         lda #<:2
+   773 					         sta andMemCounter
+   774 					         lda #>:2
+   775 					         sta andMemCounter+1
+   776 				
+   777 				andMemLoop2
+   778 					         lda (andMemPtr),y
+   779 					         and #:3
+   780 					         sta (andMemPtr),y
+   781 					         iny
+   782 					         bne andMemB1
+   783 					         inc andMemPtr+1
+   784 				andMemB1
+   785 					         lda andMemCounter
+   786 					         bne andMemB2
+   787 					         dec andMemCounter+1
+   788 				andMemB2
+   789 					         dec andMemCounter
+   790 				
+   791 					         lda andMemCounter
+   792 					         ora andMemCounter+1
+   793 					         bne andMemLoop2
+   794 					      .endif
+   795 					   .endif
+   796 				
+   797 					.endm
+   798
+   799
+   800 				;--------------------------------------------------------------------------------
+   801 				; CopyMemory [source address] [dest address] [bytes]
+   802 				;--------------------------------------------------------------------------------
+   803
+   804 				; warning, using some page zero memory
+   805
+   806 					.macro CopyMemory
+   807 				
+   808 				copyMemPtr1	= 254
+   809 				copyMemPtr2	= 252
+   810 				copyMemCounter	= 250
+   811 				
+   812 					   .if :0 <> 3
+   813 					      .error "CopyMemory error"
+   814 				
+   815 					   .else
+   816 					      ldy #0
+   817 				
+   818 					      .if :3 <= 256
+   819 				copyMemLoop1
+   820 						lda :1,y
+   821 						sta :2,y
+   822 						iny
+   823 						.if :3 < 256
+   824 							cpy #<:3
+   825 						.endif
+   826 						bne copyMemLoop1
+   827 				
+   828 					      .else
+   829 					        lda #<:1
+   830 					        sta copyMemPtr1
+   831 					        lda #>:1
+   832 					        sta copyMemPtr1+1
+   833 						lda #<:2
+   834 						sta copyMemPtr2
+   835 						lda #>:2
+   836 						sta copyMemPtr2+1
+   837 						lda #<:3
+   838 						sta copyMemCounter
+   839 						lda #>:3
+   840 						sta copyMemCounter+1
+   841 				
+   842 				copyMemLoop2
+   843 						lda (copyMemPtr1),y
+   844 						sta (copyMemPtr2),y
+   845 						iny
+   846 						bne copyMemB1
+   847 						inc copyMemPtr1+1
+   848 						inc copyMemPtr2+1
+   849 				copyMemB1
+   850 						lda copyMemCounter
+   851 						bne copyMemB2
+   852 						dec copyMemCounter+1
+   853 				copyMemB2
+   854 						dec copyMemCounter
+   855 				
+   856 						lda copyMemCounter
+   857 						ora copyMemCounter+1
+   858 						bne copyMemLoop2
+   859 					      .endif
+   860 					   .endif
+   861 				
+   862 					.endm
+   863
+   864
+   865 				;--------------------------------------------------------------------------------
+   866 				; CreateDisplayList [DL address] [DL mode] [memory address]
+   867 				; (remember to not cross the 1K limit.. and the 4K limit)
+   868 				;--------------------------------------------------------------------------------
+   869
+   870 				; 	.macro CreateDisplayList
+   871 				; 	   .if :0 <> 3
+   872 				; 	      .error "CreateDisplayList error"
+   873 				; 
+   874 				; 	   .else
+   875 				; 
+   876 				; 	   .endif
+   877 				; 
+   878 				; 	.endm
+   879
+   880
+   881 				;--------------------------------------------------------------------------------
+   882 				;
+   883 				;--------------------------------------------------------------------------------
+   884
+   885
+   886
+     7
+     8 = 2000			start_data =$2000
+     9 = A000			start_cartridge =$a000
+    10 = 2000			cart_length =$2000
+    11 = 6000			buffer = $6000
+    12 = D5FF			cart_off =$D5FF
+    13
+    14 = 0040			write_enable = $40
+    15 = 0004			write_enable2 = $04
+    16
+    17 = 0013			dir_lines = 19
+    18 = 0026			num_files = dir_lines*2
+    19
+    20 = 00CB			pt_1 = $cb
+    21 = 00CD			pt_2 = $cd
+    22 = 00CF			pt_3 = $cf
+    23
+    24
+    25 					opt h-
+    26 					
+    27 				//Let's do the ATR Header
+    28
+    29 = 0880			Total_Size		= (((end_atr - start_data)+127)/128)*128
+    30 = 0000			Total_Size_high	= (Total_Size/$100000)
+    31 = 0088			Total_Size_low	= (Total_Size-(Total_Size_high*$100000))/$10
+    32
+    33 = 0011			Sectors_boot	= (end_program-start_data+127)/128
+    34
+    35 = 0012			init_sector		= Sectors_boot + 1
+    36 				;init_rom_sector	= (init_sector + (starting_bank*$40))
+    37 = 0012			init_rom_sector	= init_sector
+    38
+    39  96 02				.by $96,$02				//Checksum of "NICKATARI"
+    40  88 00				.word Total_Size_low	//Total bytes
+    41  80 00				.word $80				//Sector Size
+    42  00 00				.word Total_Size_high	//Total bytes
+    43  00				.by $00					//No Write Protect nor Bad sectors.
+    44  00 00				.word $00				//No bad sectors
+    45  00 00 00 00 00			.by $00,$00,$00,$00,$00
+    46
+    47
+    48 					org start_data
+    49 					
+    50 2000 00				.by $00
+    51 2001 11				.by Sectors_boot
+    52 2002 00 20			.word start_data
+    53 2004 EC 26			.word start
+    54 2006			init_boot
+    55 2006 18				clc
+    56 2007 60				rts	
+    57
+    58
+    59
+    60 				//Determinamos macros
+    61
+    62 				//Partimos con seleccionar el banco
+    63 				//Formato: banco x,y
+    64 				//x = Cartridge bank to activate
+    65 				//y= 0 if its for reading, Y=1 read/write
+    66 				.macro banco
+    67 				.if :0 <> 2 
+    68 					.error "banco sin parámetros"
+    69 				.else
+    70 					.if :1 < 256
+    71 						lda #:1
+    72 						.if :2 = 1
+    73 							ora #write_enable
+    74 						.endif
+    75 						tax
+    76 						sta $d500,x
+    77 					.else
+    78 						lda :1
+    79 						.if :2 = 1
+    80 							;ora #write_enable
+    81 							ora value_write
+    82 						.endif
+    83 						tax
+    84 						sta $d500,x
+    85 					.endif
+    86 				.endif 
+    87 				.endm
+    88
+    89 				//Realiza un print en la pantalla hasta encontrar un RETURN ($9b).
+    90 				//Uso: print mem_addr
+    91 				.macro print
+    92 				.if :0 <> 1
+    93 					.error "print sin parámetros"
+    94 				.else
+    95 					ldx #<:1
+    96 					ldy #>:1
+    97 					jsr pr
+    98 				.endif
+    99 				.endm
+   100 					
+   101
+   102 				//print2: imprime una cantidad fija de caracteres según un largo definido.
+   103 				//Uso: print2 mem_addr, num_caracteres
+   104 				.macro print2
+   105 				.if :0 <> 2
+   106 					.error "print2 sin parámetros"
+   107 				.else
+   108 					ldx #<:1
+   109 					ldy #>:1
+   110 					lda #:2
+   111 					jsr pr2
+   112 				.endif
+   113 				.endm
+   114
+   115
+   116
+   117 				//Cierra el canal solicitado.
+   118 				//Uso: close channel
+   119 				.macro close
+   120 				.if :0 <> 1
+   121 					.error "close sin parámetros"
+   122 				.else
+   123 				;	lda #:1
+   124 				;	:+4 asl
+   125 				;	tax
+   126 					ldx #(:1*16)
+   127 					lda #$0C	//Close
+   128 					sta ICCMD,x
+   129 					jsr CIOV
+   130 				.endif
+   131 				.endm
+   132
+   133 				//Open: open CIO channel, simmilar to BASIC.
+   134 				//Uso: open channel,operation,aux,loc_handler
+   135
+   136 				.macro open
+   137 				.if :0 <> 4
+   138 					.error "open sin parámetros"
+   139 				.else
+   140 				;	lda #:1
+   141 				;	:+4 asl
+   142 				;	tax
+   143 					ldx #(:1*16)
+   144 					mva #$03 ICCMD,x	//Open
+   145 					mwa #:4	ICBAL,x		//"E:","C:","D:"
+   146 					mva #:2	ICAX1,x		//Read and write
+   147 					mva #:3 ICAX2,x
+   148 					jsr CIOV
+   149 				.endif
+   150 				.endm
+   151
+   152 				//CopyM: Copy número de páginas de una dirección a otra.
+   153 				.macro CopyM
+   154 				//Restricción: sólo utiliza los bytes mayores. Para un movimiento más fino, utilizar CopyMemory
+   155 				
+   156 				.if :0 <> 3
+   157 					.error "CopyM sin parámetros correctos"
+   158 				.else
+   159 					ldx #>:1
+   160 					ldy #>:2
+   161 					lda #>:3
+   162 					jsr copy
+   163 				.endif
+   164 				
+   165 				
+   166 				.endm
+   167
+   168 				//WriteMemory: Escribe en disco el contenido de memoria
+   169 				//Parámetros:
+   170 				//  1: Canal a escribir
+   171 				//  2: Zona de memoria inicial a escribir
+   172 				//  3: Cantidad de bytes
+   173 				.macro WriteMemory
+   174 				.if :0 <> 3
+   175 					.error "WriteMemory sin parámetros correctos"
+   176 				.else
+   177 				;	lda #:1
+   178 				;	:+4 asl
+   179 				;	tax
+   180 					ldx #(:1*16)
+   181 					mwa #:2 ICBAL,x
+   182 					mwa #:3 ICBLL,x
+   183 					mva #11 ICCMD,X
+   184 					jsr ciov
+   185 				.endif
+   186 				.endm
+   187
+   188 				//ReadDisk: lee del disco el contenido y guarda en memoria
+   189 				//Parámetros:
+   190 				//  1: Canal del cual leer
+   191 				//  2: Zona de memoria al cual grabar
+   192 				//  3: Cantidad de bytes
+   193 				.macro ReadDisk
+   194 				.if :0 <> 3
+   195 					.error "ReadDisk sin parámetros correctos"
+   196 				.else
+   197 				;	lda #:1
+   198 				;	:+4 asl
+   199 				;	tax
+   200 					ldx #(:1*16)
+   201 					mwa #:2 ICBAL,x
+   202 					mwa #:3 ICBLL,x
+   203 					mva #7 ICCMD,X
+   204 					jsr ciov
+   205 				.endif
+   206 				.endm
+   207
+   208
+   209 				//WriteCart: Escribe en cartridge el contenido de memoria
+   210 				//Parámetros:
+   211 				//  1: Canal a escribir
+   212 				//  2: Zona de memoria inicial a escribir
+   213 				//  3: Cantidad de bytes
+   214 				.macro WriteCart
+   215 				.if :0 <> 3
+   216 					.error "WriteCart sin parámetros correctos"
+   217 				.else
+   218 					ReadDisk :1,:2,:3
+   219 					CopyM :2,start_cartridge,:3
+   220 				.endif
+   221 				.endm
+   222
+   223 				//input: realiza un input por CIO
+   224 				//Uso: input canal,dirección a tomar
+   225 				.macro input
+   226 				.if :0 <> 2
+   227 					.error "Input sin parámetros correctos"
+   228 				.else
+   229 				;	lda #:1
+   230 				;	:+4 asl
+   231 				;	tax
+   232 					ldx #(:1*16)
+   233 					mwa #:2 ICBAL,X		;Dirección entregada
+   234 					mwa #20 ICBLL,x		;Máximo 20 bytes (Pueden ser más)
+   235 					mva #5 ICCMD,x		;Comando INPUT
+   236 					jsr ciov		;Ejecute"
+   237 				.endif
+   238 				
+   239 				.endm
+   240
+   241 				//get: realiza un input por CIO
+   242 				//Uso: input canal,dirección a tomar
+   243 				.macro get
+   244 				.if :0 <> 2
+   245 					.error "Get sin parámetros correctos"
+   246 				.else
+   247 				;	lda #:1
+   248 				;	:+4 asl
+   249 				;	tax
+   250 					ldx #(:1*16)
+   251 					mwa #:2 ICBAL,X		;Dirección entregada
+   252 					mwa #1 ICBLL,x		;Cantidad de bytes = 1
+   253 					mva #7 ICCMD,x		;Realizar una lectura
+   254 					jsr ciov		;Ejecute!
+   255 				.endif
+   256 				
+   257 				.endm
+   258
+   259
+   260 2008			boot_sector
+   261 2008 00				.by $00
+   262 2009 01				.by $01		//1 sector to read
+   263 200A 00 06			.word $600
+   264 200C 06 06			.word $606
+   265 200E 38				sec
+   266 200F 60				rts
+   267 2010 00 00 00 00 00 00 + 	:120 .by $00
+   268
+   269 2088			LOC_E
+   270 2088 45 3A 9B			.by "E:",$9B	;Handler editor E:
+   271 208B			LOC_K
+   272 208B 4B 3A 9B			.by "K:",$9B	;Handler keyboard
+   273 208E			LOC_DISK
+   274 208E 44 31 3A 41 41 41 + 	.by "D1:AAAAAAAA.DMP",$9B	;file name (not used now)
+   275 209E			LOC_DIR
+   276 209E 44 31 3A 2A 2E 2A + 	.by "D1:*.*",$9B		;search directory (not used)
+   277 20A5			LOC_INPUT
+   278 20A5 20 20 20 20 20 20 + 	.by "                    "
+   279 20B9			dl
+   280 20B9 70 70 70			.by $70,$70,$70
+   281 20BC 70 70 70 70 70 70 + 	:7 .by $70
+   282 20C3 30				.by $30
+   283 20C4 42				.by $42				;Primera línea modo ANTIC 2
+   284 20C5 D2 20			.word screen
+   285 20C7 02 02 02 02			:4 .by $02 			;4 líneas más
+   286 20CB 70				.by $70
+   287 20CC 02 02 02			.by $02,$02,$02
+   288 20CF 41				.by $41				;Vuelva
+   289 20D0 B9 20			.word dl			;al display list!
+   290 					
+   291
+   292 20D2			screen
+   293 20D2 51 52 52 52 52 52 + 	.sb +32,"QRRRRRRRRRRRRRRRRRRRRRRRRRRRRWRRRRRRRRRE"
+   294 20FA 7C 21 32 00 24 75 + 	.sb     "|AR Dungeon Char Transfer 1.0|Willysoft|"
+   295 2122 41 52 52 52 52 52 + 	.sb +32,"ARRRRRRRRRRRWRRRRRRRRRRRRRRRRXRRRRRRRRRD"
+   296 214A 7C				.sb     "|"
+   297 214B B3 B4 A1 B2 B4		.sb +128,"START"
+   298 2150 1A				.sb      ":"
+   299 2151			screen_start
+   300 2151 22 25 27 29 2E		.sb "BEGIN"
+   301 2156			screen_start_end
+   302
+   303 2156 7C				.sb "|"
+   304 2157 B3 A5 AC A5 A3 B4		.sb +128,"SELECT"
+   305 215D 1A				.sb ":"
+   306 215E			screen_operation
+   307 215E 23 21 32 34 32 29 + 	.sb "CARTRIDGE TO DISK  "
+   308 2171			screen_operation_end
+   309 = 0013			len_sc_operation= screen_operation_end - screen_operation
+   310 2171 7C				.sb "|"
+   311 2172 5A 52 52 52 52 52 + 	.sb +32,"ZRRRRRRRRRRRXRRRRRRRRRRRRRRRRRRRRRRRRRRC"
+   312
+   313 219A			sc_screen_format	
+   314 219A 00 00 00 00 00 00 + 	.sb "                                        "
+   315 21C2 00 00 00 00 00 00 + 	.sb "                                        "
+   316 21EA 00 00 00 00 00 00 + 	.sb "                                        "
+   317
+   318 2212			sc_format
+   319 2212 51 52 52 52 52 52 + 	.sb +32,"QRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRE"
+   320 223A 7C 00 00 00 30 32 + 	.sb     "|   PRESS "
+   321 2244 B2 A5 B4 B5 B2 AE		.sb +128,"RETURN"
+   322 224A 00 00 34 2F 00 26 + 	.sb "  TO FORMAT DISKETTE   |"
+   323 2262 5A 52 52 52 52 52 + 	.sb +32,"ZRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRC"
+   324 228A			sc_format_end
+   325 = 0078			len_sc_format=sc_format_end-sc_format
+   326
+   327 228A			sc_cart_error
+   328 228A 51 52 52 52 52 52 + 	.sb +32,"QRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRE"
+   329 22B2 7C 00 00 00			.sb     "|   "
+   330 22B6 A5 B2 B2 AF B2 9A		.sb +128,"ERROR:"
+   331 22BC 00 2E 2F 00 23 28 + 	.sb " NO CHARACTER ON CARTRIDGE   |"
+   332 22DA 5A 52 52 52 52 52 + 	.sb +32,"ZRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRC"
+   333 2302			sc_cart_error_end
+   334 = 0078			len_sc_cart_error = sc_cart_error_end - sc_cart_error
+   335
+   336
+   337 2302			sc_disk_error
+   338 2302 51 52 52 52 52 52 + 	.sb +32,"QRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRE"
+   339 232A 7C 00 00 00			.sb     "|   "
+   340 232E A5 B2 B2 AF B2 9A		.sb +128,"ERROR:"
+   341 2334 00 00 2E 2F 00 23 + 	.sb "  NO CHARACTER ON DISKETTE   |"
+   342 2352 5A 52 52 52 52 52 + 	.sb +32,"ZRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRC"
+   343 237A			sc_disk_error_end
+   344 = 0078			len_sc_disk_error = sc_disk_error_end - sc_disk_error
+   345
+   346
+   347 237A			sc_cart				;00
+   348 237A 23 21 32 34 32 29 + 	.sb "CARTRIDGE TO DISK  "
+   349 238D			sc_disk
+   350 238D 24 29 33 2B 00 34 + 	.sb "DISK TO CARTRIDGE  "
+   351
+   352 23A0			text_check
+   353 23A0 41 52 20 43 48 41 + 	.by "AR CHAR!"	//Header to check on disk or cartridge
+   354 23A8			text_check_end
+   355 = 0008			len_text_check = text_check_end - text_check
+   356
+   357 23A8			BEEP
+   358 23A8 FD				.by $FD		//Beep sound
+   359
+   360 23A9			flag_busy
+   361 23A9 00				.by $00
+   362
+   363 23AA			flag_operation
+   364 23AA 00				.by $00
+   365 23AB			flag_start
+   366 23AB 00				.by $00
+   367
+   368 23AC			consol_previous
+   369 23AC 08				.by $08
+   370
+   371 23AD			key
+   372 23AD 00				.by $00
+   373 					
+   374 				//Format cartridge routine for AR Dungeon.
+   375 23AE			.proc format_cartridge
+   376 23AE A9 0A			lda #$0a
+   377 23B0 20 DA 23			jsr erasebk	//Erase bank $0a (Header info)
+   378 23B3 A9 0B			lda #$0b
+   379 23B5 20 DA 23			jsr erasebk	//Erase bank $0b (save state 1)
+   380 23B8 A9 0C			lda #$0c
+   381 23BA 20 DA 23			jsr erasebk	//Erase bank $0c (save state 2)
+   382 23BD A9 0D			lda #$0d
+   383 23BF 20 DA 23			jsr erasebk	//Erase bank $0d (save state 3)
+   384 23C2 A9 0E			lda #$0e
+   385 23C4 20 DA 23			jsr erasebk	//Erase bank $0e (save state 4)
+   386 23C7 A9 FF			lda #$ff
+   387 23C9 8D FF D5			sta cart_off
+   388 23CC A0 01			ldy #$01	// All done without errors
+   389 23CE 60				rts		//Formatting successful
+   390 				.endp
+   391
+   392 23CF			.proc setsec
+   393 23CF 29 0F			and #$0F	//Only $00-$0F allowed
+   394 23D1 18				clc		//Just to not set bit 7 to 1 accidentally
+   395 23D2 2A				rol		//*2
+   396 23D3 2A				rol		//*4
+   397 23D4 2A				rol		//*8
+   398 23D5 AA				tax
+   399 23D6 9D 00 D5			sta $d500,x	//Change bank!
+   400 23D9 60				rts
+   401 				.endp
+   402
+   403 23DA			.proc erasebk
+   404 23DA 8E 18 24			stx temp_x
+   405 23DD 48				pha
+   406 23DE 20 20 24			jsr cmd_unlock		//First two cycles!
+   407 23E1 A9 80			lda #$80
+   408 23E3 20 19 24			jsr wr5555		//Third cycle!
+   409 23E6 20 20 24			jsr cmd_unlock		//Fourth and fifth cycles!
+   410 23E9 68				pla
+   411 23EA 20 CF 23			jsr setsec
+   412 23ED A9 30			lda #$30		//Sixth and final cycle!
+   413 23EF 8D 00 A0			sta start_cartridge	//Erase!
+   414 					
+   415 				//Poll_write: wait until the erase is finished.
+   416 23F2			poll_write
+   417 23F2 A9 00			lda #$00
+   418 23F4 8D 17 24			sta pollsame
+   419 23F7			@poll_again
+   420 23F7 AD 00 A0			lda start_cartridge
+   421 23FA CD 00 A0			cmp start_cartridge
+   422 23FD D0 F3			bne poll_write
+   423 23FF CD 00 A0			cmp start_cartridge
+   424 2402 D0 EE			bne poll_write
+   425 2404 CD 00 A0			cmp start_cartridge
+   426 2407 D0 E9			bne poll_write
+   427 2409 EE 17 24			inc pollsame
+   428 240C D0 E9			bne @poll_again
+   429 240E A9 FF			lda #$ff
+   430 2410 8D FF D5			sta cart_off
+   431 2413 AE 18 24			ldx temp_x
+   432 2416 60				rts
+   433 2417			pollsame
+   434 2417 00				.by $00
+   435 2418 00			temp_x	.by $00
+   436 				.endp
+   437
+   438 2419			.proc wr5555
+   439 2419 8D 42 D5			sta $d542	//Setting third bank from second chip.
+   440 241C 8D 55 B5			sta $b555	//Store on $5555!
+   441 241F 60				rts
+   442 				.endp
+   443
+   444 2420			.proc cmd_unlock
+   445 2420 A9 AA			lda #$AA	//Store $aa on $5555
+   446 2422 20 19 24			jsr wr5555	//Do it!
+   447 2425 A9 55			lda #$55	//Store $55 on $2aaa
+   448 				.endp
+   449
+   450 2427			.proc wr2AAA
+   451 2427 8D 41 D5			sta $d541	//Setting second bank from second chip.
+   452 242A 8D AA AA			sta $aaaa	//Store on $2aaa
+   453 242D 60				rts
+   454
+   455 				.endp
+   456
+   457 242E			.proc enable_write
+   458 242E 8E 43 24			stx temp_x
+   459 2431 48				pha
+   460 2432 20 20 24			jsr cmd_unlock	//First and second cycle
+   461 2435 A9 A0			lda #$a0
+   462 2437 20 19 24			jsr wr5555	//Third cycle
+   463 243A			enable_write_cont
+   464 243A 68				pla
+   465 243B AA				tax
+   466 243C 9D 00 D5			sta $d500,x
+   467 243F AE 43 24			ldx temp_x
+   468 2442 60				rts
+   469 2443			temp_x
+   470 2443 00				.by $00
+   471 				.endp
+   472
+   473 2444			.proc WriteM
+   474 2444				WriteMemory 1,start_cartridge,cart_length
+Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 2444 A2 10			ldx #(1*16)
+     8 2446 A9 00 9D 44 03 A9 + 	mwa #START_CARTRIDGE ICBAL,x
+     9 2450 A9 00 9D 48 03 A9 + 	mwa #CART_LENGTH ICBLL,x
+    10 245A A9 0B 9D 42 03		mva #11 ICCMD,X
+    11 245F 20 56 E4			jsr ciov
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   475 2462 60				rts
+   476 				.endp
+   477
+   478 2463			.proc get_key
+   479 2463				get 1,key
+Macro: GET [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 2463 A2 10			ldx #(1*16)
+     8 2465 A9 AD 9D 44 03 A9 + 	mwa #KEY ICBAL,X		;Dirección entregada
+     9 246F A9 01 9D 48 03 A9 + 	mwa #1 ICBLL,x		;Cantidad de bytes = 1
+    10 2479 A9 07 9D 42 03		mva #7 ICCMD,x		;Realizar una lectura
+    11 247E 20 56 E4			jsr ciov		;Ejecute!
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   480 2481 60				rts
+   481 				.endp
+   482
+   483 2482			.proc wait_return
+   484 2482			start
+   485 2482 AD FC 02			lda CH
+   486 2485 C9 FF			cmp #$ff	//Key pressed?
+   487 2487 D0 F9			bne start	//Nope, start over!
+   488 2489 20 63 24			jsr get_key //Get key
+   489 248C A9 FF			lda #$ff	//Erase last key pressed
+   490 248E 8D FC 02			sta CH		//Done!
+   491 2491 AD AD 23			lda key		//Read key
+   492 2494 C9 9B			cmp #$9b	//Is it Return?
+   493 2496 D0 EA			bne start	//No, let's do it again.
+   494 2498 60				rts			//Yes, return
+   495 				.endp
+   496
+   497 2499			.proc format_disk
+   498 2499 A9 31 8D 00 03		mva #$31 DDEVIC
+   499 249E A9 01 8D 01 03		mva #$01 DUNIT
+   500 24A3 A9 21 8D 02 03		mva #$21 DCOMND
+   501 24A8 A9 80 8D 0A 03		mva #$80 daux1
+   502 24AD A9 00 8D 0B 03		mva #$00 daux2
+   503 24B2 20 59 E4			jsr siov
+   504 24B5 60				rts
+   505 					
+   506 				.endp
+   507
+   508 24B6			.proc write_disk
+   509
+   510 				//Character 1
+   511 24B6				banco $58,0
+Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     5 24B6 A9 58				lda #$58
+     9 24B8 AA					tax
+    10 24B9 9D 00 D5				sta $d500,x
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   512 24BC A2 03			ldx #$03
+   513 24BE A0 00			ldy #$00
+   514 24C0 20 EB 24			jsr write_char
+   515 				//Character 2
+   516 24C3				banco $60,0
+Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     5 24C3 A9 60				lda #$60
+     9 24C5 AA					tax
+    10 24C6 9D 00 D5				sta $d500,x
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   517 24C9 A2 BB			ldx #$bb
+   518 24CB A0 00			ldy #$00
+   519 24CD 20 EB 24			jsr write_char
+   520 				//Character 3
+   521 24D0				banco $68,0
+Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     5 24D0 A9 68				lda #$68
+     9 24D2 AA					tax
+    10 24D3 9D 00 D5				sta $d500,x
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   522 24D6 A2 73			ldx #$73
+   523 24D8 A0 01			ldy #$01
+   524 24DA 20 EB 24			jsr write_char
+   525 				//Character 4
+   526 24DD				banco $70,0
+Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     5 24DD A9 70				lda #$70
+     9 24DF AA					tax
+    10 24E0 9D 00 D5				sta $d500,x
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   527 24E3 A2 2B			ldx #$2b
+   528 24E5 A0 02			ldy #$02
+   529 24E7 20 EB 24			jsr write_char
+   530 24EA 60				rts
+   531 				.endp
+   532
+   533 24EB			.proc write_char
+   534 24EB 8E 0A 03			stx daux1
+   535 24EE 8C 0B 03			sty daux2
+   536 24F1 A9 00 8D 04 03 A9 + 	mwa #$a000 dbuflo
+   537 24FB A9 50 8D 02 03		mva #$50 dcomnd
+   538 2500 A9 26 8D 24 25		mva #$26 sec_count	//$26 sectors to write.
+   539 2505			loop
+   540 2505 20 53 E4			jsr dskinv
+   541 2508 EE 0A 03			inc daux1
+   542 250B D0 03			bne noincdaux2
+   543 250D EE 0B 03			inc daux2
+   544 2510			noincdaux2
+   545 2510 18				clc
+   546 2511 AD 04 03			lda dbuflo
+   547 2514 69 80			adc #$80
+   548 2516 8D 04 03			sta dbuflo
+   549 2519 90 03			bcc noincdbufhi
+   550 251B EE 05 03			inc dbufhi
+   551 251E			noincdbufhi
+   552 251E CE 24 25			dec sec_count
+   553 2521 D0 E2			bne loop
+   554 2523 60				rts
+   555
+   556 2524			sec_count
+   557 2524 00				.by $00
+   558 				.endp
+   559
+   560
+   561 2525			.proc write_cartridge
+   562 2525 A2 01			ldx #$01			//First sector LSB
+   563 2527 A0 00			ldy #$00			//First sector MSB
+   564 2529 A9 02			lda #$02			//2 sectors to read
+   565 252B 20 76 25			jsr read_char		//Do it!
+   566 252E A9 50			lda #$50			//Bank $50 to write (Sector $A
+   567 2530 A2 01			ldx #$01			//$100 bytes to write
+   568 2532 20 AE 25			jsr write_char_cart	//Do it!
+   569
+   570
+   571 				//First character
+   572 2535 A2 03			ldx #$03			//Sector 3 LSB
+   573 2537 A0 00			ldy #$00			//Sector 3 MSB
+   574 2539 A9 26			lda #$26			//$26 sectors to read
+   575 253B 20 76 25			jsr read_char		//Do it!
+   576 253E A9 58			lda #$58			//Bank $58 (Sector $B)
+   577 2540 A2 13			ldx #$13			//$1300 bytes to write
+   578 2542 20 AE 25			jsr write_char_cart	//Do it!
+   579
+   580 				//Second character
+   581 2545 A2 BB			ldx #$bb
+   582 2547 A0 00			ldy #$00
+   583 2549 A9 26			lda #$26
+   584 254B 20 76 25			jsr read_char
+   585 254E A9 60			lda #$60
+   586 2550 A2 13			ldx #$13
+   587 2552 20 AE 25			jsr write_char_cart
+   588
+   589 				//Third character
+   590 2555 A2 73			ldx #$73
+   591 2557 A0 01			ldy #$01
+   592 2559 A9 26			lda #$26
+   593 255B 20 76 25			jsr read_char
+   594 255E A9 68			lda #$68
+   595 2560 A2 13			ldx #$13
+   596 2562 20 AE 25			jsr write_char_cart
+   597
+   598 				//Fourth character
+   599 2565 A2 2B			ldx #$2b
+   600 2567 A0 02			ldy #$02
+   601 2569 A9 26			lda #$26
+   602 256B 20 76 25			jsr read_char
+   603 256E A9 70			lda #$70
+   604 2570 A2 13			ldx #$13
+   605 2572 20 AE 25			jsr write_char_cart
+   606 					
+   607 2575 60				rts
+   608 				.endp
+   609
+   610 2576			.proc read_char
+   611 2576 8E 0A 03			stx daux1
+   612 2579 8C 0B 03			sty daux2
+   613 257C 8D AD 25			sta sec_count
+   614 257F A9 52 8D 02 03		mva #$52 dcomnd
+   615 2584 A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
+   616 258E			loop
+   617 258E 20 53 E4			jsr dskinv
+   618 2591 EE 0A 03			inc daux1
+   619 2594 D0 03			bne noincdaux2
+   620 2596 EE 0B 03			inc daux2
+   621 2599			noincdaux2
+   622 2599 AD 04 03			lda dbuflo
+   623 259C 18				clc
+   624 259D 69 80			adc #$80
+   625 259F 8D 04 03			sta dbuflo
+   626 25A2 90 03			bcc noincdbufhi
+   627 25A4 EE 05 03			inc dbufhi
+   628 25A7			noincdbufhi
+   629 25A7 CE AD 25			dec sec_count
+   630 25AA D0 E2			bne loop
+   631 25AC 60				rts
+   632 25AD			sec_count
+   633 25AD 00				.by $00
+   634 				.endp
+   635
+   636 25AE			.proc write_char_cart
+   637 25AE 86 D0			stx pt_3+1
+   638 25B0 8D EE 25			sta bank
+   639 25B3 A9 00 85 CF			mva #$00 pt_3
+   640 25B7 A9 00 85 CB A9 60 + 	mwa #buffer pt_1
+   641 25BF A9 00 85 CD A9 A0 + 	mwa #$a000 pt_2
+   642 25C7			loop
+   643 25C7 AD EE 25			lda bank
+   644 25CA 20 2E 24			jsr enable_write
+   645 25CD A0 00			ldy #$00
+   646 25CF B1 CB			lda (pt_1),y
+   647 25D1 91 CD			sta (pt_2),y
+   648 25D3 E6 CB			inc pt_1
+   649 25D5 D0 02			bne noinc_pt1_1
+   650 25D7 E6 CC			inc pt_1+1
+   651 25D9			noinc_pt1_1
+   652 25D9 E6 CD			inc pt_2
+   653 25DB D0 02			bne noinc_pt2_1
+   654 25DD E6 CE			inc pt_2+1
+   655 25DF			noinc_pt2_1
+   656 25DF A5 CF			lda pt_3
+   657 25E1 D0 02			bne nodec_pt3_1
+   658 25E3 C6 D0			dec pt_3+1
+   659 25E5			nodec_pt3_1
+   660 25E5 C6 CF			dec pt_3
+   661 25E7 A5 CF			lda pt_3
+   662 25E9 05 D0			ora pt_3+1
+   663 25EB D0 DA			bne loop
+   664 25ED 60				rts
+   665 25EE			bank
+   666 25EE 00				.by $00
+   667 				.endp
+   668
+   669 25EF			.proc cart_check
+   670 25EF				banco $50,0
+Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     5 25EF A9 50				lda #$50
+     9 25F1 AA					tax
+    10 25F2 9D 00 D5				sta $d500,x
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   671 25F5 A2 07			ldx #len_text_check-1
+   672 25F7			loop
+   673 25F7 BD 80 A0			lda $a080,x
+   674 25FA DD A0 23			cmp text_check,x
+   675 25FD D0 05			bne no_check
+   676 25FF CA				dex
+   677 2600 10 F5			bpl loop
+   678 2602 18				clc
+   679 2603 60				rts
+   680 2604			no_check
+   681 2604 38				sec
+   682 2605 60				rts
+   683 				.endp
+   684
+   685 2606			.proc disk_check
+   686 2606 A9 31 8D 00 03		mva #$31 ddevic
+   687 260B A9 01 8D 01 03		mva #$01 dunit
+   688 2610 A9 52 8D 02 03		mva #$52 dcomnd
+   689 2615 A9 02 8D 0A 03 A9 + 	mwa #$0002 daux1
+   690 261F A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
+   691 2629 20 53 E4			jsr dskinv
+   692 262C A2 07			ldx #len_text_check-1
+   693 262E			loop
+   694 262E BD 00 60			lda buffer,x
+   695 2631 DD A0 23			cmp text_check,x
+   696 2634 D0 05			bne no_check
+   697 2636 CA				dex
+   698 2637 10 F5			bpl loop
+   699 2639 18				clc
+   700 263A 60				rts
+   701 263B			no_check
+   702 263B 38				sec
+   703 263C 60				rts
+   704 				.endp
+   705 263D			.proc error_cart
+   706 263D A2 77			ldx #len_sc_format-1
+   707 263F			loop
+   708 263F BD 8A 22			lda sc_cart_error,x
+   709 2642 9D 9A 21			sta sc_screen_format,x
+   710 2645 CA				dex
+   711 2646 10 F7			bpl loop
+   712 2648				writememory 0,beep,1
+Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 2648 A2 00			ldx #(0*16)
+     8 264A A9 A8 9D 44 03 A9 + 	mwa #BEEP ICBAL,x
+     9 2654 A9 01 9D 48 03 A9 + 	mwa #1 ICBLL,x
+    10 265E A9 0B 9D 42 03		mva #11 ICCMD,X
+    11 2663 20 56 E4			jsr ciov
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   713 2666 60				rts
+   714 				.endp
+   715
+   716 2667			.proc error_disk
+   717 2667 A2 77			ldx #len_sc_format-1
+   718 2669			loop
+   719 2669 BD 02 23			lda sc_disk_error,x
+   720 266C 9D 9A 21			sta sc_screen_format,x
+   721 266F CA				dex
+   722 2670 10 F7			bpl loop
+   723 2672				writememory 0,beep,1
+Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 2672 A2 00			ldx #(0*16)
+     8 2674 A9 A8 9D 44 03 A9 + 	mwa #BEEP ICBAL,x
+     9 267E A9 01 9D 48 03 A9 + 	mwa #1 ICBLL,x
+    10 2688 A9 0B 9D 42 03		mva #11 ICCMD,X
+    11 268D 20 56 E4			jsr ciov
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   724 2690 60				rts
+   725 				.endp
+   726
+   727 2691			.proc vbi
+   728 2691 AD 13 D0			lda trig3
+   729 2694 8D FA 03			sta gintlk		//No cartridge lockup!
+   730 2697 A5 4D			lda atract
+   731 2699 30 04			bmi vbi_end
+   732 269B A9 00			lda #$00
+   733 269D 85 4D			sta atract
+   734 269F			vbi_end
+   735 269F 4C 5F E4			jmp sysvbv
+   736 				.endp
+   737
+   738 26A2			.proc vbd
+   739 26A2 AD A9 23			lda flag_busy
+   740 26A5 D0 37			bne vbd_end
+   741 26A7 AD 1F D0			lda consol
+   742 26AA CD AC 23			cmp consol_previous
+   743 26AD F0 2F			jeq vbd_end
+   744 26AF 8D AC 23			sta consol_previous
+   745 26B2 4A				lsr		; START?
+   746 26B3 B0 07			bcs vbd_2	; No!
+   747 26B5 48				pha
+   748
+   749 26B6 A9 01			lda #$01
+   750 26B8 8D AB 23			sta flag_start
+   751
+   752 26BB 68				pla
+   753 26BC			vbd_2
+   754 26BC 4A				lsr 		; SELECT?
+   755 26BD B0 1C			bcs vbd_3	; No!
+   756 26BF 48				pha
+   757 26C0 A2 25			ldx #37
+   758 26C2 A0 12			ldy #18
+   759 26C4 AD AA 23			lda flag_operation
+   760 26C7 49 01			eor #$01
+   761 26C9 8D AA 23			sta flag_operation
+   762 26CC D0 02			bne vbd_2_write
+   763 26CE A2 12			ldx #18
+   764 26D0			vbd_2_write
+   765 26D0 BD 7A 23			lda sc_cart,x
+   766 26D3 99 5E 21			sta screen_operation,y
+   767 26D6 CA				dex
+   768 26D7 88				dey
+   769 26D8 10 F6			bpl vbd_2_write
+   770 26DA 68				pla
+   771 26DB			vbd_3
+   772 26DB 4A				lsr		;OPTION?
+   773 26DC B0 00			bcs vbd_end	;NO!
+   774 				;	lda #$01
+   775 				;	sta flag_dir
+   776 26DE			vbd_end
+   777 26DE 4C 62 E4			jmp xitvbv
+   778 				.endp
+   779
+   780 26E1			.proc screen_erase
+   781 26E1 A9 00			lda #$00
+   782 26E3 A2 77			ldx #len_sc_format-1
+   783 26E5			loop
+   784 26E5 9D 9A 21			sta sc_screen_format,x
+   785 26E8 CA				dex
+   786 26E9 10 FA			bpl loop
+   787 26EB 60				rts
+   788 				.endp
+   789 					
+   790 26EC			start
+   791 26EC 20 E1 26			jsr screen_erase
+   792 26EF			start2
+   793 26EF AD 01 D3			lda portb
+   794 26F2 09 FE			ora #$fe	//No BASIC, maintain SIO patch if there's any.
+   795 26F4 8D 01 D3			sta portb
+   796 26F7 A9 01 8D F8 03		mva #$01 basicf
+   797 26FC				close 0
+Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 26FC A2 00			ldx #(0*16)
+     8 26FE A9 0C			lda #$0C	//Close
+     9 2700 9D 42 03			sta ICCMD,x
+    10 2703 20 56 E4			jsr CIOV
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   798 2706				close 1
+Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 2706 A2 10			ldx #(1*16)
+     8 2708 A9 0C			lda #$0C	//Close
+     9 270A 9D 42 03			sta ICCMD,x
+    10 270D 20 56 E4			jsr CIOV
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   799 2710 A9 A0 85 6A			mva #$a0 RAMTOP
+   800 2714				open 0,12,0,LOC_E
+Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 2714 A2 00			ldx #(0*16)
+     8 2716 A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
+     9 271B A9 88 9D 44 03 A9 + 	mwa #LOC_E	ICBAL,x		//"E:","C:","D:"
+    10 2725 A9 0C 9D 4A 03		mva #12	ICAX1,x		//Read and write
+    11 272A A9 00 9D 4B 03		mva #0 ICAX2,x
+    12 272F 20 56 E4			jsr CIOV
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   801 2732				open 1,4,0,LOC_K
+Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 2732 A2 10			ldx #(1*16)
+     8 2734 A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
+     9 2739 A9 8B 9D 44 03 A9 + 	mwa #LOC_K	ICBAL,x		//"E:","C:","D:"
+    10 2743 A9 04 9D 4A 03		mva #4	ICAX1,x		//Read and write
+    11 2748 A9 00 9D 4B 03		mva #0 ICAX2,x
+    12 274D 20 56 E4			jsr CIOV
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   802 2750 A9 B9 8D 30 02 A9 + 	mwa #dl SDLSTL
+   803 275A A9 00 8D A9 23		mva #$00 flag_busy	//just a flag
+   804 275F A9 00 8D C6 02		mva #$00 color2
+   805 2764 A9 0F 8D C5 02		mva #$0f color1
+   806 2769 A2 26			ldx #>vbi
+   807 276B A0 91			ldy #<vbi
+   808 276D A9 06			lda #VBI_I
+   809 276F 20 5C E4			jsr setvbv			//Set VBI to prevent cartridge lockup
+   810 2772 A2 26			ldx #>vbd
+   811 2774 A0 A2			ldy #<vbd
+   812 2776 A9 07			lda #VBI_D
+   813 2778 20 5C E4			jsr setvbv			//VBD to look on consol keys.
+   814
+   815 277B			loop_start
+   816 277B AD AB 23			lda flag_start
+   817 277E F0 FB			beq loop_start
+   818
+   819 2780 20 E1 26			jsr screen_erase
+   820 2783 8D A9 23			sta flag_busy
+   821 2786 CE AB 23			dec flag_start
+   822 2789 AD AA 23			lda flag_operation		//DISK to CART or CART to DISK?
+   823 278C D0 72			jne no_to_disk
+   824 278E 20 EF 25			jsr cart_check
+   825 2791 90 06			bcc no_cart_error
+   826 2793 20 3D 26			jsr error_cart
+   827 2796 4C EF 26			jmp start2
+   828
+   829 2799			no_cart_error
+   830 2799 A2 77			ldx #len_sc_format-1
+   831 279B			start_loop_sc_format
+   832 279B BD 12 22			lda sc_format,x
+   833 279E 9D 9A 21			sta sc_screen_format,x
+   834 27A1 CA				dex
+   835 27A2 10 F7			bpl start_loop_sc_format
+   836 					
+   837 					
+   838 27A4				writememory 0,beep,1	//Make a beep sound! That's the legal way
+Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     7 27A4 A2 00			ldx #(0*16)
+     8 27A6 A9 A8 9D 44 03 A9 + 	mwa #BEEP ICBAL,x
+     9 27B0 A9 01 9D 48 03 A9 + 	mwa #1 ICBLL,x
+    10 27BA A9 0B 9D 42 03		mva #11 ICCMD,X
+    11 27BF 20 56 E4			jsr ciov
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   839 27C2 20 82 24			jsr wait_return
+   840 27C5 20 99 24			jsr format_disk
+   841 27C8 A9 01 8D 0A 03 A9 + 	mwa #$0001 daux1
+   842 27D2 A9 08 8D 04 03 A9 + 	mwa #boot_sector dbuflo
+   843 27DC A9 50 8D 02 03		mva #$50 dcomnd
+   844 27E1 20 53 E4			jsr dskinv
+   845 27E4				banco $50,0
+Macro: BANCO [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm]
+     5 27E4 A9 50				lda #$50
+     9 27E6 AA					tax
+    10 27E7 9D 00 D5				sta $d500,x
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\ARDungeonCharTransfer\ARCharTransferV2.asm
+   846 27EA A9 80 8D 04 03 A9 + 	mwa #$a080 dbuflo
+   847 27F4 EE 0A 03			inc daux1
+   848 27F7 20 53 E4			jsr dskinv
+   849 27FA 20 B6 24			jsr write_disk
+   850 27FD 4C EC 26			jmp start
+   851
+   852
+   853 2800			no_to_disk
+   854 2800 20 06 26			jsr disk_check
+   855 2803 90 06			bcc no_disk_error
+   856 2805 20 67 26			jsr error_disk
+   857 2808 4C EF 26			jmp start2
+   858
+   859 280B			no_disk_error	
+   860 280B 20 AE 23			jsr format_cartridge
+   861 280E 20 25 25			jsr write_cartridge
+   862 2811 4C EC 26			jmp start
+   863
+   864 2814			end_program
+   865 2814			end_atr
+   866
+   867
+   868 				//	run start
