@@ -1,11 +1,15 @@
 mads 2.1.0 build 8 (23 Dec 19)
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-     1
-     2 				;	@com.wudsn.ide.asm.outputfileextension=.atr
-     3
+     1 				.macro PUT_VERSION
+     2 					.sb "V14"
+     3 				.endm
      4
-     5 				; include files, useful macros:
-     6 					icl "../base/sys_equates.m65"
+     5
+     6 				;	@com.wudsn.ide.asm.outputfileextension=.atr
+     7
+     8
+     9 				; include files, useful macros:
+    10 					icl "../base/sys_equates.m65"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_equates.m65
      1 				;================================================================================
      2 				; System equates, Atari XL + mads [NRV 2009]
@@ -390,7 +394,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
    381 				together with Control key: add +$80 
    382 				*/
    382
-     7 					icl "../base/sys_macros.m65"
+    11 					icl "../base/sys_macros.m65"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65
      1 				;================================================================================
      2 				; System macros, Atari XL + mads [NRV 2009]
@@ -1278,1129 +1282,1265 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
    884
    885
    886
-     8
-     9
-    10 = 2000			start_data =$2000
-    11 				//start_cartridge =$a000
-    12 = 2000			cart_length =$2000
-    13 = 6000			buffer = $6000
-    14 = D5FF			cart_off =$D5FF
-    15
-    16 = 0040			write_enable = $40
-    17 = 0004			write_enable2 = $04
-    18
-    19 = 0013			dir_lines = 19
-    20 = 0026			num_files = dir_lines*2
-    21
-    22 = 00CB			pt_1 = $cb
-    23 = 00CD			pt_2 = $cd
-    24 = 00CF			pt_3 = $cf
+    12
+    13
+    14 = 2000			start_data =$2000
+    15 				//start_cartridge =$a000
+    16 = 2000			cart_length =$2000
+    17 = 6000			buffer = $6000
+    18 = D5FF			cart_off =$D5FF
+    19
+    20 = 0040			write_enable = $40
+    21 = 0004			write_enable2 = $04
+    22
+    23 = 0013			dir_lines = 19
+    24 = 0026			num_files = dir_lines*2
     25
-    26 = 0040			starting_bank 	= $40
-    27 = 0057			final_bank		= $57
-    28 = 0018			total_banks		= final_bank-starting_bank+1
-    29 = 0008			starting_sector	= starting_bank/8
-    30 = 0003			total_sectors	= (total_banks+7)/8
-    31
-    32 				.macro PUT_VERSION
-    33 					.sb "V12"
-    34 				.endm
+    26 = 00CB			pt_1 = $cb
+    27 = 00CD			pt_2 = $cd
+    28 = 00CF			pt_3 = $cf
+    29
+    30 = 0000			starting_bank 	= $00
+    31 = 007F			final_bank		= $7f
+    32 = 0080			total_banks		= final_bank-starting_bank+1
+    33 = 0000			starting_sector	= starting_bank/8
+    34 = 0010			total_sectors	= (total_banks+7)/8
     35
     36
     37
-    38 					opt h-
-    39 					
-    40 				//Let's do the ATR Header
-    41
-    42 = 030700			Total_Size		= (((end_atr - start_data)+127)/128)*128
-    43 = 0000			Total_Size_high	= (Total_Size/$100000)
-    44 = 3070			Total_Size_low	= (Total_Size-(Total_Size_high*$100000))/$10
-    45
-    46 = 000E			Sectors_boot	= (end_program-start_data+127)/128
+    38
+    39
+    40 					opt h-
+    41 					
+    42 				//Let's do the ATR Header
+    43
+    44 = 100780			Total_Size		= (((end_atr - start_data)+127)/128)*128
+    45 = 0001			Total_Size_high	= (Total_Size/$100000)
+    46 = 0078			Total_Size_low	= (Total_Size-(Total_Size_high*$100000))/$10
     47
-    48 = 000F			init_sector		= Sectors_boot + 1
-    49 				;init_rom_sector	= (init_sector + (starting_bank*$40))
-    50 = 000F			init_rom_sector	= init_sector
-    51
-    52  96 02				.by $96,$02				//Checksum of "NICKATARI"
-    53  70 30				.word Total_Size_low	//Total bytes
-    54  80 00				.word $80				//Sector Size
-    55  00 00				.word Total_Size_high	//Total bytes
-    56  00				.by $00					//No Write Protect nor Bad sectors.
-    57  00 00				.word $00				//No bad sectors
-    58  00 00 00 00 00			.by $00,$00,$00,$00,$00
-    59
-    60
-    61 					org start_data
-    62 					
-    63 2000 00				.by $00
-    64 2001 0E				.by Sectors_boot
-    65 2002 00 20			.word start_data
-    66 2004 A6 25			.word start
-    67 2006			init_boot
-    68 2006 18				clc
-    69 2007 60				rts	
-    70
-    71
-    72 				// Include Flash drivers	
-    73 2008				icl "FlashCartDriver.asm"
+    48 = 000F			Sectors_boot	= (end_program-start_data+127)/128
+    49
+    50 = 0010			init_sector		= Sectors_boot + 1
+    51 				;init_rom_sector	= (init_sector + (starting_bank*$40))
+    52 = 0010			init_rom_sector	= init_sector
+    53
+    54  96 02				.by $96,$02				//Checksum of "NICKATARI"
+    55  78 00				.word Total_Size_low	//Total bytes
+    56  80 00				.word $80				//Sector Size
+    57  01 00				.word Total_Size_high	//Total bytes
+    58  00				.by $00					//No Write Protect nor Bad sectors.
+    59  00 00				.word $00				//No bad sectors
+    60  00 00 00 00 00			.by $00,$00,$00,$00,$00
+    61
+    62
+    63 					org start_data
+    64 					
+    65 2000 00				.by $00
+    66 2001 0F				.by Sectors_boot
+    67 2002 00 20			.word start_data
+    68 2004 64 26			.word start
+    69 2006			init_boot
+    70 2006 18				clc
+    71 2007 60				rts	
+    72
+    73
+    74 				// Include Flash drivers	
+    75 2008				icl "FlashCartDriver.asm"
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\FlashCartDriver.asm
      1
-     2
-     3
-     4 = A000			start_cartridge = $a000
-     5 = C000			end_cartridge	= $c000
+     2 				//Flash cartridge driver
+     3 				//2021 Guillermo Fuenzalida
+     4 				//
+     5
      6
-     7
-     8 				//	org $2000
-     9 					
+     7 = A000			start_cartridge = $a000
+     8 = C000			end_cartridge	= $c000
+     9 = 0010			num_tries	= $10
     10
-    11 				//SetSector: selects the first bank of the sector selected.
-    12 				//Parameter: A= number of sector ($00-$0F)	
-    13
-    14 2008			chip_select
-    15 2008 00				.by $00
-    16
-    17 2009			.proc SetSector
-    18 2009 29 0F			and #$0F	//Only $00-$0F allowed
-    19 200B 18				clc		//Just to not set bit 7 to 1 accidentally
-    20 200C 2A				rol		//*2
-    21 200D 2A				rol		//*4
-    22 200E 2A				rol		//*8
-    23 200F AA				tax
-    24 2010 9D 00 D5			sta $d500,x	//Change bank!
-    25 2013 60				rts
-    26 				.endp
-    27
-    28 2014			.proc Command_Unlock
-    29 2014 A9 AA			lda #$AA
-    30 2016 20 F0 20			jsr Write_5555
-    31 2019 A9 55			lda #$55
-    32 201B 4C DD 20			jmp Write_2AAA
-    33
-    34 				.endp
-    35
+    11 				//	org $2000
+    12
+    13 2008			chip_select
+    14 2008 00				.by $00	
+    15
+    16 				//SetSector: selects the first bank of the sector selected.
+    17 				//Parameter: A= number of sector ($00-$0F)	
+    18 2009			.proc SetSector
+    19 2009 29 0F			and #$0F	//Only $00-$0F allowed
+    20 200B 18				clc		//Just to not set bit 7 to 1 accidentally
+    21 200C 0A				asl		//*2
+    22 200D 0A				asl		//*4
+    23 200E 0A				asl		//*8
+    24 200F AA				tax
+    25 2010 9D 00 D5			sta $d500,x	//Change bank!
+    26 2013 60				rts
+    27 				.endp
+    28
+    29
+    30 				//Command_Unlock: first two steps to unlock the flash chip.
+    31 2014			.proc Command_Unlock
+    32 2014 A9 AA			lda #$AA
+    33 2016 20 AE 21			jsr Write_5555
+    34 2019 A9 55			lda #$55
+    35 201B 4C 9B 21			jmp Write_2AAA
     36
-    37 				// VerifyBlankSector: verifies if sector is erased ($FF)
-    38 				// Parameter A=Sector number (0 to 15)
-    39 201E			.proc VerifyBlankSector
-    40
-    41 = D500			bank	= $d500
-    42 = 00CB			pt_1	= $cb
-    43 = 00CD			pt_2	= $cd
-    44
-    45 201E 48				pha
-    46 201F 8E 5D 20			stx save_x+1	//save X register
-    47 2022 8C 5F 20			sty save_y+1	//save Y register
-    48 2025 18				clc				//By default, we are ok
-    49 2026 A0 00			ldy #$00
-    50 2028 0A 0A 0A			:3 asl 			//*8
-    51 202B AA				tax				//Save bank on X
-    52 202C A9 08 8D 62 20		mva #$08 count
-    53
-    54 2031			loop1
-    55 2031 9D 00 D5			sta bank,x		//Activate bank
-    56 2034 A9 00 8D 3F 20 A9 + 	mwa #start_cartridge loop2+1	//init the loop with start_cartridge
-    57 203E			loop2
-    58 203E B9 FF FF			lda $ffff,y
-    59 2041 C9 FF			cmp #$ff
-    60 2043 D0 16			bne error
-    61 2045 C8				iny
-    62 2046 D0 F6			bne loop2
-    63 2048 EE 40 20			inc loop2+2
-    64 204B AD 40 20			lda loop2+2
-    65 204E C9 C0			cmp #>end_cartridge
-    66 2050 D0 EC			bne loop2
-    67 2052 E8				inx
-    68 2053 CE 62 20			dec count
-    69 2056 D0 D9			bne loop1
-    70 2058 18				clc
-    71 2059 90 01			bcc end_loop
-    72 205B			error
-    73 205B 38				sec
-    74 205C			end_loop
+    37 				.endp
+    38
+    39 201E			.proc CheckID
+    40 201E 8E 44 20			stx save_x+1
+    41 2021 20 14 20			jsr Command_Unlock
+    42 2024 A9 90			lda #$90
+    43 2026 20 AE 21			jsr Write_5555
+    44 2029 AE 08 20			ldx chip_select
+    45 202C 9D 00 D5			sta $d500,x
+    46 202F AD 00 A0			lda $a000
+    47 2032 0D 01 A0			ora $a001
+    48 2035 48				pha
+    49 2036 20 14 20			jsr Command_Unlock
+    50 2039 A9 F0			lda #$f0
+    51 203B 20 AE 21			jsr Write_5555
+    52 203E A2 00			ldx #$00
+    53 2040			loop
+    54 2040 E8				inx
+    55 2041 D0 FD			bne loop
+    56
+    57 2043			save_x
+    58 2043 A2 00			ldx #$00
+    59 2045 68				pla
+    60 2046 60				rts
+    61 				.endp
+    62
+    63 				//is39F: looks if chipset if sst39sf040.
+    64 				//Output: Carry set = is sst39sf040, carry clear = none of this.
+    65 2047			.proc is39F
+    66 2047 20 1E 20			jsr CheckID
+    67 204A C9 BF			cmp #$bf
+    68 204C D0 02			bne no_sst
+    69 204E 38				sec
+    70 204F 60				rts
+    71 2050			no_sst
+    72 2050 18				clc
+    73 2051 60				rts
+    74 				.endp
     75
-    76 205C			save_x
-    77 205C A2 00			ldx #$00
-    78 205E			save_y
-    79 205E A0 00			ldy #$00
-    80 2060 68				pla
-    81 2061			end_verify
-    82 2061 60				rts
-    83 2062			count
-    84 2062 00				.by $00
-    85 				.endp
-    86
-    87
-    88 				//Erase_Cartridge: erases an entire cartridge
-    89 				//Parameter: none
-    90
-    91 2063			.proc Erase_cartridge
-    92 2063 48				pha
-    93 2064 A9 00			lda #$00
-    94 2066 8D 08 20			sta chip_select
-    95 2069			begin_erase
-    96 2069 20 14 20			jsr Command_Unlock
-    97 206C A9 80			lda #$80
-    98 206E 20 F0 20			jsr Write_5555
-    99 2071 A9 AA			lda #$aa
-   100 2073 20 F0 20			jsr Write_5555
-   101 2076 A9 55			lda #$55
-   102 2078 20 DD 20			jsr Write_2aaa
-   103 207B A9 10			lda #$10
-   104 207D 20 F0 20			jsr Write_5555
-   105 2080 20 BD 20			jsr pollwrite
-   106 2083 AD 08 20			lda chip_select
-   107 2086 D0 07			bne end_erase
-   108 2088 A9 40			lda #$40
-   109 208A 8D 08 20			sta chip_select
-   110 208D D0 DA			bne begin_erase
-   111 208F			end_erase
-   112 208F A9 00			lda #$00
-   113 2091 8D 08 20			sta chip_select
-   114 2094 68				pla
-   115 2095 60				rts
-   116 				.endp
-   117
-   118 				//EraseSector: erases sector of 64kbytes
-   119 				//Parameter: A=sector to erase 
-   120 2096			.proc Erase_Sector
-   121 2096 48				pha		//Save sector
-   122 2097 29 08			and #$08
-   123 2099 F0 02			beq erase2
-   124 209B A9 40			lda #$40
-   125 209D			erase2
-   126 209D 8D 08 20			sta chip_select
-   127 20A0 20 14 20			jsr Command_Unlock //1st and 2nd cycle
-   128 					
-   129 20A3 A9 80			lda #$80
-   130 20A5 20 F0 20			jsr Write_5555	//3rd cycle
-   131 20A8 A9 AA			lda #$aa
-   132 20AA 20 F0 20			jsr Write_5555	//4th cycle
-   133 20AD A9 55			lda #$55
-   134 20AF 20 DD 20			jsr Write_2aaa	//5th cycle
-   135
-   136 20B2 68				pla		//Recover sector
-   137 20B3 48				pha
-   138 20B4 20 09 20			jsr SetSector
-   139 					
-   140 					
-   141 20B7 A9 30			lda #$30
-   142 20B9 8D 00 A0			sta start_cartridge	//6th cycle
-   143
-   144 				//Erase command sent. Now let's wait until it's finished.
-   145 20BC 68				pla
-   146 				.endp
-   147
-   148 20BD			.proc pollwrite
-   149 20BD 48				pha
-   150 20BE			again
-   151 20BE A9 00 8D DC 20		mva #$00 pollsame
-   152 20C3			loop
-   153 20C3 AD 00 A0			lda start_cartridge
-   154 20C6 CD 00 A0			cmp start_cartridge
-   155 20C9 D0 F3			bne again
-   156 20CB CD 00 A0			cmp start_cartridge
-   157 20CE D0 EE			bne again
-   158 20D0 CD 00 A0			cmp start_cartridge
-   159 20D3 D0 E9			bne again
-   160 20D5 EE DC 20			inc pollsame
-   161 20D8 D0 E9			bne loop
-   162 				//	pla
-   163 				//	pha
-   164 				//	jsr VerifyBlankSector
-   165 				//	bcs pollwrite
-   166 20DA 68				pla
-   167 20DB 60				rts
-   168 20DC			pollsame
-   169 20DC 00				.by $00
-   170 				.endp
-   171
-   172
-   173 				//Write_2aaa: writes value at $2aaa on the respective chip selected.
-   174 				//Parameter: A=value to write
-   175 20DD			.proc write_2aaa
-   176 20DD 2C 08 20			bit chip_select
-   177 20E0 50 07			bvc step2
-   178 20E2 8D 41 D5			sta $d541
-   179 20E5 8D AA AA			sta $aaaa
-   180 20E8 60				rts
-   181 20E9			step2
-   182 20E9 8D 01 D5			sta $d501
-   183 20EC 8D AA AA			sta $aaaa
-   184 20EF 60				rts
-   185 				.endp
-   186
-   187 20F0			.proc write_5555
-   188 20F0 2C 08 20			bit chip_select
-   189 20F3 50 07			bvc step2
-   190 20F5 8D 42 D5			sta $d542
-   191 20F8 8D 55 B5			sta $b555
-   192 20FB 60				rts
-   193 20FC			step2
-   194 20FC 8D 02 D5			sta $d502
-   195 20FF 8D 55 B5			sta $b555
-   196 2102 60				rts
-   197 				.endp
-   198
-   199 				//Enable Write: enables one byte to write on the cartridge
-   200 				//Parameter: A = bank to write.
-   201
-   202 2103			.proc Enable_Write
-   203 2103 8E 23 21			stx save_x+1
-   204 2106 48				pha					//Save bank to write on.
-   205 2107 29 7F			and #$7f			//Avoid error on using banks >=128
-   206 2109 4A 4A 4A			:3 lsr				//divide by 8
-   207 210C 29 08			and #$08
-   208 210E F0 02			beq erase2
-   209 2110 A9 40			lda #$40
-   210 2112			erase2
-   211 2112 8D 08 20			sta chip_select
-   212 2115 20 14 20			jsr Command_Unlock	//1st and 2nd cycle
-   213 2118 A9 A0			lda #$a0
-   214 211A 20 F0 20			jsr Write_5555		//3rd cycle
-   215 211D 68				pla					//Recover bank
-   216 211E AA				tax
-   217 211F 9D 00 D5			sta $d500,x
-   218 2122			save_x
-   219 2122 A2 00			ldx #$00
-   220 2124 60				rts
-   221 				.endp
-   222
-   223
-   224 				//Erase_Sectors: erase a number of sectors
-   225 				//Parameters: X=Initial sector, Y=number of sectors to erase.
-   226 2125			.proc Erase_Sectors
-   227 2125 48				pha		//Save accumulator
-   228 2126 8E 3C 21			stx sector
-   229 2129 8C 3D 21			sty num_sectors
-   230 212C			loop
-   231 212C AD 3C 21			lda sector
-   232 212F 20 96 20			jsr Erase_Sector
-   233 2132 EE 3C 21			inc sector
-   234 2135 CE 3D 21			dec num_sectors
-   235 2138 D0 F2			bne loop
-   236 213A 68				pla
-   237 213B 60				rts
-   238 213C			sector
-   239 213C 00				.by $00
-   240 213D			num_sectors
-   241 213D 00				.by $00
-   242 				.endp
-   243
-   244 				//VerifyBlankSectors: Verifynumber of sector
-   245 				//Parameters: X=Initial sector, Y=number of sectors to erase.
-   246 213E			.proc VerifyBlankSectors
-   247 213E 48				pha
-   248 213F			loop
-   249 213F 8A				txa
-   250 2140 20 1E 20			jsr VerifyBlankSector
-   251 2143 B0 05			bcs end_verify
-   252 2145 E8				inx
-   253 2146 88				dey
-   254 2147 D0 F6			bne loop
-   255 2149 18				clc
-   256 214A			end_verify
-   257 214A 68				pla
-   258 214B 60				rts
-   259 					
-   260 				.endp
-    74
-    75
-    76 				//Determinamos macros
-    77
-    78 				//Partimos con seleccionar el banco
-    79 				//Formato: banco x,y
-    80 				//x = Cartridge bank to activate
-    81 				//y= 0 if its for reading, Y=1 read/write
-    82 				.macro banco
-    83 				.if :0 <> 2 
-    84 					.error "banco sin parámetros"
-    85 				.else
-    86 					.if :1 < 256
-    87 						lda #:1
-    88 						.if :2 = 1
-    89 							ora #write_enable
-    90 						.endif
-    91 						tax
-    92 						sta $d500,x
-    93 					.else
-    94 						lda :1
-    95 						.if :2 = 1
-    96 							;ora #write_enable
-    97 							ora value_write
-    98 						.endif
-    99 						tax
-   100 						sta $d500,x
-   101 					.endif
-   102 				.endif 
-   103 				.endm
-   104
-   105 				//Realiza un print en la pantalla hasta encontrar un RETURN ($9b).
-   106 				//Uso: print mem_addr
-   107 				.macro print
-   108 				.if :0 <> 1
-   109 					.error "print sin parámetros"
-   110 				.else
-   111 					ldx #<:1
-   112 					ldy #>:1
-   113 					jsr pr
-   114 				.endif
-   115 				.endm
-   116 					
-   117
-   118 				//print2: imprime una cantidad fija de caracteres según un largo definido.
-   119 				//Uso: print2 mem_addr, num_caracteres
-   120 				.macro print2
-   121 				.if :0 <> 2
-   122 					.error "print2 sin parámetros"
-   123 				.else
-   124 					ldx #<:1
-   125 					ldy #>:1
-   126 					lda #:2
-   127 					jsr pr2
-   128 				.endif
-   129 				.endm
-   130
+    76
+    77 				// VerifyBlankSector: verifies if sector is erased ($FF)
+    78 				// Parameter A=Sector number (0 to 15)
+    79 				// Output: Carry clear = OK, Carry Set = Error
+    80 2052			.proc VerifyBlankSector
+    81
+    82 = D500			bank	= $d500
+    83 = 00CB			pt_1	= $cb
+    84 = 00CD			pt_2	= $cd
+    85
+    86 2052 48				pha
+    87 2053 8E 91 20			stx save_x+1	//save X register
+    88 2056 8C 93 20			sty save_y+1	//save Y register
+    89 2059 18				clc				//By default, we are ok
+    90 205A A0 00			ldy #$00
+    91 205C 0A 0A 0A			:3 asl 			//*8
+    92 205F AA				tax				//Save bank on X
+    93 2060 A9 08 8D 96 20		mva #$08 count
+    94
+    95 2065			loop1
+    96 2065 9D 00 D5			sta bank,x		//Activate bank
+    97 2068 A9 00 8D 73 20 A9 + 	mwa #start_cartridge loop2+1	//init the loop with start_cartridge
+    98 2072			loop2
+    99 2072 B9 FF FF			lda $ffff,y
+   100 2075 C9 FF			cmp #$ff
+   101 2077 D0 16			bne error
+   102 2079 C8				iny
+   103 207A D0 F6			bne loop2
+   104 207C EE 74 20			inc loop2+2
+   105 207F AD 74 20			lda loop2+2
+   106 2082 C9 C0			cmp #>end_cartridge
+   107 2084 D0 EC			bne loop2
+   108 2086 E8				inx
+   109 2087 CE 96 20			dec count
+   110 208A D0 D9			bne loop1
+   111 208C 18				clc
+   112 208D 90 01			bcc end_loop
+   113 208F			error
+   114 208F 38				sec
+   115 2090			end_loop
+   116
+   117 2090			save_x
+   118 2090 A2 00			ldx #$00
+   119 2092			save_y
+   120 2092 A0 00			ldy #$00
+   121 2094 68				pla
+   122 2095			end_verify
+   123 2095 60				rts
+   124 2096			count
+   125 2096 00				.by $00
+   126 				.endp
+   127
+   128
+   129 				//Erase_Cartridge: erases an entire cartridge
+   130 				//Parameter: none
    131
-   132
-   133 				//Cierra el canal solicitado.
-   134 				//Uso: close channel
-   135 				.macro close
-   136 				.if :0 <> 1
-   137 					.error "close sin parámetros"
-   138 				.else
-   139 				;	lda #:1
-   140 				;	:+4 asl
-   141 				;	tax
-   142 					ldx #(:1*16)
-   143 					lda #$0C	//Close
-   144 					sta ICCMD,x
-   145 					jsr CIOV
-   146 				.endif
-   147 				.endm
-   148
-   149 				//Open: open CIO channel, simmilar to BASIC.
-   150 				//Uso: open channel,operation,aux,loc_handler
-   151
-   152 				.macro open
-   153 				.if :0 <> 4
-   154 					.error "open sin parámetros"
-   155 				.else
-   156 				;	lda #:1
-   157 				;	:+4 asl
-   158 				;	tax
-   159 					ldx #(:1*16)
-   160 					mva #$03 ICCMD,x	//Open
-   161 					mwa #:4	ICBAL,x		//"E:","C:","D:"
-   162 					mva #:2	ICAX1,x		//Read and write
-   163 					mva #:3 ICAX2,x
-   164 					jsr CIOV
-   165 				.endif
-   166 				.endm
-   167
-   168 				//CopyM: Copy número de páginas de una dirección a otra.
-   169 				.macro CopyM
-   170 				//Restricción: sólo utiliza los bytes mayores. Para un movimiento más fino, utilizar CopyMemory
-   171 				
-   172 				.if :0 <> 3
-   173 					.error "CopyM sin parámetros correctos"
-   174 				.else
-   175 					ldx #>:1
-   176 					ldy #>:2
-   177 					lda #>:3
-   178 					jsr copy
-   179 				.endif
-   180 				
-   181 				
-   182 				.endm
+   132 2097			.proc Erase_cartridge
+   133 2097 48				pha
+   134 2098 A9 00			lda #$00
+   135 209A 8D 08 20			sta chip_select
+   136 209D			begin_erase
+   137 209D 20 14 20			jsr Command_Unlock
+   138 20A0 A9 80			lda #$80
+   139 20A2 20 AE 21			jsr Write_5555
+   140 20A5 A9 AA			lda #$aa
+   141 20A7 20 AE 21			jsr Write_5555
+   142 20AA A9 55			lda #$55
+   143 20AC 20 9B 21			jsr Write_2aaa
+   144 20AF A9 10			lda #$10
+   145 20B1 20 AE 21			jsr Write_5555
+   146 20B4 20 5B 21			jsr pollwrite
+   147 20B7 AD 08 20			lda chip_select
+   148 20BA D0 07			bne end_erase
+   149 20BC A9 40			lda #$40
+   150 20BE 8D 08 20			sta chip_select
+   151 20C1 D0 DA			bne begin_erase
+   152 20C3			end_erase
+   153 20C3 A9 00			lda #$00
+   154 20C5 8D 08 20			sta chip_select
+   155 20C8 68				pla
+   156 20C9 60				rts
+   157 				.endp
+   158
+   159 				//EraseSector: erases sector of 64kbytes
+   160 				//Parameter: A=sector to erase 
+   161 20CA			.proc Erase_Sector
+   162 20CA 48				pha		//Save sector
+   163 20CB 29 08			and #$08
+   164 20CD F0 02			beq erase2
+   165 20CF A9 40			lda #$40
+   166 20D1			erase2
+   167 20D1 8D 08 20			sta chip_select
+   168 					
+   169 20D4 20 47 20			jsr is39f
+   170 20D7 B0 26			bcs erase3
+   171
+   172 20D9 20 47 21			jsr Common
+   173
+   174 20DC 68				pla		//Recover sector
+   175 20DD 48				pha
+   176 20DE 20 09 20			jsr SetSector
+   177 					
+   178 					
+   179 20E1 A9 30			lda #$30
+   180 20E3 8D 00 A0			sta start_cartridge	//6th cycle
+   181
+   182 				//Erase command sent. Now let's wait until it's finished.
    183
-   184 				//WriteMemory: Escribe en disco el contenido de memoria
-   185 				//Parámetros:
-   186 				//  1: Canal a escribir
-   187 				//  2: Zona de memoria inicial a escribir
-   188 				//  3: Cantidad de bytes
-   189 				.macro WriteMemory
-   190 				.if :0 <> 3
-   191 					.error "WriteMemory sin parámetros correctos"
-   192 				.else
-   193 				;	lda #:1
-   194 				;	:+4 asl
-   195 				;	tax
-   196 					ldx #(:1*16)
-   197 					mwa #:2 ICBAL,x
-   198 					mwa #:3 ICBLL,x
-   199 					mva #11 ICCMD,X
-   200 					jsr ciov
-   201 				.endif
-   202 				.endm
-   203
-   204 				//ReadDisk: lee del disco el contenido y guarda en memoria
-   205 				//Parámetros:
-   206 				//  1: Canal del cual leer
-   207 				//  2: Zona de memoria al cual grabar
-   208 				//  3: Cantidad de bytes
-   209 				.macro ReadDisk
-   210 				.if :0 <> 3
-   211 					.error "ReadDisk sin parámetros correctos"
-   212 				.else
-   213 				;	lda #:1
-   214 				;	:+4 asl
-   215 				;	tax
-   216 					ldx #(:1*16)
-   217 					mwa #:2 ICBAL,x
-   218 					mwa #:3 ICBLL,x
-   219 					mva #7 ICCMD,X
-   220 					jsr ciov
-   221 				.endif
-   222 				.endm
-   223
-   224
-   225 				//WriteCart: Escribe en cartridge el contenido de memoria
-   226 				//Parámetros:
-   227 				//  1: Canal a escribir
-   228 				//  2: Zona de memoria inicial a escribir
-   229 				//  3: Cantidad de bytes
-   230 				.macro WriteCart
-   231 				.if :0 <> 3
-   232 					.error "WriteCart sin parámetros correctos"
-   233 				.else
-   234 					ReadDisk :1,:2,:3
-   235 					CopyM :2,start_cartridge,:3
-   236 				.endif
-   237 				.endm
-   238
-   239 				//input: realiza un input por CIO
-   240 				//Uso: input canal,dirección a tomar
-   241 				.macro input
-   242 				.if :0 <> 2
-   243 					.error "Input sin parámetros correctos"
-   244 				.else
-   245 				;	lda #:1
-   246 				;	:+4 asl
-   247 				;	tax
-   248 					ldx #(:1*16)
-   249 					mwa #:2 ICBAL,X		;Dirección entregada
-   250 					mwa #20 ICBLL,x		;Máximo 20 bytes (Pueden ser más)
-   251 					mva #5 ICCMD,x		;Comando INPUT
-   252 					jsr ciov		;Ejecute"
-   253 				.endif
-   254 				
-   255 				.endm
-   256
-   257 				//get: realiza un input por CIO
-   258 				//Uso: input canal,dirección a tomar
-   259 				.macro get
-   260 				.if :0 <> 2
-   261 					.error "Get sin parámetros correctos"
-   262 				.else
-   263 				;	lda #:1
-   264 				;	:+4 asl
-   265 				;	tax
-   266 					ldx #(:1*16)
-   267 					mwa #:2 ICBAL,X		;Dirección entregada
-   268 					mwa #1 ICBLL,x		;Cantidad de bytes = 1
-   269 					mva #7 ICCMD,x		;Realizar una lectura
-   270 					jsr ciov		;Ejecute!
-   271 				.endif
-   272 				
-   273 				.endm
-   274
-   275
-   276
-   277 214C			boot_sector
-   278 214C 00				.by $00
-   279 214D 01				.by $01		//1 sector to read
-   280 214E 00 06			.word $600
-   281 2150 06 06			.word $606
-   282 2152 38				sec
-   283 2153 60				rts
-   284 2154 00 00 00 00 00 00 + 	:120 .by $00
-   285
-   286 21CC			LOC_E
-   287 21CC 45 3A 9B			.by "E:",$9B	;Handler editor E:
-   288 21CF			LOC_K
-   289 21CF 4B 3A 9B			.by "K:",$9B	;Handler keyboard
-   290 21D2			LOC_DISK
-   291 21D2 44 31 3A 41 41 41 + 	.by "D1:AAAAAAAA.DMP",$9B	;file name (not used now)
-   292 21E2			LOC_DIR
-   293 21E2 44 31 3A 2A 2E 2A + 	.by "D1:*.*",$9B		;search directory (not used)
-   294 21E9			LOC_INPUT
-   295 21E9 20 20 20 20 20 20 + 	.by "                    "
-   296 21FD			dl
-   297 21FD 70 70 70			.by $70,$70,$70
-   298 2200 70 70 70 70 70 70 + 	:7 .by $70
-   299 2207 30				.by $30
-   300 2208 42				.by $42				;Primera línea modo ANTIC 2
-   301 2209 12 22			.word screen
-   302 220B 02 02 02 02			:4 .by $02 			;4 líneas más
-   303 				//	.by $70
-   304 				//	.by $02,$02,$02
-   305 220F 41				.by $41				;Vuelva
-   306 2210 FD 21			.word dl			;al display list!
-   307 					
-   308
-   309 2212			screen
-   310 2212 51 52 52 52 52 52 + 	.sb +32,"QRRRRRRRRRRRRRRRRRRRRRRRWRRRRRRRRRRRRRRE"
-   311 223A 7C 21 32 00 24 75 + 	.sb     "|AR Dungeon Updater "
-   312 224E				PUT_VERSION
-Macro: PUT_VERSION [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm]
-     1 224E 36 11 12			.sb "V12"
-Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   313 2251 00 7C 12 10 12 11 + 	.sb " |2021 Willysoft|"
-   314 2262 41 52 52 52 52 52 + 	.sb +32,"ARRRRRRRRRRRWRRRRRRRRRRRXRRRRRRRRRRRRRRD"
-   315 228A 7C				.sb     "|"
-   316 228B B3 B4 A1 B2 B4		.sb +128,"START"
-   317 2290 1A				.sb      ":"
-   318 2291			screen_start
-   319 2291 22 25 27 29 2E		.sb "BEGIN"
-   320 2296			screen_start_end
-   321
-   322 2296			screen_status
-   323 2296 7C 00 00 00 00 00 + 	.sb "|                          |"
-   324 22B2			screen_status_end
-   325 = 001C			len_screen_status = screen_status_end - screen_status
-   326
-   327 22B2 5A 52 52 52 52 52 + 	.sb +32,"ZRRRRRRRRRRRXRRRRRRRRRRRRRRRRRRRRRRRRRRC"
-   328
-   329 22DA			screen_erasing
-   330 22DA 7C 25 72 61 73 69 + 	.sb "|Erasing Cartridge...      |"
-   331 22F6			screen_erasing_end
-   332 = 001C			len_screen_erasing = screen_erasing_end - screen_erasing
-   333
-   334 22F6			screen_veryfing
-   335 22F6 7C 36 65 72 69 66 + 	.sb "|Verifying erase...        |"
-   336 2312			screen_veryfing_end
-   337 = 001C			len_screen_veryfing = screen_veryfing_end - screen_veryfing
+   184 20E6 A9 10 8D 59 21		mva #num_tries sec_count
+   185 					
+   186 20EB 68				pla
+   187 20EC 48				pha
+   188 					
+   189 20ED			loop
+   190 					
+   191 20ED 20 5B 21			jsr pollwrite
+   192 					
+   193 20F0 68				pla
+   194 20F1 48				pha
+   195 					
+   196 20F2 20 52 20			jsr VerifyBlankSector
+   197 20F5 90 06			bcc exit
+   198 20F7 CE 59 21			dec sec_count
+   199 20FA D0 F1			bne loop
+   200 20FC 38				sec
+   201 20FD			exit
+   202 20FD 68				pla
+   203 20FE 60				rts
+   204
+   205 20FF			erase3
+   206 20FF 8E 42 21			stx save_x+1
+   207 2102 8C 44 21			sty save_y+1
+   208 2105 A9 08 8D 59 21		mva #$08 sec_count
+   209
+   210 210A 68				pla
+   211 210B 48				pha
+   212 210C 0A				asl
+   213 210D 0A				asl
+   214 210E 0A				asl
+   215 210F 8D 5A 21			sta bank_number
+   216
+   217 2112			loop2	
+   218 2112 20 47 21			jsr Common
+   219 2115 AE 5A 21			ldx bank_number
+   220 2118 9D 00 D5			sta $d500,x
+   221 211B A9 30			lda #$30
+   222 211D 8D 00 A0			sta start_cartridge
+   223 2120 20 5B 21			jsr pollwrite
+   224 					
+   225 2123 20 47 21			jsr Common
+   226 2126 AE 5A 21			ldx bank_number
+   227 2129 9D 00 D5			sta $d500,x
+   228 212C A9 30			lda #$30
+   229 212E 8D 00 B0			sta start_cartridge+$1000
+   230 2131 20 7B 21			jsr pollwrite2
+   231 2134 EE 5A 21			inc bank_number
+   232 2137 CE 59 21			dec sec_count
+   233 213A D0 D6			bne loop2
+   234 213C 68				pla
+   235 213D 48				pha
+   236 213E 20 52 20			jsr VerifyBlankSector
+   237 2141			save_x
+   238 2141 A2 00			ldx #$00
+   239 2143			save_y
+   240 2143 A0 00			ldy #$00	
+   241 2145 68				pla
+   242 2146 60				rts
+   243
+   244 2147			Common
+   245 2147 20 14 20			jsr Command_Unlock //1st and 2nd cycle
+   246 					
+   247 214A A9 80			lda #$80
+   248 214C 20 AE 21			jsr Write_5555	//3rd cycle
+   249 214F A9 AA			lda #$aa
+   250 2151 20 AE 21			jsr Write_5555	//4th cycle
+   251 2154 A9 55			lda #$55
+   252 2156 4C 9B 21			jmp Write_2aaa	//5th cycle
+   253 					
+   254
+   255 2159			sec_count
+   256 2159 00				.by $00
+   257 215A			bank_number
+   258 215A 00				.by $00
+   259
+   260 				.endp
+   261
+   262
+   263 				//PollWrite: waits until the sector data stopped changing.
+   264 215B			.proc pollwrite
+   265
+   266 = A000			byte_address = start_cartridge
+   267
+   268 215B 48				pha
+   269 215C			again
+   270 215C A9 00 8D 7A 21		mva #$00 pollsame
+   271 2161			loop
+   272 2161 AD 00 A0			lda byte_address
+   273 2164 CD 00 A0			cmp byte_address
+   274 2167 D0 F3			bne again
+   275 2169 CD 00 A0			cmp byte_address
+   276 216C D0 EE			bne again
+   277 216E CD 00 A0			cmp byte_address
+   278 2171 D0 E9			bne again
+   279 2173 EE 7A 21			inc pollsame
+   280 2176 D0 E9			bne loop
+   281 2178 68				pla
+   282 2179 60				rts
+   283 217A			pollsame
+   284 217A 00				.by $00
+   285 				.endp
+   286
+   287 217B			.proc pollwrite2
+   288
+   289 = B000			byte_address = start_cartridge+$1000
+   290
+   291 217B 48				pha
+   292 217C			again
+   293 217C A9 00 8D 9A 21		mva #$00 pollsame
+   294 2181			loop
+   295 2181 AD 00 B0			lda byte_address
+   296 2184 CD 00 B0			cmp byte_address
+   297 2187 D0 F3			bne again
+   298 2189 CD 00 B0			cmp byte_address
+   299 218C D0 EE			bne again
+   300 218E CD 00 B0			cmp byte_address
+   301 2191 D0 E9			bne again
+   302 2193 EE 9A 21			inc pollsame
+   303 2196 D0 E9			bne loop
+   304 2198 68				pla
+   305 2199 60				rts
+   306 219A			pollsame
+   307 219A 00				.by $00
+   308 				.endp
+   309
+   310 				//Write_2aaa: writes value at $2aaa on the respective chip selected.
+   311 				//Parameter: A=value to write
+   312 219B			.proc write_2aaa
+   313 219B 2C 08 20			bit chip_select
+   314 219E 50 07			bvc step2
+   315 21A0 8D 41 D5			sta $d541
+   316 21A3 8D AA AA			sta $aaaa
+   317 21A6 60				rts
+   318 21A7			step2
+   319 21A7 8D 01 D5			sta $d501
+   320 21AA 8D AA AA			sta $aaaa
+   321 21AD 60				rts
+   322 				.endp
+   323
+   324 21AE			.proc write_5555
+   325 21AE 2C 08 20			bit chip_select
+   326 21B1 50 07			bvc step2
+   327 21B3 8D 42 D5			sta $d542
+   328 21B6 8D 55 B5			sta $b555
+   329 21B9 60				rts
+   330 21BA			step2
+   331 21BA 8D 02 D5			sta $d502
+   332 21BD 8D 55 B5			sta $b555
+   333 21C0 60				rts
+   334 				.endp
+   335
+   336 				//Enable Write: enables one byte to write on the cartridge
+   337 				//Parameter: A = bank to write.
    338
-   339 2312			screen_reading
-   340 2312 7C 32 65 61 64 69 + 	.sb "|Reading Bank     "
-   341 2324			screen_reading_bank
-   342 2324 10 10 0F			.sb "00/"
-   343 2327			screen_reading_total_banks
-   344 2327 17 26 00 00 00 00 + 	.sb "7F    |"
-   345 232E			screen_reading_end
-   346 = 001C			len_screen_reading = screen_reading_end - screen_reading
-   347
-   348 232E			screen_writing
-   349 232E 7C 37 72 69 74 69 + 	.sb "|Writing Bank     "
-   350 2340			screen_writing_bank
-   351 2340 10 10 0F			.sb "00/"
-   352 2343			screen_writing_total_banks
-   353 2343 17 26 00 00 00 00 + 	.sb "7F    |"
-   354 234A			screen_writing_end
-   355 = 001C			len_screen_writing = screen_writing_end - screen_writing
-   356
-   357 234A			screen_verify_write
-   358 234A 7C 36 65 72 69 66 + 	.sb "|Verifying Bank   "
-   359 235C			screen_verify_write_bank
-   360 235C 10 10 0F			.sb "00/"
-   361 235F			screen_verify_total_banks
-   362 235F 17 26 00 00 00 00 + 	.sb "7F    |"
-   363 2366			screen_verify_write_end
-   364
-   365 = 001C			len_screen_verify_write = screen_writing_end - screen_writing
+   339 21C1			.proc Enable_Write
+   340 21C1 8E E1 21			stx save_x+1
+   341 21C4 48				pha					//Save bank to write on.
+   342 21C5 29 7F			and #$7f			//Avoid error on using banks >=128
+   343 21C7 4A 4A 4A			:3 lsr				//divide by 8
+   344 21CA 29 08			and #$08
+   345 21CC F0 02			beq erase2
+   346 21CE A9 40			lda #$40
+   347 21D0			erase2
+   348 21D0 8D 08 20			sta chip_select
+   349 21D3 20 14 20			jsr Command_Unlock	//1st and 2nd cycle
+   350 21D6 A9 A0			lda #$a0
+   351 21D8 20 AE 21			jsr Write_5555		//3rd cycle
+   352 21DB 68				pla					//Recover bank
+   353 21DC AA				tax
+   354 21DD 9D 00 D5			sta $d500,x
+   355 21E0			save_x
+   356 21E0 A2 00			ldx #$00
+   357 21E2 60				rts
+   358 				.endp
+   359
+   360
+   361 				//Erase_Sectors: erase a number of sectors
+   362 				//Parameters: X=Initial sector, Y=number of sectors to erase.
+   363 21E3			.proc Erase_Sectors
+   364 21E3 48				pha		//Save accumulator
+   365 21E4 8E FA 21			stx sector
+   366 21E7 8C FB 21			sty num_sectors
+   367 21EA			loop
+   368 21EA AD FA 21			lda sector
+   369 21ED 20 CA 20			jsr Erase_Sector
+   370 21F0 EE FA 21			inc sector
+   371 21F3 CE FB 21			dec num_sectors
+   372 21F6 D0 F2			bne loop
+   373 21F8 68				pla
+   374 21F9 60				rts
+   375 21FA			sector
+   376 21FA 00				.by $00
+   377 21FB			num_sectors
+   378 21FB 00				.by $00
+   379 				.endp
+   380
+   381 				//VerifyBlankSectors: Verify status blank of sector
+   382 				//Parameters: X=Initial sector, Y=number of sectors to verify.
+   383 				//Output: Carry clear: OK, Carry Set = Error
+   384 21FC			.proc VerifyBlankSectors
+   385 21FC 48				pha
+   386 21FD			loop
+   387 21FD 8A				txa
+   388 21FE 20 52 20			jsr VerifyBlankSector
+   389 2201 B0 05			bcs end_verify
+   390 2203 E8				inx
+   391 2204 88				dey
+   392 2205 D0 F6			bne loop
+   393 2207 18				clc
+   394 2208			end_verify
+   395 2208 68				pla
+   396 2209 60				rts
+   397 					
+   398 				.endp
+    76
+    77
+    78 				//Determinamos macros
+    79
+    80 				//Partimos con seleccionar el banco
+    81 				//Formato: banco x,y
+    82 				//x = Cartridge bank to activate
+    83 				//y= 0 if its for reading, Y=1 read/write
+    84 				.macro banco
+    85 				.if :0 <> 2 
+    86 					.error "banco sin parámetros"
+    87 				.else
+    88 					.if :1 < 256
+    89 						lda #:1
+    90 						.if :2 = 1
+    91 							ora #write_enable
+    92 						.endif
+    93 						tax
+    94 						sta $d500,x
+    95 					.else
+    96 						lda :1
+    97 						.if :2 = 1
+    98 							;ora #write_enable
+    99 							ora value_write
+   100 						.endif
+   101 						tax
+   102 						sta $d500,x
+   103 					.endif
+   104 				.endif 
+   105 				.endm
+   106
+   107 				//Realiza un print en la pantalla hasta encontrar un RETURN ($9b).
+   108 				//Uso: print mem_addr
+   109 				.macro print
+   110 				.if :0 <> 1
+   111 					.error "print sin parámetros"
+   112 				.else
+   113 					ldx #<:1
+   114 					ldy #>:1
+   115 					jsr pr
+   116 				.endif
+   117 				.endm
+   118 					
+   119
+   120 				//print2: imprime una cantidad fija de caracteres según un largo definido.
+   121 				//Uso: print2 mem_addr, num_caracteres
+   122 				.macro print2
+   123 				.if :0 <> 2
+   124 					.error "print2 sin parámetros"
+   125 				.else
+   126 					ldx #<:1
+   127 					ldy #>:1
+   128 					lda #:2
+   129 					jsr pr2
+   130 				.endif
+   131 				.endm
+   132
+   133
+   134
+   135 				//Cierra el canal solicitado.
+   136 				//Uso: close channel
+   137 				.macro close
+   138 				.if :0 <> 1
+   139 					.error "close sin parámetros"
+   140 				.else
+   141 				;	lda #:1
+   142 				;	:+4 asl
+   143 				;	tax
+   144 					ldx #(:1*16)
+   145 					lda #$0C	//Close
+   146 					sta ICCMD,x
+   147 					jsr CIOV
+   148 				.endif
+   149 				.endm
+   150
+   151 				//Open: open CIO channel, simmilar to BASIC.
+   152 				//Uso: open channel,operation,aux,loc_handler
+   153
+   154 				.macro open
+   155 				.if :0 <> 4
+   156 					.error "open sin parámetros"
+   157 				.else
+   158 				;	lda #:1
+   159 				;	:+4 asl
+   160 				;	tax
+   161 					ldx #(:1*16)
+   162 					mva #$03 ICCMD,x	//Open
+   163 					mwa #:4	ICBAL,x		//"E:","C:","D:"
+   164 					mva #:2	ICAX1,x		//Read and write
+   165 					mva #:3 ICAX2,x
+   166 					jsr CIOV
+   167 				.endif
+   168 				.endm
+   169
+   170 				//CopyM: Copy número de páginas de una dirección a otra.
+   171 				.macro CopyM
+   172 				//Restricción: sólo utiliza los bytes mayores. Para un movimiento más fino, utilizar CopyMemory
+   173 				
+   174 				.if :0 <> 3
+   175 					.error "CopyM sin parámetros correctos"
+   176 				.else
+   177 					ldx #>:1
+   178 					ldy #>:2
+   179 					lda #>:3
+   180 					jsr copy
+   181 				.endif
+   182 				
+   183 				
+   184 				.endm
+   185
+   186 				//WriteMemory: Escribe en disco el contenido de memoria
+   187 				//Parámetros:
+   188 				//  1: Canal a escribir
+   189 				//  2: Zona de memoria inicial a escribir
+   190 				//  3: Cantidad de bytes
+   191 				.macro WriteMemory
+   192 				.if :0 <> 3
+   193 					.error "WriteMemory sin parámetros correctos"
+   194 				.else
+   195 				;	lda #:1
+   196 				;	:+4 asl
+   197 				;	tax
+   198 					ldx #(:1*16)
+   199 					mwa #:2 ICBAL,x
+   200 					mwa #:3 ICBLL,x
+   201 					mva #11 ICCMD,X
+   202 					jsr ciov
+   203 				.endif
+   204 				.endm
+   205
+   206 				//ReadDisk: lee del disco el contenido y guarda en memoria
+   207 				//Parámetros:
+   208 				//  1: Canal del cual leer
+   209 				//  2: Zona de memoria al cual grabar
+   210 				//  3: Cantidad de bytes
+   211 				.macro ReadDisk
+   212 				.if :0 <> 3
+   213 					.error "ReadDisk sin parámetros correctos"
+   214 				.else
+   215 				;	lda #:1
+   216 				;	:+4 asl
+   217 				;	tax
+   218 					ldx #(:1*16)
+   219 					mwa #:2 ICBAL,x
+   220 					mwa #:3 ICBLL,x
+   221 					mva #7 ICCMD,X
+   222 					jsr ciov
+   223 				.endif
+   224 				.endm
+   225
+   226
+   227 				//WriteCart: Escribe en cartridge el contenido de memoria
+   228 				//Parámetros:
+   229 				//  1: Canal a escribir
+   230 				//  2: Zona de memoria inicial a escribir
+   231 				//  3: Cantidad de bytes
+   232 				.macro WriteCart
+   233 				.if :0 <> 3
+   234 					.error "WriteCart sin parámetros correctos"
+   235 				.else
+   236 					ReadDisk :1,:2,:3
+   237 					CopyM :2,start_cartridge,:3
+   238 				.endif
+   239 				.endm
+   240
+   241 				//input: realiza un input por CIO
+   242 				//Uso: input canal,dirección a tomar
+   243 				.macro input
+   244 				.if :0 <> 2
+   245 					.error "Input sin parámetros correctos"
+   246 				.else
+   247 				;	lda #:1
+   248 				;	:+4 asl
+   249 				;	tax
+   250 					ldx #(:1*16)
+   251 					mwa #:2 ICBAL,X		;Dirección entregada
+   252 					mwa #20 ICBLL,x		;Máximo 20 bytes (Pueden ser más)
+   253 					mva #5 ICCMD,x		;Comando INPUT
+   254 					jsr ciov		;Ejecute"
+   255 				.endif
+   256 				
+   257 				.endm
+   258
+   259 				//get: realiza un input por CIO
+   260 				//Uso: input canal,dirección a tomar
+   261 				.macro get
+   262 				.if :0 <> 2
+   263 					.error "Get sin parámetros correctos"
+   264 				.else
+   265 				;	lda #:1
+   266 				;	:+4 asl
+   267 				;	tax
+   268 					ldx #(:1*16)
+   269 					mwa #:2 ICBAL,X		;Dirección entregada
+   270 					mwa #1 ICBLL,x		;Cantidad de bytes = 1
+   271 					mva #7 ICCMD,x		;Realizar una lectura
+   272 					jsr ciov		;Ejecute!
+   273 				.endif
+   274 				
+   275 				.endm
+   276
+   277
+   278
+   279 220A			boot_sector
+   280 220A 00				.by $00
+   281 220B 01				.by $01		//1 sector to read
+   282 220C 00 06			.word $600
+   283 220E 06 06			.word $606
+   284 2210 38				sec
+   285 2211 60				rts
+   286 2212 00 00 00 00 00 00 + 	:120 .by $00
+   287
+   288 228A			LOC_E
+   289 228A 45 3A 9B			.by "E:",$9B	;Handler editor E:
+   290 228D			LOC_K
+   291 228D 4B 3A 9B			.by "K:",$9B	;Handler keyboard
+   292 2290			LOC_DISK
+   293 2290 44 31 3A 41 41 41 + 	.by "D1:AAAAAAAA.DMP",$9B	;file name (not used now)
+   294 22A0			LOC_DIR
+   295 22A0 44 31 3A 2A 2E 2A + 	.by "D1:*.*",$9B		;search directory (not used)
+   296 22A7			LOC_INPUT
+   297 22A7 20 20 20 20 20 20 + 	.by "                    "
+   298 22BB			dl
+   299 22BB 70 70 70			.by $70,$70,$70
+   300 22BE 70 70 70 70 70 70 + 	:7 .by $70
+   301 22C5 30				.by $30
+   302 22C6 42				.by $42				;Primera línea modo ANTIC 2
+   303 22C7 D0 22			.word screen
+   304 22C9 02 02 02 02			:4 .by $02 			;4 líneas más
+   305 				//	.by $70
+   306 				//	.by $02,$02,$02
+   307 22CD 41				.by $41				;Vuelva
+   308 22CE BB 22			.word dl			;al display list!
+   309 					
+   310
+   311 22D0			screen
+   312 22D0 51 52 52 52 52 52 + 	.sb +32,"QRRRRRRRRRRRRRRRRRRRRRRRWRRRRRRRRRRRRRRE"
+   313 22F8 7C 21 32 00 24 75 + 	.sb     "|AR Dungeon Updater "
+   314 230C				PUT_VERSION
+Macro: PUT_VERSION [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm]
+     1 230C 36 11 14			.sb "V14"
+Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
+   315 230F 00 7C 12 10 12 11 + 	.sb " |2021 Willysoft|"
+   316 2320 41 52 52 52 52 52 + 	.sb +32,"ARRRRRRRRRRRWRRRRRRRRRRRXRRRRRRRRRRRRRRD"
+   317 2348 7C				.sb     "|"
+   318 2349 B3 B4 A1 B2 B4		.sb +128,"START"
+   319 234E 1A				.sb      ":"
+   320 234F			screen_start
+   321 234F 22 25 27 29 2E		.sb "BEGIN"
+   322 2354			screen_start_end
+   323
+   324 2354			screen_status
+   325 2354 7C 00 00 00 00 00 + 	.sb "|                          |"
+   326 2370			screen_status_end
+   327 = 001C			len_screen_status = screen_status_end - screen_status
+   328
+   329 2370 5A 52 52 52 52 52 + 	.sb +32,"ZRRRRRRRRRRRXRRRRRRRRRRRRRRRRRRRRRRRRRRC"
+   330
+   331 2398			screen_erasing
+   332 2398 7C 25 72 61 73 69 + 	.sb "|Erasing Cartridge...      |"
+   333 23B4			screen_erasing_end
+   334 = 001C			len_screen_erasing = screen_erasing_end - screen_erasing
+   335
+   336 23B4			screen_veryfing
+   337 23B4 7C 36 65 72 69 66 + 	.sb "|Verifying erase...        |"
+   338 23D0			screen_veryfing_end
+   339 = 001C			len_screen_veryfing = screen_veryfing_end - screen_veryfing
+   340
+   341 23D0			screen_reading
+   342 23D0 7C 32 65 61 64 69 + 	.sb "|Reading Bank     "
+   343 23E2			screen_reading_bank
+   344 23E2 10 10 0F			.sb "00/"
+   345 23E5			screen_reading_total_banks
+   346 23E5 17 26 00 00 00 00 + 	.sb "7F    |"
+   347 23EC			screen_reading_end
+   348 = 001C			len_screen_reading = screen_reading_end - screen_reading
+   349
+   350 23EC			screen_writing
+   351 23EC 7C 37 72 69 74 69 + 	.sb "|Writing Bank     "
+   352 23FE			screen_writing_bank
+   353 23FE 10 10 0F			.sb "00/"
+   354 2401			screen_writing_total_banks
+   355 2401 17 26 00 00 00 00 + 	.sb "7F    |"
+   356 2408			screen_writing_end
+   357 = 001C			len_screen_writing = screen_writing_end - screen_writing
+   358
+   359 2408			screen_verify_write
+   360 2408 7C 36 65 72 69 66 + 	.sb "|Verifying Bank   "
+   361 241A			screen_verify_write_bank
+   362 241A 10 10 0F			.sb "00/"
+   363 241D			screen_verify_total_banks
+   364 241D 17 26 00 00 00 00 + 	.sb "7F    |"
+   365 2424			screen_verify_write_end
    366
-   367 2366			screen_done
-   368 2366 7C 24 2F 2E 25 01 + 	.sb "|DONE!                     |"
-   369 2382			screen_done_end
-   370 = 001C			len_screen_done = screen_done_end - screen_done
-   371
-   372 2382			text_check
-   373 2382 41 52 20 43 48 41 + 	.by "AR CHAR!"	//Header to check on disk or cartridge
-   374 238A			text_check_end
-   375 = 0008			len_text_check = text_check_end - text_check
-   376
-   377 238A			BEEP
-   378 238A FD				.by $FD		//Beep sound
-   379
-   380 238B			flag_busy
-   381 238B 00				.by $00
-   382
-   383 238C			flag_operation
-   384 238C 00				.by $00
-   385 238D			flag_start
-   386 238D 00				.by $00
-   387
-   388 238E			consol_previous
-   389 238E 08				.by $08
-   390
-   391 238F			key
-   392 238F 00				.by $00
-   393 					
-   394 2390			banknum
-   395 2390 00				.by $00
-   396 					
-   397 2391			count
-   398 2391 00				.by $00
-   399 					
-   400 2392			sector
-   401 2392 00 00			.word $00
-   402 					
-   403 2394			tabla_hex
-   404 2394 10 11 12 13 14 15 + 	.sb "0123456789ABCDEF"
-   405 					
-   406 23A4			.proc put_banknum
-   407 23A4 AD 90 23			lda banknum
-   408 23A7 4A 4A 4A 4A			:4 lsr
-   409 23AB AA				tax
-   410 23AC BD 94 23			lda tabla_hex,x
-   411 23AF 8D 24 23			sta screen_reading_bank
-   412 23B2 8D 40 23			sta screen_writing_bank
-   413 23B5 8D 5C 23			sta screen_verify_write_bank
-   414 23B8 AD 90 23			lda banknum
-   415 23BB 29 0F			and #$0f
-   416 23BD AA				tax
-   417 23BE BD 94 23			lda tabla_hex,x
-   418 23C1 8D 25 23			sta screen_reading_bank+1
-   419 23C4 8D 41 23			sta screen_writing_bank+1
-   420 23C7 8D 5D 23			sta screen_verify_write_bank+1
-   421 23CA 60				rts
-   422 				.endp
-   423
-   424 23CB			.proc put_final_bank
-   425 23CB A9 57			lda #final_bank
-   426 23CD 4A 4A 4A 4A			:4 lsr
-   427 23D1 AA				tax
-   428 23D2 BD 94 23			lda tabla_hex,x
-   429 23D5 8D 27 23			sta screen_reading_total_banks
-   430 23D8 8D 43 23			sta screen_writing_total_banks
-   431 23DB 8D 5F 23			sta screen_verify_total_banks
-   432 23DE A9 57			lda #final_bank
-   433 23E0 29 0F			and #$0f
-   434 23E2 AA				tax
-   435 23E3 BD 94 23			lda tabla_hex,x
-   436 23E6 8D 28 23			sta screen_reading_total_banks+1
-   437 23E9 8D 44 23			sta screen_writing_total_banks+1
-   438 23EC 8D 60 23			sta screen_verify_total_banks+1
-   439 23EF 60				rts
-   440 				.endp
-   441
-   442 					
-   443 23F0			.proc put_erase
-   444 23F0				CopyMemory screen_erasing,screen_status,len_screen_erasing
+   367 = 001C			len_screen_verify_write = screen_writing_end - screen_writing
+   368
+   369 2424			screen_done
+   370 2424 7C 24 2F 2E 25 01 + 	.sb "|DONE!                     |"
+   371 2440			screen_done_end
+   372 = 001C			len_screen_done = screen_done_end - screen_done
+   373
+   374 2440			text_check
+   375 2440 41 52 20 43 48 41 + 	.by "AR CHAR!"	//Header to check on disk or cartridge
+   376 2448			text_check_end
+   377 = 0008			len_text_check = text_check_end - text_check
+   378
+   379 2448			BEEP
+   380 2448 FD				.by $FD		//Beep sound
+   381
+   382 2449			flag_busy
+   383 2449 00				.by $00
+   384
+   385 244A			flag_operation
+   386 244A 00				.by $00
+   387 244B			flag_start
+   388 244B 00				.by $00
+   389
+   390 244C			consol_previous
+   391 244C 08				.by $08
+   392
+   393 244D			key
+   394 244D 00				.by $00
+   395 					
+   396 244E			banknum
+   397 244E 00				.by $00
+   398 					
+   399 244F			count
+   400 244F 00				.by $00
+   401 					
+   402 2450			sector
+   403 2450 00 00			.word $00
+   404 					
+   405 2452			tabla_hex
+   406 2452 10 11 12 13 14 15 + 	.sb "0123456789ABCDEF"
+   407 					
+   408 2462			.proc put_banknum
+   409 2462 AD 4E 24			lda banknum
+   410 2465 4A 4A 4A 4A			:4 lsr
+   411 2469 AA				tax
+   412 246A BD 52 24			lda tabla_hex,x
+   413 246D 8D E2 23			sta screen_reading_bank
+   414 2470 8D FE 23			sta screen_writing_bank
+   415 2473 8D 1A 24			sta screen_verify_write_bank
+   416 2476 AD 4E 24			lda banknum
+   417 2479 29 0F			and #$0f
+   418 247B AA				tax
+   419 247C BD 52 24			lda tabla_hex,x
+   420 247F 8D E3 23			sta screen_reading_bank+1
+   421 2482 8D FF 23			sta screen_writing_bank+1
+   422 2485 8D 1B 24			sta screen_verify_write_bank+1
+   423 2488 60				rts
+   424 				.endp
+   425
+   426 2489			.proc put_final_bank
+   427 2489 A9 7F			lda #final_bank
+   428 248B 4A 4A 4A 4A			:4 lsr
+   429 248F AA				tax
+   430 2490 BD 52 24			lda tabla_hex,x
+   431 2493 8D E5 23			sta screen_reading_total_banks
+   432 2496 8D 01 24			sta screen_writing_total_banks
+   433 2499 8D 1D 24			sta screen_verify_total_banks
+   434 249C A9 7F			lda #final_bank
+   435 249E 29 0F			and #$0f
+   436 24A0 AA				tax
+   437 24A1 BD 52 24			lda tabla_hex,x
+   438 24A4 8D E6 23			sta screen_reading_total_banks+1
+   439 24A7 8D 02 24			sta screen_writing_total_banks+1
+   440 24AA 8D 1E 24			sta screen_verify_total_banks+1
+   441 24AD 60				rts
+   442 				.endp
+   443
+   444 					
+   445 24AE			.proc put_erase
+   446 24AE				CopyMemory screen_erasing,screen_status,len_screen_erasing
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 23F0 A0 00			      ldy #0
-    13 23F2			copyMemLoop1
-    14 23F2 B9 DA 22				lda SCREEN_ERASING,y
-    15 23F5 99 96 22				sta SCREEN_STATUS,y
-    16 23F8 C8					iny
-    18 23F9 C0 1C					cpy #<LEN_SCREEN_ERASING
-    20 23FB D0 F5				bne copyMemLoop1
+    10 24AE A0 00			      ldy #0
+    13 24B0			copyMemLoop1
+    14 24B0 B9 98 23				lda SCREEN_ERASING,y
+    15 24B3 99 54 23				sta SCREEN_STATUS,y
+    16 24B6 C8					iny
+    18 24B7 C0 1C					cpy #<LEN_SCREEN_ERASING
+    20 24B9 D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   445 23FD 60				rts
-   446 				.endp
-   447
-   448 23FE			.proc put_veryfing
-   449 23FE				CopyMemory screen_veryfing,screen_status,len_screen_veryfing
+   447 24BB 60				rts
+   448 				.endp
+   449
+   450 24BC			.proc put_veryfing
+   451 24BC				CopyMemory screen_veryfing,screen_status,len_screen_veryfing
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 23FE A0 00			      ldy #0
-    13 2400			copyMemLoop1
-    14 2400 B9 F6 22				lda SCREEN_VERYFING,y
-    15 2403 99 96 22				sta SCREEN_STATUS,y
-    16 2406 C8					iny
-    18 2407 C0 1C					cpy #<LEN_SCREEN_VERYFING
-    20 2409 D0 F5				bne copyMemLoop1
+    10 24BC A0 00			      ldy #0
+    13 24BE			copyMemLoop1
+    14 24BE B9 B4 23				lda SCREEN_VERYFING,y
+    15 24C1 99 54 23				sta SCREEN_STATUS,y
+    16 24C4 C8					iny
+    18 24C5 C0 1C					cpy #<LEN_SCREEN_VERYFING
+    20 24C7 D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   450 240B 60				rts
-   451 				.endp
-   452
-   453 240C			.proc put_reading
-   454 240C				CopyMemory screen_reading,screen_status,len_screen_reading
+   452 24C9 60				rts
+   453 				.endp
+   454
+   455 24CA			.proc put_reading
+   456 24CA				CopyMemory screen_reading,screen_status,len_screen_reading
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 240C A0 00			      ldy #0
-    13 240E			copyMemLoop1
-    14 240E B9 12 23				lda SCREEN_READING,y
-    15 2411 99 96 22				sta SCREEN_STATUS,y
-    16 2414 C8					iny
-    18 2415 C0 1C					cpy #<LEN_SCREEN_READING
-    20 2417 D0 F5				bne copyMemLoop1
+    10 24CA A0 00			      ldy #0
+    13 24CC			copyMemLoop1
+    14 24CC B9 D0 23				lda SCREEN_READING,y
+    15 24CF 99 54 23				sta SCREEN_STATUS,y
+    16 24D2 C8					iny
+    18 24D3 C0 1C					cpy #<LEN_SCREEN_READING
+    20 24D5 D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   455 2419 60				rts
-   456 				.endp
-   457
-   458 241A			.proc put_writing
-   459 241A				CopyMemory screen_writing,screen_status,len_screen_writing
+   457 24D7 60				rts
+   458 				.endp
+   459
+   460 24D8			.proc put_writing
+   461 24D8				CopyMemory screen_writing,screen_status,len_screen_writing
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 241A A0 00			      ldy #0
-    13 241C			copyMemLoop1
-    14 241C B9 2E 23				lda SCREEN_WRITING,y
-    15 241F 99 96 22				sta SCREEN_STATUS,y
-    16 2422 C8					iny
-    18 2423 C0 1C					cpy #<LEN_SCREEN_WRITING
-    20 2425 D0 F5				bne copyMemLoop1
+    10 24D8 A0 00			      ldy #0
+    13 24DA			copyMemLoop1
+    14 24DA B9 EC 23				lda SCREEN_WRITING,y
+    15 24DD 99 54 23				sta SCREEN_STATUS,y
+    16 24E0 C8					iny
+    18 24E1 C0 1C					cpy #<LEN_SCREEN_WRITING
+    20 24E3 D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   460 2427 60				rts
-   461 				.endp
-   462
-   463 2428			.proc put_verify_write
-   464 2428				CopyMemory screen_verify_write,screen_status,len_screen_verify_write
+   462 24E5 60				rts
+   463 				.endp
+   464
+   465 24E6			.proc put_verify_write
+   466 24E6				CopyMemory screen_verify_write,screen_status,len_screen_verify_write
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 2428 A0 00			      ldy #0
-    13 242A			copyMemLoop1
-    14 242A B9 4A 23				lda SCREEN_VERIFY_WRITE,y
-    15 242D 99 96 22				sta SCREEN_STATUS,y
-    16 2430 C8					iny
-    18 2431 C0 1C					cpy #<LEN_SCREEN_VERIFY_WRITE
-    20 2433 D0 F5				bne copyMemLoop1
+    10 24E6 A0 00			      ldy #0
+    13 24E8			copyMemLoop1
+    14 24E8 B9 08 24				lda SCREEN_VERIFY_WRITE,y
+    15 24EB 99 54 23				sta SCREEN_STATUS,y
+    16 24EE C8					iny
+    18 24EF C0 1C					cpy #<LEN_SCREEN_VERIFY_WRITE
+    20 24F1 D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   465 2435 60				rts
-   466 				.endp
-   467
-   468 2436			.proc put_done
-   469 2436				CopyMemory screen_done,screen_status,len_screen_done
+   467 24F3 60				rts
+   468 				.endp
+   469
+   470 24F4			.proc put_done
+   471 24F4				CopyMemory screen_done,screen_status,len_screen_done
 Macro: COPYMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\..\base\sys_macros.m65]
      2 = 00FE			copyMemPtr1	= 254
      3 = 00FC			copyMemPtr2	= 252
      4 = 00FA			copyMemCounter	= 250
-    10 2436 A0 00			      ldy #0
-    13 2438			copyMemLoop1
-    14 2438 B9 66 23				lda SCREEN_DONE,y
-    15 243B 99 96 22				sta SCREEN_STATUS,y
-    16 243E C8					iny
-    18 243F C0 1C					cpy #<LEN_SCREEN_DONE
-    20 2441 D0 F5				bne copyMemLoop1
+    10 24F4 A0 00			      ldy #0
+    13 24F6			copyMemLoop1
+    14 24F6 B9 24 24				lda SCREEN_DONE,y
+    15 24F9 99 54 23				sta SCREEN_STATUS,y
+    16 24FC C8					iny
+    18 24FD C0 1C					cpy #<LEN_SCREEN_DONE
+    20 24FF D0 F5				bne copyMemLoop1
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   470 2443 60				rts
-   471 				.endp
-   472
-   473 2444			.proc WriteM
-   474 2444				WriteMemory 1,start_cartridge,cart_length
+   472 2501 60				rts
+   473 				.endp
+   474
+   475 2502			.proc WriteM
+   476 2502				WriteMemory 1,start_cartridge,cart_length
 Macro: WRITEMEMORY [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm]
-     7 2444 A2 10			ldx #(1*16)
-     8 2446 A9 00 9D 44 03 A9 + 	mwa #START_CARTRIDGE ICBAL,x
-     9 2450 A9 00 9D 48 03 A9 + 	mwa #CART_LENGTH ICBLL,x
-    10 245A A9 0B 9D 42 03		mva #11 ICCMD,X
-    11 245F 20 56 E4			jsr ciov
+     7 2502 A2 10			ldx #(1*16)
+     8 2504 A9 00 9D 44 03 A9 + 	mwa #START_CARTRIDGE ICBAL,x
+     9 250E A9 00 9D 48 03 A9 + 	mwa #CART_LENGTH ICBLL,x
+    10 2518 A9 0B 9D 42 03		mva #11 ICCMD,X
+    11 251D 20 56 E4			jsr ciov
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   475 2462 60				rts
-   476 				.endp
-   477
-   478 2463			.proc get_key
-   479 2463				get 1,key
+   477 2520 60				rts
+   478 				.endp
+   479
+   480 2521			.proc get_key
+   481 2521				get 1,key
 Macro: GET [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm]
-     7 2463 A2 10			ldx #(1*16)
-     8 2465 A9 8F 9D 44 03 A9 + 	mwa #KEY ICBAL,X		;Dirección entregada
-     9 246F A9 01 9D 48 03 A9 + 	mwa #1 ICBLL,x		;Cantidad de bytes = 1
-    10 2479 A9 07 9D 42 03		mva #7 ICCMD,x		;Realizar una lectura
-    11 247E 20 56 E4			jsr ciov		;Ejecute!
+     7 2521 A2 10			ldx #(1*16)
+     8 2523 A9 4D 9D 44 03 A9 + 	mwa #KEY ICBAL,X		;Dirección entregada
+     9 252D A9 01 9D 48 03 A9 + 	mwa #1 ICBLL,x		;Cantidad de bytes = 1
+    10 2537 A9 07 9D 42 03		mva #7 ICCMD,x		;Realizar una lectura
+    11 253C 20 56 E4			jsr ciov		;Ejecute!
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   480 2481 60				rts
-   481 				.endp
-   482
-   483 2482			.proc Erase_patch
-   484 2482 A2 08			ldx #starting_sector
-   485 2484 A0 03			ldy #total_sectors
-   486 2486 20 25 21			jsr Erase_Sectors
-   487 2489 60				rts
-   488 				.endp
-   489
-   490 248A			.proc Verify_Erase
-   491 248A A2 08			ldx #starting_sector
-   492 248C A0 03			ldy #total_sectors
-   493 248E 20 3E 21			jsr VerifyBlankSectors
-   494 2491 60				rts
-   495 				.endp
-   496
-   497 2492			.proc Read_bank
-   498 2492 A9 31 8D 00 03		mva #$31 DDEVIC
-   499 2497 A9 01 8D 01 03		mva #$01 DUNIT
-   500 249C AD 92 23 8D 0A 03 + 	mwa sector $30A
-   501 24A8 A9 52 8D 02 03		mva #$52 dcomnd
-   502 24AD A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
-   503 24B7 A9 40 8D E9 24		mva #$40 count
-   504 24BC			loop
-   505 24BC 20 53 E4			jsr dskinv
-   506 24BF 30 FB			bmi loop
-   507 24C1 EE 0A 03			inc daux1
-   508 24C4 D0 03			bne loop2
-   509 24C6 EE 0B 03			inc daux2
-   510 24C9			loop2
-   511 24C9 AD 04 03			lda dbuflo
-   512 24CC 18				clc
-   513 24CD 69 80			adc #$80
-   514 24CF 8D 04 03			sta dbuflo
-   515 24D2 90 03			bcc loop3
-   516 24D4 EE 05 03			inc dbufhi
-   517 24D7			loop3
-   518 24D7 CE E9 24			dec count
-   519 24DA D0 E0			bne loop
-   520 24DC AD 0A 03 8D 92 23 + 	mwa daux1 sector
-   521 24E8 60				rts
-   522 24E9			count
-   523 24E9 00				.by $00
-   524 				.endp	
-   525
-   526 24EA			.proc Write_bank
-   527 24EA 48				pha
-   528 24EB 8A				txa
-   529 24EC 48				pha
-   530 24ED 98				tya
-   531 24EE 48				pha
-   532
-   533 24EF A9 00 85 CB A9 60 + 	mwa #buffer pt_1
-   534 24F7 A9 00 85 CD A9 A0 + 	mwa #start_cartridge pt_2
-   535 24FF A0 00			ldy #$00
-   536 2501 A2 20			ldx #$20
-   537 2503			loop
-   538 2503 AD 90 23			lda banknum
-   539 2506 20 03 21			jsr enable_write
-   540 2509 B1 CB			lda (pt_1),y
-   541 250B 91 CD			sta (pt_2),y
-   542 250D C8				iny
-   543 250E D0 F3			bne loop
-   544 2510 E6 CC			inc pt_1+1
-   545 2512 E6 CE			inc pt_2+1
-   546 2514 CA				dex
-   547 2515 D0 EC			bne loop
-   548
-   549 2517 68				pla
-   550 2518 A8				tay
-   551 2519 68				pla
-   552 251A AA				tax
-   553 251B 68				pla
-   554 251C 60				rts
-   555 				.endp
-   556
-   557 251D			.proc Verify_Bank
-   558 251D 48				pha
-   559 251E 8A				txa
-   560 251F 48				pha
-   561 2520 98				tya
-   562 2521 48				pha
-   563 2522 A9 00 85 CB A9 A0 + 	mwa #start_cartridge pt_1
-   564 252A A9 00 85 CD A9 60 + 	mwa #buffer pt_2
-   565 2532 A0 00			ldy #$00
-   566 2534 AD 90 23			lda banknum
-   567 2537 AA				tax
-   568 2538 9D 00 D5			sta $d500,x
-   569 253B A2 20			ldx #$20
-   570 253D			loop
-   571 253D B1 CB			lda (pt_1),y
-   572 253F D1 CD			cmp (pt_2),y
-   573 2541 D0 0D			bne error
-   574 2543 C8				iny
-   575 2544 D0 F7			bne loop
-   576 2546 E6 CC			inc pt_1+1
-   577 2548 E6 CE			inc pt_2+1
-   578 254A CA				dex
-   579 254B D0 F0			bne loop
-   580 254D 18				clc
-   581 254E 90 01			bcc end_verify
-   582 2550			error
-   583 2550 38				sec
-   584 2551			end_verify
-   585 2551 68				pla
-   586 2552 A8				tay
-   587 2553 68				pla
-   588 2554 AA				tax
-   589 2555 68				pla
-   590 2556 60				rts
-   591 				.endp
-   592
-   593 2557			.proc wait_return
-   594 2557			start
-   595 2557 AD FC 02			lda CH
-   596 255A C9 FF			cmp #$ff	//Key pressed?
-   597 255C D0 F9			bne start	//Nope, start over!
-   598 255E 20 63 24			jsr get_key //Get key
-   599 2561 A9 FF			lda #$ff	//Erase last key pressed
-   600 2563 8D FC 02			sta CH		//Done!
-   601 2566 AD 8F 23			lda key		//Read key
-   602 2569 C9 9B			cmp #$9b	//Is it Return?
-   603 256B D0 EA			bne start	//No, let's do it again.
-   604 256D 60				rts			//Yes, return
-   605 				.endp
-   606
-   607 256E			.proc Wait_sec
-   608 256E A5 14			lda rtclock
-   609 2570 18				clc
-   610 2571 69 3C			adc #60
-   611 2573			loop
-   612 2573 C5 14			cmp rtclock
-   613 2575 D0 FC			bne loop
-   614 2577 60				rts
-   615 				.endp
-   616
-   617
-   618 2578			.proc vbi
-   619 2578 AD 13 D0			lda trig3
-   620 257B 8D FA 03			sta gintlk		//No cartridge lockup!
-   621 257E A5 4D			lda atract
-   622 2580 30 04			bmi vbi_end
-   623 2582 A9 00			lda #$00
-   624 2584 85 4D			sta atract
-   625 2586			vbi_end
-   626 2586 4C 5F E4			jmp sysvbv
-   627 				.endp
-   628
-   629 2589			.proc vbd
-   630 2589 AD 8B 23			lda flag_busy
-   631 258C D0 15			bne vbd_end
-   632 258E AD 1F D0			lda consol
-   633 2591 CD 8E 23			cmp consol_previous
-   634 2594 F0 0D			jeq vbd_end
-   635 2596 8D 8E 23			sta consol_previous
-   636 2599 4A				lsr		; START?
-   637 259A B0 07			bcs vbd_2	; No!
-   638 259C 48				pha
-   639
-   640 259D A9 01			lda #$01
-   641 259F 8D 8D 23			sta flag_start
-   642
-   643 25A2 68				pla
-   644 25A3			vbd_2
-   645 25A3			vbd_end
-   646 25A3 4C 62 E4			jmp xitvbv
-   647 				.endp
-   648
-   649 					
-   650 25A6			start
-   651 				//	jsr screen_erase
-   652 25A6			start2
-   653 25A6 AD 01 D3			lda portb
-   654 25A9 09 FE			ora #$fe	//No BASIC, maintain SIO patch if there's any.
-   655 25AB 8D 01 D3			sta portb
-   656 25AE A9 01 8D F8 03		mva #$01 basicf
-   657 25B3				close 0
+   482 253F 60				rts
+   483 				.endp
+   484
+   485 2540			.proc Erase_patch
+   486 2540 A2 00			ldx #starting_sector
+   487 2542 A0 10			ldy #total_sectors
+   488 2544 20 E3 21			jsr Erase_Sectors
+   489 2547 60				rts
+   490 				.endp
+   491
+   492 2548			.proc Verify_Erase
+   493 2548 A2 00			ldx #starting_sector
+   494 254A A0 10			ldy #total_sectors
+   495 254C 20 FC 21			jsr VerifyBlankSectors
+   496 254F 60				rts
+   497 				.endp
+   498
+   499 2550			.proc Read_bank
+   500 2550 A9 31 8D 00 03		mva #$31 DDEVIC
+   501 2555 A9 01 8D 01 03		mva #$01 DUNIT
+   502 255A AD 50 24 8D 0A 03 + 	mwa sector $30A
+   503 2566 A9 52 8D 02 03		mva #$52 dcomnd
+   504 256B A9 00 8D 04 03 A9 + 	mwa #buffer dbuflo
+   505 2575 A9 40 8D A7 25		mva #$40 count
+   506 257A			loop
+   507 257A 20 53 E4			jsr dskinv
+   508 257D 30 FB			bmi loop
+   509 257F EE 0A 03			inc daux1
+   510 2582 D0 03			bne loop2
+   511 2584 EE 0B 03			inc daux2
+   512 2587			loop2
+   513 2587 AD 04 03			lda dbuflo
+   514 258A 18				clc
+   515 258B 69 80			adc #$80
+   516 258D 8D 04 03			sta dbuflo
+   517 2590 90 03			bcc loop3
+   518 2592 EE 05 03			inc dbufhi
+   519 2595			loop3
+   520 2595 CE A7 25			dec count
+   521 2598 D0 E0			bne loop
+   522 259A AD 0A 03 8D 50 24 + 	mwa daux1 sector
+   523 25A6 60				rts
+   524 25A7			count
+   525 25A7 00				.by $00
+   526 				.endp	
+   527
+   528 25A8			.proc Write_bank
+   529 25A8 48				pha
+   530 25A9 8A				txa
+   531 25AA 48				pha
+   532 25AB 98				tya
+   533 25AC 48				pha
+   534
+   535 25AD A9 00 85 CB A9 60 + 	mwa #buffer pt_1
+   536 25B5 A9 00 85 CD A9 A0 + 	mwa #start_cartridge pt_2
+   537 25BD A0 00			ldy #$00
+   538 25BF A2 20			ldx #$20
+   539 25C1			loop
+   540 25C1 AD 4E 24			lda banknum
+   541 25C4 20 C1 21			jsr enable_write
+   542 25C7 B1 CB			lda (pt_1),y
+   543 25C9 91 CD			sta (pt_2),y
+   544 25CB C8				iny
+   545 25CC D0 F3			bne loop
+   546 25CE E6 CC			inc pt_1+1
+   547 25D0 E6 CE			inc pt_2+1
+   548 25D2 CA				dex
+   549 25D3 D0 EC			bne loop
+   550
+   551 25D5 68				pla
+   552 25D6 A8				tay
+   553 25D7 68				pla
+   554 25D8 AA				tax
+   555 25D9 68				pla
+   556 25DA 60				rts
+   557 				.endp
+   558
+   559 25DB			.proc Verify_Bank
+   560 25DB 48				pha
+   561 25DC 8A				txa
+   562 25DD 48				pha
+   563 25DE 98				tya
+   564 25DF 48				pha
+   565 25E0 A9 00 85 CB A9 A0 + 	mwa #start_cartridge pt_1
+   566 25E8 A9 00 85 CD A9 60 + 	mwa #buffer pt_2
+   567 25F0 A0 00			ldy #$00
+   568 25F2 AD 4E 24			lda banknum
+   569 25F5 AA				tax
+   570 25F6 9D 00 D5			sta $d500,x
+   571 25F9 A2 20			ldx #$20
+   572 25FB			loop
+   573 25FB B1 CB			lda (pt_1),y
+   574 25FD D1 CD			cmp (pt_2),y
+   575 25FF D0 0D			bne error
+   576 2601 C8				iny
+   577 2602 D0 F7			bne loop
+   578 2604 E6 CC			inc pt_1+1
+   579 2606 E6 CE			inc pt_2+1
+   580 2608 CA				dex
+   581 2609 D0 F0			bne loop
+   582 260B 18				clc
+   583 260C 90 01			bcc end_verify
+   584 260E			error
+   585 260E 38				sec
+   586 260F			end_verify
+   587 260F 68				pla
+   588 2610 A8				tay
+   589 2611 68				pla
+   590 2612 AA				tax
+   591 2613 68				pla
+   592 2614 60				rts
+   593 				.endp
+   594
+   595 2615			.proc wait_return
+   596 2615			start
+   597 2615 AD FC 02			lda CH
+   598 2618 C9 FF			cmp #$ff	//Key pressed?
+   599 261A D0 F9			bne start	//Nope, start over!
+   600 261C 20 21 25			jsr get_key //Get key
+   601 261F A9 FF			lda #$ff	//Erase last key pressed
+   602 2621 8D FC 02			sta CH		//Done!
+   603 2624 AD 4D 24			lda key		//Read key
+   604 2627 C9 9B			cmp #$9b	//Is it Return?
+   605 2629 D0 EA			bne start	//No, let's do it again.
+   606 262B 60				rts			//Yes, return
+   607 				.endp
+   608
+   609 262C			.proc Wait_sec
+   610 262C A5 14			lda rtclock
+   611 262E 18				clc
+   612 262F 69 3C			adc #60
+   613 2631			loop
+   614 2631 C5 14			cmp rtclock
+   615 2633 D0 FC			bne loop
+   616 2635 60				rts
+   617 				.endp
+   618
+   619
+   620 2636			.proc vbi
+   621 2636 AD 13 D0			lda trig3
+   622 2639 8D FA 03			sta gintlk		//No cartridge lockup!
+   623 263C A5 4D			lda atract
+   624 263E 30 04			bmi vbi_end
+   625 2640 A9 00			lda #$00
+   626 2642 85 4D			sta atract
+   627 2644			vbi_end
+   628 2644 4C 5F E4			jmp sysvbv
+   629 				.endp
+   630
+   631 2647			.proc vbd
+   632 2647 AD 49 24			lda flag_busy
+   633 264A D0 15			bne vbd_end
+   634 264C AD 1F D0			lda consol
+   635 264F CD 4C 24			cmp consol_previous
+   636 2652 F0 0D			jeq vbd_end
+   637 2654 8D 4C 24			sta consol_previous
+   638 2657 4A				lsr		; START?
+   639 2658 B0 07			bcs vbd_2	; No!
+   640 265A 48				pha
+   641
+   642 265B A9 01			lda #$01
+   643 265D 8D 4B 24			sta flag_start
+   644
+   645 2660 68				pla
+   646 2661			vbd_2
+   647 2661			vbd_end
+   648 2661 4C 62 E4			jmp xitvbv
+   649 				.endp
+   650
+   651 					
+   652 2664			start
+   653 				//	jsr screen_erase
+   654 2664			start2
+   655 2664 AD 01 D3			lda portb
+   656 2667 09 FE			ora #$fe	//No BASIC, maintain SIO patch if there's any.
+   657 2669 8D 01 D3			sta portb
+   658 266C A9 01 8D F8 03		mva #$01 basicf
+   659 2671				close 0
 Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm]
-     7 25B3 A2 00			ldx #(0*16)
-     8 25B5 A9 0C			lda #$0C	//Close
-     9 25B7 9D 42 03			sta ICCMD,x
-    10 25BA 20 56 E4			jsr CIOV
+     7 2671 A2 00			ldx #(0*16)
+     8 2673 A9 0C			lda #$0C	//Close
+     9 2675 9D 42 03			sta ICCMD,x
+    10 2678 20 56 E4			jsr CIOV
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   658 25BD				close 1
+   660 267B				close 1
 Macro: CLOSE [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm]
-     7 25BD A2 10			ldx #(1*16)
-     8 25BF A9 0C			lda #$0C	//Close
-     9 25C1 9D 42 03			sta ICCMD,x
-    10 25C4 20 56 E4			jsr CIOV
+     7 267B A2 10			ldx #(1*16)
+     8 267D A9 0C			lda #$0C	//Close
+     9 267F 9D 42 03			sta ICCMD,x
+    10 2682 20 56 E4			jsr CIOV
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   659 25C7 A9 A0 85 6A			mva #$a0 RAMTOP
-   660 25CB				open 0,12,0,LOC_E
+   661 2685 A9 A0 85 6A			mva #$a0 RAMTOP
+   662 2689				open 0,12,0,LOC_E
 Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm]
-     7 25CB A2 00			ldx #(0*16)
-     8 25CD A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
-     9 25D2 A9 CC 9D 44 03 A9 + 	mwa #LOC_E	ICBAL,x		//"E:","C:","D:"
-    10 25DC A9 0C 9D 4A 03		mva #12	ICAX1,x		//Read and write
-    11 25E1 A9 00 9D 4B 03		mva #0 ICAX2,x
-    12 25E6 20 56 E4			jsr CIOV
+     7 2689 A2 00			ldx #(0*16)
+     8 268B A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
+     9 2690 A9 8A 9D 44 03 A9 + 	mwa #LOC_E	ICBAL,x		//"E:","C:","D:"
+    10 269A A9 0C 9D 4A 03		mva #12	ICAX1,x		//Read and write
+    11 269F A9 00 9D 4B 03		mva #0 ICAX2,x
+    12 26A4 20 56 E4			jsr CIOV
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   661 25E9				open 1,4,0,LOC_K
+   663 26A7				open 1,4,0,LOC_K
 Macro: OPEN [Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm]
-     7 25E9 A2 10			ldx #(1*16)
-     8 25EB A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
-     9 25F0 A9 CF 9D 44 03 A9 + 	mwa #LOC_K	ICBAL,x		//"E:","C:","D:"
-    10 25FA A9 04 9D 4A 03		mva #4	ICAX1,x		//Read and write
-    11 25FF A9 00 9D 4B 03		mva #0 ICAX2,x
-    12 2604 20 56 E4			jsr CIOV
+     7 26A7 A2 10			ldx #(1*16)
+     8 26A9 A9 03 9D 42 03		mva #$03 ICCMD,x	//Open
+     9 26AE A9 8D 9D 44 03 A9 + 	mwa #LOC_K	ICBAL,x		//"E:","C:","D:"
+    10 26B8 A9 04 9D 4A 03		mva #4	ICAX1,x		//Read and write
+    11 26BD A9 00 9D 4B 03		mva #0 ICAX2,x
+    12 26C2 20 56 E4			jsr CIOV
 Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartridge\Updater\ArDungeonUpdateV2.asm
-   662 2607 A9 FD 8D 30 02 A9 + 	mwa #dl SDLSTL
-   663 2611 A9 00 8D 8B 23		mva #$00 flag_busy	//just a flag
-   664 2616 A9 00 8D C6 02		mva #$00 color2
-   665 261B A9 0F 8D C5 02		mva #$0f color1
-   666 2620 A2 25			ldx #>vbi
-   667 2622 A0 78			ldy #<vbi
-   668 2624 A9 06			lda #VBI_I
-   669 2626 20 5C E4			jsr setvbv			//Set VBI to prevent cartridge lockup
-   670 2629 A2 25			ldx #>vbd
-   671 262B A0 89			ldy #<vbd
-   672 262D A9 07			lda #VBI_D
-   673 262F 20 5C E4			jsr setvbv			//VBD to look on consol keys.
-   674
-   675 2632			loop_start
-   676 2632 AD 8D 23			lda flag_start
-   677 2635 F0 FB			beq loop_start
-   678 					
-   679 				//Start main process
-   680 2637 A9 01 8D 8B 23		mva #$01 flag_busy	//Put it as busy
-   681 263C A9 40 8D 90 23		mva #starting_bank banknum
-   682 2641 A9 0F 8D 92 23 A9 + 	mwa #init_rom_sector sector
-   683 264B CE 8D 23			dec flag_start	
-   684 264E 20 CB 23			jsr put_final_bank
-   685
-   686 				// 1st step: Erase cartridge
-   687 2651			First_step
-   688 2651 20 F0 23			jsr put_erase
-   689 					
-   690 				.if starting_bank =$00
-   691 					.if final_bank =$7f
-   692 						jsr Erase_Cartridge
-   693 					.else
-   694 						jsr Erase_patch
-   695 					.endif
-   696 				.else
-   697 2654 20 82 24			jsr Erase_patch
-   698 				.endif
-   699
-   700
-   701 				// 2nd step: Verify erase
-   702 2657 20 FE 23			jsr put_veryfing
-   703 265A 20 8A 24			jsr Verify_Erase
-   704 265D B0 F2			bcs First_step
-   705 					
-   706
-   707 265F A9 18 8D 91 23		mva #total_banks count
-   708 2664			loop
-   709 2664 20 A4 23			jsr put_banknum
-   710
-   711 2667 20 0C 24			jsr put_reading
-   712 266A 20 92 24			jsr Read_bank
-   713
-   714 266D			error_write	
-   715 266D 20 1A 24			jsr put_writing
-   716 2670 20 EA 24			jsr Write_bank
-   717
-   718 2673 20 28 24			jsr put_verify_write
-   719 2676 20 1D 25			jsr Verify_bank
-   720 2679 B0 F2			bcs error_write
-   721 					
-   722 267B EE 90 23			inc banknum
-   723 267E CE 91 23			dec count
-   724 2681 D0 E1			bne loop	
-   725 					
-   726 					
-   727 2683 20 36 24			jsr put_done
-   728 2686 A9 00			lda #$00
-   729 2688 8D 8B 23			sta flag_busy
-   730 268B 4C 32 26			jmp loop_start
-   731 					
-   732 268E			end_program	
+   664 26C5 A9 BB 8D 30 02 A9 + 	mwa #dl SDLSTL
+   665 26CF A9 00 8D 49 24		mva #$00 flag_busy	//just a flag
+   666 26D4 A9 00 8D C6 02		mva #$00 color2
+   667 26D9 A9 0F 8D C5 02		mva #$0f color1
+   668 26DE A2 26			ldx #>vbi
+   669 26E0 A0 36			ldy #<vbi
+   670 26E2 A9 06			lda #VBI_I
+   671 26E4 20 5C E4			jsr setvbv			//Set VBI to prevent cartridge lockup
+   672 26E7 A2 26			ldx #>vbd
+   673 26E9 A0 47			ldy #<vbd
+   674 26EB A9 07			lda #VBI_D
+   675 26ED 20 5C E4			jsr setvbv			//VBD to look on consol keys.
+   676
+   677 26F0			loop_start
+   678 26F0 AD 4B 24			lda flag_start
+   679 26F3 F0 FB			beq loop_start
+   680 					
+   681 				//Start main process
+   682 26F5 A9 01 8D 49 24		mva #$01 flag_busy	//Put it as busy
+   683 26FA A9 00 8D 4E 24		mva #starting_bank banknum
+   684 26FF A9 10 8D 50 24 A9 + 	mwa #init_rom_sector sector
+   685 2709 CE 4B 24			dec flag_start	
+   686 270C 20 89 24			jsr put_final_bank
+   687
+   688 				// 1st step: Erase cartridge
+   689 270F			First_step
+   690 270F 20 AE 24			jsr put_erase
+   691 					
+   692 				.if starting_bank =$00
+   693 					.if final_bank =$7f
+   694 2712 20 97 20				jsr Erase_Cartridge
+   695 					.else
+   696 						jsr Erase_patch
+   697 					.endif
+   698 				.else
+   699 					jsr Erase_patch
+   700 				.endif
+   701
+   702
+   703 				// 2nd step: Verify erase
+   704 2715 20 BC 24			jsr put_veryfing
+   705 2718 20 48 25			jsr Verify_Erase
+   706 271B B0 F2			bcs First_step
+   707 					
+   708
+   709 271D A9 80 8D 4F 24		mva #total_banks count
+   710 2722			loop
+   711 2722 20 62 24			jsr put_banknum
+   712
+   713 2725 20 CA 24			jsr put_reading
+   714 2728 20 50 25			jsr Read_bank
+   715
+   716 272B			error_write	
+   717 272B 20 D8 24			jsr put_writing
+   718 272E 20 A8 25			jsr Write_bank
+   719
+   720 2731 20 E6 24			jsr put_verify_write
+   721 2734 20 DB 25			jsr Verify_bank
+   722 2737 B0 F2			bcs error_write
+   723 					
+   724 2739 EE 4E 24			inc banknum
+   725 273C CE 4F 24			dec count
+   726 273F D0 E1			bne loop	
+   727 					
+   728 					
+   729 2741 20 F4 24			jsr put_done
+   730 2744 A9 00			lda #$00
+   731 2746 8D 49 24			sta flag_busy
+   732 2749 4C F0 26			jmp loop_start
    733 					
-   734 = 068F			total_program	= end_program-start_data+1
-   735 = 070E			total_temp		= total_program + 127
-   736 = 000E			total sectors	= total_temp/128
-   737 = 0700			total_bytes		= ((Total_Program+127)/128)*128
-   738 = 0072			filler			= total_bytes - total_program +1
-   739
-   740 				.if filler > 0
-   741 268E 00 00 00 00 00 00 + 	.sav filler
-   742 				.endif
-   743
-   744 					
-   745 2700			start_rom
-   746
-   747 2700 7B 8D 86 7A 20 FF + 	ins "../BOOTCartridge/Alternate Reality - The dungeon/Ardungeon.rom",starting_bank*$2000,total_banks*$2000
+   734 274C			end_program	
+   735 					
+   736 = 074D			total_program	= end_program-start_data+1
+   737 = 07CC			total_temp		= total_program + 127
+   738 = 000F			total sectors	= total_temp/128
+   739 = 0780			total_bytes		= ((Total_Program+127)/128)*128
+   740 = 0034			filler			= total_bytes - total_program +1
+   741
+   742 				.if filler > 0
+   743 274C 00 00 00 00 00 00 + 	.sav filler
+   744 				.endif
+   745
+   746 					
+   747 2780			start_rom
    748
-   749 032700			end_rom
+   749 2780 A9 FF 8D 01 D3 A9 + 	ins "../BOOTCartridge/Alternate Reality - The dungeon/Ardungeon.rom",starting_bank*$2000,total_banks*$2000
    750
-   751 032700			end_atr
-   752 					
-   753 					
-   754 				//	run start
-   755 						
+   751 102780			end_rom
+   752
+   753 102780			end_atr
+   754 					
+   755 					
+   756 				//	run start
+   757 						

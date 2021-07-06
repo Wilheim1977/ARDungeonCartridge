@@ -11,9 +11,11 @@
 //History:
 
 .macro PUT_VERSION
-	.sb "V12"
+	.sb "V14"
 .endm
 
+//V14: fixed sst39F040 bug for transfering characters to cartridge
+//V13: added AR Char Transfer on Cart. Press SELECT on boot to initialize
 //V12: added 39F040 flash support. updater size optimizations.
 //V11: added new updater. No need to backup the characters!!
 //V10: bugfix: game hangs when putting a wrong floppy or atr image, going to the cartridge and not returning to D1:
@@ -95,11 +97,13 @@ TYPE_CART =1
 
 //Parameters to init the loader
 
-start_loader = $0400
-start_loader2 = $cc00		//Dungeon loader.
-start_cart_io =$cd00		//Cartridge IO routines.
-start_init2 = $480
-start_exit = $100
+start_loader 	= $0400
+start_loader2 	= $cc00		//Dungeon loader.
+start_cart_io 	= $cd00		//Cartridge IO routines.
+start_init2 	= $480
+start_exit 		= $100
+start_chartrans	= $2000
+
 
 // Page zero parameters
 BUFRLO 	= $32
@@ -120,15 +124,28 @@ Copy_init
 	mva #$ff portb
 	mva #$01 basicf
 	lda consol
+	pha
 	and #$04	//OPTION??
 	bne NO_OPTION	//NO!
+	pla
 	CopyMemory Copy_Exit,start_exit,(.len Exit)
 	jmp exit
 NO_OPTION
+	pla
+	and #$02	//SELECT?
+	bne NO_SELECT
+	mva #$00 basicf
+NO_SELECT
 	clc
 	rts
 .endp
 .proc init1
+	lda basicf 	//SELECT??
+	bne no_select
+	CopyMemory Copy_chartrans, start_chartrans, (.len chartrans)
+	jmp chartrans.start
+	
+no_select
 	CopyMemory Copy_loader, start_loader,(.len loader)	//Copy loader to the desired address in the parameters.
 	mva #$00 loader.flag	//Avoid turning the cartridge off
 	mwa #$600 dbuflo	
@@ -207,6 +224,14 @@ Copy_exit		//exit to boot routine.
 	cli		//Restore IRQs
 	rts		//Go to BOOT!
 .endp
+
+Copy_chartrans
+.proc chartrans,start_chartrans
+
+	icl "../../ARDungeonCharTransfer/ARCharTransferV3Cart.asm"
+
+.endp
+
 
 Copy_init2
 .proc init2, start_init2

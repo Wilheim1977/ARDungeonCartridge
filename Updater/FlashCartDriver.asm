@@ -1,30 +1,33 @@
 
+//Flash cartridge driver
+//2021 Guillermo Fuenzalida
+//
 
 
 start_cartridge = $a000
 end_cartridge	= $c000
-
+num_tries	= $10
 
 //	org $2000
-	
+
+chip_select
+	.by $00	
 
 //SetSector: selects the first bank of the sector selected.
 //Parameter: A= number of sector ($00-$0F)	
-
-chip_select
-	.by $00
-
 .proc SetSector
 	and #$0F	//Only $00-$0F allowed
 	clc		//Just to not set bit 7 to 1 accidentally
-	rol		//*2
-	rol		//*4
-	rol		//*8
+	asl		//*2
+	asl		//*4
+	asl		//*8
 	tax
 	sta $d500,x	//Change bank!
 	rts
 .endp
 
+
+//Command_Unlock: first two steps to unlock the flash chip.
 .proc Command_Unlock
 	lda #$AA
 	jsr Write_5555
@@ -33,9 +36,47 @@ chip_select
 
 .endp
 
+.proc CheckID
+	stx save_x+1
+	jsr Command_Unlock
+	lda #$90
+	jsr Write_5555
+	ldx chip_select
+	sta $d500,x
+	lda $a000
+	ora $a001
+	pha
+	jsr Command_Unlock
+	lda #$f0
+	jsr Write_5555
+	ldx #$00
+loop
+	inx
+	bne loop
+
+save_x
+	ldx #$00
+	pla
+	rts
+.endp
+
+//is39F: looks if chipset if sst39sf040.
+//Output: Carry set = is sst39sf040, carry clear = none of this.
+.proc is39F
+	jsr CheckID
+	cmp #$bf
+	bne no_sst
+	sec
+	rts
+no_sst
+	clc
+	rts
+.endp
+
 
 // VerifyBlankSector: verifies if sector is erased ($FF)
 // Parameter A=Sector number (0 to 15)
+// Output: Carry clear = OK, Carry Set = Error
 .proc VerifyBlankSector
 
 bank	= $d500
@@ -124,14 +165,11 @@ end_erase
 	lda #$40
 erase2
 	sta chip_select
-	jsr Command_Unlock //1st and 2nd cycle
 	
-	lda #$80
-	jsr Write_5555	//3rd cycle
-	lda #$aa
-	jsr Write_5555	//4th cycle
-	lda #$55
-	jsr Write_2aaa	//5th cycle
+	jsr is39f
+	bcs erase3
+
+	jsr Common
 
 	pla		//Recover sector
 	pha
@@ -142,33 +180,132 @@ erase2
 	sta start_cartridge	//6th cycle
 
 //Erase command sent. Now let's wait until it's finished.
+
+	mva #num_tries sec_count
+	
 	pla
+	pha
+	
+loop
+	
+	jsr pollwrite
+	
+	pla
+	pha
+	
+	jsr VerifyBlankSector
+	bcc exit
+	dec sec_count
+	bne loop
+	sec
+exit
+	pla
+	rts
+
+erase3
+	stx save_x+1
+	sty save_y+1
+	mva #$08 sec_count
+
+	pla
+	pha
+	asl
+	asl
+	asl
+	sta bank_number
+
+loop2	
+	jsr Common
+	ldx bank_number
+	sta $d500,x
+	lda #$30
+	sta start_cartridge
+	jsr pollwrite
+	
+	jsr Common
+	ldx bank_number
+	sta $d500,x
+	lda #$30
+	sta start_cartridge+$1000
+	jsr pollwrite2
+	inc bank_number
+	dec sec_count
+	bne loop2
+	pla
+	pha
+	jsr VerifyBlankSector
+save_x
+	ldx #$00
+save_y
+	ldy #$00	
+	pla
+	rts
+
+Common
+	jsr Command_Unlock //1st and 2nd cycle
+	
+	lda #$80
+	jsr Write_5555	//3rd cycle
+	lda #$aa
+	jsr Write_5555	//4th cycle
+	lda #$55
+	jmp Write_2aaa	//5th cycle
+	
+
+sec_count
+	.by $00
+bank_number
+	.by $00
+
 .endp
 
+
+//PollWrite: waits until the sector data stopped changing.
 .proc pollwrite
+
+byte_address = start_cartridge
+
 	pha
 again
 	mva #$00 pollsame
 loop
-	lda start_cartridge
-	cmp start_cartridge
+	lda byte_address
+	cmp byte_address
 	bne again
-	cmp start_cartridge
+	cmp byte_address
 	bne again
-	cmp start_cartridge
+	cmp byte_address
 	bne again
 	inc pollsame
 	bne loop
-//	pla
-//	pha
-//	jsr VerifyBlankSector
-//	bcs pollwrite
 	pla
 	rts
 pollsame
 	.by $00
 .endp
 
+.proc pollwrite2
+
+byte_address = start_cartridge+$1000
+
+	pha
+again
+	mva #$00 pollsame
+loop
+	lda byte_address
+	cmp byte_address
+	bne again
+	cmp byte_address
+	bne again
+	cmp byte_address
+	bne again
+	inc pollsame
+	bne loop
+	pla
+	rts
+pollsame
+	.by $00
+.endp
 
 //Write_2aaa: writes value at $2aaa on the respective chip selected.
 //Parameter: A=value to write
@@ -241,8 +378,9 @@ num_sectors
 	.by $00
 .endp
 
-//VerifyBlankSectors: Verifynumber of sector
-//Parameters: X=Initial sector, Y=number of sectors to erase.
+//VerifyBlankSectors: Verify status blank of sector
+//Parameters: X=Initial sector, Y=number of sectors to verify.
+//Output: Carry clear: OK, Carry Set = Error
 .proc VerifyBlankSectors
 	pha
 loop
