@@ -23,14 +23,14 @@ pt_1 = $cb
 pt_2 = $cd
 pt_3 = $cf
 
-starting_bank 	= $40
-final_bank		= $57
+starting_bank 	= $00
+final_bank		= $7f
 total_banks		= final_bank-starting_bank+1
 starting_sector	= starting_bank/8
 total_sectors	= (total_banks+7)/8
 
 .macro PUT_VERSION
-	.sb "V12"
+	.sb "V14"
 .endm
 
 	opt h-

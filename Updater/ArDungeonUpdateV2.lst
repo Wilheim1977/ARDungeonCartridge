@@ -1301,10 +1301,10 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
     28 = 00CF			pt_3 = $cf
     29
     30 = 0000			starting_bank 	= $00
-    31 = 007F			final_bank		= $7f
-    32 = 0080			total_banks		= final_bank-starting_bank+1
+    31 = 004F			final_bank		= $4f
+    32 = 0050			total_banks		= final_bank-starting_bank+1
     33 = 0000			starting_sector	= starting_bank/8
-    34 = 0010			total_sectors	= (total_banks+7)/8
+    34 = 000A			total_sectors	= (total_banks+7)/8
     35
     36
     37
@@ -1314,9 +1314,9 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
     41 					
     42 				//Let's do the ATR Header
     43
-    44 = 100780			Total_Size		= (((end_atr - start_data)+127)/128)*128
-    45 = 0001			Total_Size_high	= (Total_Size/$100000)
-    46 = 0078			Total_Size_low	= (Total_Size-(Total_Size_high*$100000))/$10
+    44 = 0A0780			Total_Size		= (((end_atr - start_data)+127)/128)*128
+    45 = 0000			Total_Size_high	= (Total_Size/$100000)
+    46 = A078			Total_Size_low	= (Total_Size-(Total_Size_high*$100000))/$10
     47
     48 = 000F			Sectors_boot	= (end_program-start_data+127)/128
     49
@@ -1325,9 +1325,9 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
     52 = 0010			init_rom_sector	= init_sector
     53
     54  96 02				.by $96,$02				//Checksum of "NICKATARI"
-    55  78 00				.word Total_Size_low	//Total bytes
+    55  78 A0				.word Total_Size_low	//Total bytes
     56  80 00				.word $80				//Sector Size
-    57  01 00				.word Total_Size_high	//Total bytes
+    57  00 00				.word Total_Size_high	//Total bytes
     58  00				.by $00					//No Write Protect nor Bad sectors.
     59  00 00				.word $00				//No bad sectors
     60  00 00 00 00 00			.by $00,$00,$00,$00,$00
@@ -2099,14 +2099,14 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
    424 				.endp
    425
    426 2489			.proc put_final_bank
-   427 2489 A9 7F			lda #final_bank
+   427 2489 A9 4F			lda #final_bank
    428 248B 4A 4A 4A 4A			:4 lsr
    429 248F AA				tax
    430 2490 BD 52 24			lda tabla_hex,x
    431 2493 8D E5 23			sta screen_reading_total_banks
    432 2496 8D 01 24			sta screen_writing_total_banks
    433 2499 8D 1D 24			sta screen_verify_total_banks
-   434 249C A9 7F			lda #final_bank
+   434 249C A9 4F			lda #final_bank
    435 249E 29 0F			and #$0f
    436 24A0 AA				tax
    437 24A1 BD 52 24			lda tabla_hex,x
@@ -2245,14 +2245,14 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
    484
    485 2540			.proc Erase_patch
    486 2540 A2 00			ldx #starting_sector
-   487 2542 A0 10			ldy #total_sectors
+   487 2542 A0 0A			ldy #total_sectors
    488 2544 20 E3 21			jsr Erase_Sectors
    489 2547 60				rts
    490 				.endp
    491
    492 2548			.proc Verify_Erase
    493 2548 A2 00			ldx #starting_sector
-   494 254A A0 10			ldy #total_sectors
+   494 254A A0 0A			ldy #total_sectors
    495 254C 20 FC 21			jsr VerifyBlankSectors
    496 254F 60				rts
    497 				.endp
@@ -2480,9 +2480,9 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
    691 					
    692 				.if starting_bank =$00
    693 					.if final_bank =$7f
-   694 2712 20 97 20				jsr Erase_Cartridge
+   694 						jsr Erase_Cartridge
    695 					.else
-   696 						jsr Erase_patch
+   696 2712 20 40 25				jsr Erase_patch
    697 					.endif
    698 				.else
    699 					jsr Erase_patch
@@ -2495,7 +2495,7 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
    706 271B B0 F2			bcs First_step
    707 					
    708
-   709 271D A9 80 8D 4F 24		mva #total_banks count
+   709 271D A9 50 8D 4F 24		mva #total_banks count
    710 2722			loop
    711 2722 20 62 24			jsr put_banknum
    712
@@ -2537,9 +2537,9 @@ Source: C:\Users\admin\OneDrive\Guille\Eclipse\workplace2\GitHub\ARDungeonCartri
    748
    749 2780 A9 FF 8D 01 D3 A9 + 	ins "../BOOTCartridge/Alternate Reality - The dungeon/Ardungeon.rom",starting_bank*$2000,total_banks*$2000
    750
-   751 102780			end_rom
+   751 0A2780			end_rom
    752
-   753 102780			end_atr
+   753 0A2780			end_atr
    754 					
    755 					
    756 				//	run start
