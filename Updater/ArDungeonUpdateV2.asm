@@ -656,15 +656,15 @@ start2
 	ora #$fe	//No BASIC, maintain SIO patch if there's any.
 	sta portb
 	mva #$01 basicf
-	close 0
-	close 1
-	mva #$a0 RAMTOP
-	open 0,12,0,LOC_E
-	open 1,4,0,LOC_K
+	close 0		//Close channel 0
+	close 1		//Close channel 1
+	mva #$a0 RAMTOP	//Set RAMTOP to $A000
+	open 0,12,0,LOC_E	//Open an editor channel on screen.
+	open 1,4,0,LOC_K	//Open a keyboard channel
 	mwa #dl SDLSTL
 	mva #$00 flag_busy	//just a flag
-	mva #$00 color2
-	mva #$0f color1
+	mva #$00 color2		//Black background color.
+	mva #$0f color1		//White text color.
 	ldx #>vbi
 	ldy #<vbi
 	lda #VBI_I
@@ -701,9 +701,9 @@ First_step
 
 
 // 2nd step: Verify erase
-	jsr put_veryfing
-	jsr Verify_Erase
-	bcs First_step
+	jsr put_veryfing	//Print message "Veryfing erase"
+	jsr Verify_Erase	//Do the verify!
+	bcs First_step		//ERROR: do it again.
 	
 
 	mva #total_banks count
